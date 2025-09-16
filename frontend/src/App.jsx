@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Login from './pages/Login';
-import Profile from './pages/Profile';
-import Dashboard from './pages/Dashboard';
-import Chat from './pages/Chat';
+import Login from './pages/Login.jsx';
+import Profile from './pages/Profile.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Chat from './pages/Chat.jsx';
 
 function App() {
   return (
