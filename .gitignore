@@ -1,0 +1,17 @@
+# Ignore .env files
+.env
+
+# Ignore local documentation files
+Self-local-documentationtempo files/
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build directories
+/frontend/dist
+/backend/dist
+
+# VSCode
+.vscode/
