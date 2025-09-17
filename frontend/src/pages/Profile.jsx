@@ -92,53 +92,53 @@ const Profile = () => {
         <form className="w-full max-w-3xl mx-auto glass-effect rounded-2xl shadow-xl p-8" onSubmit={(e) => e.preventDefault()}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="first-name">
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="field_of_study">
                 Field of Study
               </label>
-              <input className="input-field" id="field_of_study" type="text" placeholder="Computer Science" value={form.field_of_study} onChange={onChange} />
+              <input className="input-field" id="field_of_study" type="text" placeholder="Computer Science" value={form.field_of_study} onChange={onChange} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="last-name">
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="education_level">
                 Education Level
               </label>
-              <input className="input-field" id="education_level" type="text" placeholder="Bachelor" value={form.education_level} onChange={onChange} />
+              <input className="input-field" id="education_level" type="text" placeholder="Bachelor" value={form.education_level} onChange={onChange} autoComplete="off" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="current_year">
                 Current Year
               </label>
-              <input className="input-field" id="current_year" type="number" min="1" max="6" placeholder="2" value={form.current_year} onChange={onChange} />
+              <input className="input-field" id="current_year" type="number" min="1" max="6" placeholder="2" value={form.current_year} onChange={onChange} autoComplete="off" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="location">
                 Location
               </label>
-              <input className="input-field" id="location" type="text" placeholder="Pune, IN" value={form.location} onChange={onChange} />
+              <input className="input-field" id="location" type="text" placeholder="Pune, IN" value={form.location} onChange={onChange} autoComplete="address-level2" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="skills">
                 Skills (comma separated)
               </label>
-              <input className="input-field" id="skills" type="text" placeholder="Python, React, SQL" value={form.skills} onChange={onChange} />
+              <input className="input-field" id="skills" type="text" placeholder="Python, React, SQL" value={form.skills} onChange={onChange} autoComplete="off" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="interests">
                 Interests (comma separated)
               </label>
-              <input className="input-field" id="interests" type="text" placeholder="AI, Cloud" value={form.interests} onChange={onChange} />
+              <input className="input-field" id="interests" type="text" placeholder="AI, Cloud" value={form.interests} onChange={onChange} autoComplete="off" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="resume">
                 Resume
               </label>
-              <input id="resume" type="file" onChange={onResume} className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+              <input id="resume" type="file" onChange={onResume} className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" autoComplete="off" />
               <p className="text-slate-600 text-xs mt-2">Upload your resume for automated skill extraction.</p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="career_goals">
                 Career Goals
               </label>
-              <textarea id="career_goals" className="input-field" rows="3" placeholder="What do you want to achieve?" value={form.career_goals} onChange={onChange} />
+              <textarea id="career_goals" className="input-field" rows="3" placeholder="What do you want to achieve?" value={form.career_goals} onChange={onChange} autoComplete="off" />
             </div>
           </div>
           <div className="mt-8 flex justify-end">

@@ -57,6 +57,7 @@ const Chat = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' ? send() : null}
+            autoComplete="off"
           />
           <button className="btn-primary" onClick={send} disabled={loading}>{loading ? 'Sending...' : 'Send'}</button>
         </div>

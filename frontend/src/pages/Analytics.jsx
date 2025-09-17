@@ -45,31 +45,58 @@ const Analytics = () => {
     }
   };
 
-  const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }) => (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
-          {change && (
-            <div className={`flex items-center mt-2 text-sm ${
-              change.startsWith('+') ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {change.startsWith('+') ? (
-                <ArrowUpIcon className="w-4 h-4 mr-1" />
-              ) : (
-                <ArrowDownIcon className="w-4 h-4 mr-1" />
-              )}
-              {change}
-            </div>
-          )}
-        </div>
-        <div className={`p-3 rounded-full bg-${color}-100`}>
-          <Icon className={`w-6 h-6 text-${color}-600`} />
+  const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }) => {
+    const colorClasses = {
+      blue: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-600',
+      },
+      green: {
+        bg: 'bg-green-100',
+        text: 'text-green-600',
+      },
+      purple: {
+        bg: 'bg-purple-100',
+        text: 'text-purple-600',
+      },
+      orange: {
+        bg: 'bg-orange-100',
+        text: 'text-orange-600',
+      },
+      red: {
+        bg: 'bg-red-100',
+        text: 'text-red-600',
+      },
+      slate: {
+        bg: 'bg-slate-100',
+        text: 'text-slate-600',
+      }
+    };
+    const chosen = colorClasses[color] || colorClasses.blue;
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
+            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            {change && (
+              <div className={`flex items-center mt-2 text-sm ${change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                {change.startsWith('+') ? (
+                  <ArrowUpIcon className="w-4 h-4 mr-1" />
+                ) : (
+                  <ArrowDownIcon className="w-4 h-4 mr-1" />
+                )}
+                {change}
+              </div>
+            )}
+          </div>
+          <div className={`p-3 rounded-full ${chosen.bg}`}>
+            <Icon className={`w-6 h-6 ${chosen.text}`} />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const tabs = [
     { id: 'dashboard', name: 'Dashboard', icon: ChartBarIcon },

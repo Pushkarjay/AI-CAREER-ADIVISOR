@@ -101,6 +101,7 @@ const Login = ({ defaultSignUp = false }) => {
                 })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter your email"
+                autoComplete="email"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -125,6 +126,7 @@ const Login = ({ defaultSignUp = false }) => {
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Enter your password"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                 />
                 <button
                   type="button"

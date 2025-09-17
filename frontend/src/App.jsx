@@ -169,11 +169,11 @@ function ProfileForm({ onProfileUpdate }) {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                     <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
-                    <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name" className="input-field" />
+                    <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name" className="input-field" autoComplete="name" />
                 </div>
                 <div>
                     <label htmlFor="education" className="block text-sm font-semibold text-slate-700 mb-2">Current Education Level</label>
-                    <select id="education" value={education} onChange={e => setEducation(e.target.value)} className="input-field">
+                    <select id="education" value={education} onChange={e => setEducation(e.target.value)} className="input-field" autoComplete="off">
                         <option value="">Select your education level</option>
                         <option value="highschool">High School</option>
                         <option value="college">College / University</option>
@@ -195,7 +195,7 @@ function ProfileForm({ onProfileUpdate }) {
                     <label htmlFor="interests" className="block text-sm font-semibold text-slate-700 mb-2">What are your interests?</label>
                     <textarea id="interests" value={interests} onChange={e => setInterests(e.target.value)} rows="3"
                         className="input-field resize-none"
-                        placeholder="e.g., Gaming, AI, sustainable technology..."></textarea>
+                        placeholder="e.g., Gaming, AI, sustainable technology..." autoComplete="off"></textarea>
                 </div>
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -464,10 +464,11 @@ function Chatbot() {
                         type="text"
                         value={input}
                         onChange={e => setInput(e.target.value)}
-                        onKeyPress={e => e.key === 'Enter' && handleSend()}
+                        onKeyDown={e => e.key === 'Enter' && handleSend()}
                         placeholder={isLoading ? "AI is thinking..." : "Ask about careers, skills..."}
                         disabled={isLoading}
                         className="flex-grow px-4 py-3 bg-white border-2 border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 shadow-sm transition-all duration-300"
+                        autoComplete="off"
                     />
                     <button 
                         onClick={handleSend} 
