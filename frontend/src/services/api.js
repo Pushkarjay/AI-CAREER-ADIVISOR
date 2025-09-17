@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { auth } from '../firebase/config';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // Create axios instance
 const api = axios.create({
@@ -54,58 +54,26 @@ export const authAPI = {
 
 // Chat API
 export const chatAPI = {
-  getSessions: () =>
-    api.get('/api/v1/chat/sessions'),
-  
-  createSession: () =>
-    api.post('/api/v1/chat/sessions'),
-  
-  getMessages: (sessionId) =>
-    api.get(`/api/v1/chat/sessions/${sessionId}/messages`),
-  
-  sendMessage: (sessionId, message) =>
-    api.post(`/api/v1/chat/sessions/${sessionId}/messages`, { message }),
-  
-  analyzeIntent: (message) =>
-    api.post('/api/v1/chat/analyze-intent', { message }),
+  sendMessage: ({ message, session_id = null, history = [] }) =>
+    api.post('/api/chat', { message, session_id, history }),
 };
 
 // Career API
 export const careerAPI = {
-  search: (query, filters = {}) =>
-    api.get('/api/v1/careers/search', { params: { query, ...filters } }),
-  
-  getRecommendations: () =>
-    api.get('/api/v1/careers/recommendations'),
-  
-  getTrends: () =>
-    api.get('/api/v1/careers/trends'),
-  
-  getDetails: (careerId) =>
-    api.get(`/api/v1/careers/${careerId}`),
+  getRecommendations: () => api.get('/api/recommendations'),
 };
 
 // Profile API
 export const profileAPI = {
-  get: () =>
-    api.get('/api/v1/profiles/me'),
-  
-  update: (profileData) =>
-    api.put('/api/v1/profiles/me', profileData),
-  
+  fetch: () => api.get('/api/v1/profiles/me'),
+  save: (profileData) => api.post('/api/profile', profileData),
   uploadResume: (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/api/v1/profiles/resume', formData, {
+    return api.post('/api/resume', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  
-  analyzeSkillGap: () =>
-    api.post('/api/v1/profiles/skill-gap-analysis'),
-  
-  getLearningResources: () =>
-    api.get('/api/v1/profiles/learning-resources'),
 };
 
 // Analytics API

@@ -3,8 +3,8 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 
 const SkillGapChart = ({ skills }) => {
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Skill Gap Analysis</h2>
+    <div className="mt-8 glass-effect rounded-2xl shadow-xl p-6">
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">Skill Gap Analysis</h2>
       <ResponsiveContainer width="100%" height={300}>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skills}>
           <PolarGrid />

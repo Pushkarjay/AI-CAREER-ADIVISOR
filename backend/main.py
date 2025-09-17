@@ -15,6 +15,8 @@ from contextlib import asynccontextmanager
 from core.config import settings
 from core.database import initialize_connections
 from api import auth, chat, careers, profiles, analytics
+from api import adapter as adapter_routes
+from api.alias_api import router as alias_router
 
 
 # Configure logging
@@ -131,6 +133,20 @@ app.include_router(
     analytics.router,
     prefix=f"{settings.API_V1_STR}/analytics",
     tags=["analytics"]
+)
+
+# Adapter routes for simplified frontend expectations
+app.include_router(
+    adapter_routes.router,
+    prefix="/api",
+    tags=["adapter"]
+)
+
+# Simple alias routes as per final architecture (no version prefix)
+app.include_router(
+    alias_router,
+    prefix="/api",
+    tags=["alias"]
 )
 
 

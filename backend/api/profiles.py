@@ -1,6 +1,6 @@
 """Profile API endpoints for user profile management."""
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -137,25 +137,34 @@ async def update_profile(profile_updates: UserProfileUpdate, token: str = Depend
 
 
 @router.post("/upload-resume")
-async def upload_resume(token: str = Depends(security)):
-    """Upload and parse resume."""
+async def upload_resume(file: UploadFile = File(...), token: str = Depends(security)):
+    """Upload and parse resume using lightweight text parsing (no paid APIs)."""
     try:
         payload = verify_token(token.credentials)
         user_id = payload.get("user_id")
+        # Read file (expect text; PDFs/Docs would need extra libs, omitted per constraints)
+        content_bytes = await file.read()
+        text = content_bytes.decode(errors="ignore")
+
+        # Very simple skill extraction via keyword matching
+        known_skills = [
+            "python","java","javascript","react","node","sql","nosql","aws","gcp","azure",
+            "docker","kubernetes","machine learning","ml","data analysis","pandas","numpy","git"
+        ]
+        found = []
+        lower = text.lower()
+        for sk in known_skills:
+            if sk in lower:
+                # Normalize formatting
+                found.append(sk.title() if sk.isalpha() else sk)
+
+        extracted = {
+            "skills": sorted(list(set(found)))[:20],
+        }
         
-        # In a real implementation, this would:
-        # 1. Handle file upload
-        # 2. Process with Document AI
-        # 3. Update profile with extracted data
-        
-        # Mock response
         return {
             "message": "Resume uploaded successfully",
-            "extracted_data": {
-                "skills": ["Python", "JavaScript", "React"],
-                "experience_years": 2,
-                "education_level": "bachelor"
-            }
+            "extracted_data": extracted
         }
         
     except Exception as e:

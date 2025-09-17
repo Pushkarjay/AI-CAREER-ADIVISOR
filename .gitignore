@@ -1,17 +1,41 @@
-# Ignore .env files
+### Environment files
+# Ignore env files anywhere, but keep examples
 .env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
 
-# Ignore local documentation files
-Self-local-documentationtempo files/
+### Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
 
-# Node modules
+### Virtual Environments
+.venv/
+venv/
+**/.venv/
+**/venv/
+
+### OS/Editor junk
+.DS_Store
+Thumbs.db
+**/desktop.ini
+.vscode/
+
+### Node
 node_modules/
+**/node_modules/
 npm-debug.log
 yarn-error.log
 
-# Build directories
+### Build outputs
 /frontend/dist
 /backend/dist
+**/dist
 
-# VSCode
-.vscode/
+### Local docs
+Self-local-documentationtempo files/

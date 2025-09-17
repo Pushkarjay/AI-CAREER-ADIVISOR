@@ -1,44 +1,38 @@
-"""Google Vertex AI Gemini service for AI-powered insights and recommendations."""
+"""Real Gemini AI service using Google Generative AI."""
 
+import os
 import logging
-from typing import Dict, Any, List, Optional
-import asyncio
-import json
-
-from google.cloud import aiplatform
-import vertexai
-from vertexai.generative_models import GenerativeModel
-
-from core.config import settings
+from typing import List, Dict, Any, Optional
+import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 logger = logging.getLogger(__name__)
 
 
 class GeminiService:
-    """Service for interacting with Google Vertex AI Gemini models."""
+    """Real Gemini service using Google Generative AI API."""
     
     def __init__(self):
-        self.project_id = settings.GOOGLE_CLOUD_PROJECT
-        self.location = settings.VERTEX_AI_LOCATION
-        self.model_name = settings.GEMINI_MODEL
-        self.temperature = settings.GEMINI_TEMPERATURE
-        self._initialize_client()
-    
-    def _initialize_client(self):
-        """Initialize Vertex AI client."""
-        try:
-            # Initialize Vertex AI
-            vertexai.init(
-                project=self.project_id,
-                location=self.location
-            )
-            
-            self.model = GenerativeModel(self.model_name)
-            logger.info(f"Gemini service initialized with model: {self.model_name}")
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize Gemini service: {e}")
-            raise
+        """Initialize the Gemini service with API key."""
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        if not self.api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is required")
+        
+        # Configure the API
+        genai.configure(api_key=self.api_key)
+        
+        # Initialize the model
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Safety settings
+        self.safety_settings = {
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        }
+        
+        logger.info("Initialized real Gemini service with API key")
     
     async def generate_chat_response(self, message: str, chat_history: List[Dict[str, str]] = None,
                                    system_prompt: str = None) -> Dict[str, Any]:

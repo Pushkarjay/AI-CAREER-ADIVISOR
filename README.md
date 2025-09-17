@@ -110,7 +110,7 @@ GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 FIRESTORE_DATABASE=your-firestore-database
 BIGQUERY_DATASET=career_data
-VERTEX_AI_LOCATION=us-central1
+VERTEX_AI_LOCATION=asia-south1
 ```
 
 #### Frontend (.env)
@@ -197,6 +197,28 @@ cd backend
 gcloud builds submit --tag gcr.io/PROJECT_ID/career-advisor-backend
 gcloud run deploy --image gcr.io/PROJECT_ID/career-advisor-backend --platform managed
 ```
+
+## Firebase + Cloud Run Routing
+
+- `firebase.json` rewrites `/api/**` to your Cloud Run service (serviceId `backend-service`, region `asia-south1`).
+- Frontend uses `VITE_API_BASE_URL` when running locally; in Hosting, leave it blank to rely on the rewrite.
+
+## Updated (No Paid GCP APIs)
+
+- Removed Document AI, BigQuery, and Vertex AI dependencies. Gemini is called via `google-generativeai` using an API key.
+- Firestore is accessed via Firebase Admin in the backend.
+- Resume parsing is done with lightweight text parsing; you can upgrade to spaCy if needed.
+
+## Environment quick refs
+
+Backend `.env` (see `backend/.env.example`):
+- SECRET_KEY
+- GEMINI_API_KEY
+- Firebase Admin creds via env or `GOOGLE_APPLICATION_CREDENTIALS`
+
+Frontend `.env` (see `frontend/.env.example`):
+- VITE_FIREBASE_* web config
+- VITE_API_BASE_URL (optional, blank when served via Hosting)
 
 #### Frontend to Firebase
 ```bash

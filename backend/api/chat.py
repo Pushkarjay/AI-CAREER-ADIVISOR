@@ -10,7 +10,7 @@ import asyncio
 from models.chat import ChatMessage, ChatMessageCreate, ChatSession, ChatResponse
 from core.security import verify_token
 from services.firestore_service_mock import FirestoreService
-from services.gemini_service_mock import GeminiService
+from services.gemini_service_real import GeminiService
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)
@@ -107,6 +107,32 @@ async def get_chat_history(session_id: str, token: str = Depends(security)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get chat history"
         )
+
+
+@router.post("/test", response_model=dict)
+async def test_chat(request: ChatRequest):
+    """Test chat endpoint without authentication."""
+    try:
+        # Generate AI response using Gemini (or fallback to mock)
+        ai_response = await gemini_service.generate_chat_response(
+            message=request.message,
+            chat_history=[],
+            system_prompt="You are an AI career advisor for Indian students. Provide helpful, practical career guidance."
+        )
+        
+        return {
+            "message": ai_response["response"],
+            "confidence": ai_response.get("confidence", 0.8),
+            "model": ai_response.get("model_used", "test")
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to process test message: {e}")
+        return {
+            "message": f"Test response for: {request.message}",
+            "confidence": 0.5,
+            "model": "fallback"
+        }
 
 
 @router.post("/message", response_model=ChatResponse)

@@ -5,11 +5,11 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
-const Login = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+const Login = ({ defaultSignUp = false }) => {
+  const [isSignUp, setIsSignUp] = useState(defaultSignUp);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user, login, signup } = useAuth();
+  const { user, login, signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -21,11 +21,14 @@ const Login = () => {
     }
   }, [user, navigate]);
 
+  useEffect(() => {
+    setIsSignUp(defaultSignUp);
+  }, [defaultSignUp]);
+
   const signInWithGoogle = async () => {
     try {
       setLoading(true);
-      // Mock Google sign-in for development
-      await login('demo@example.com', 'password');
+      await loginWithGoogle();
       navigate('/dashboard');
     } catch (err) {
       console.error(err);

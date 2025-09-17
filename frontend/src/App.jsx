@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { chatAPI } from './services/api';
 
 // --- Mock Data ---
 // Based on common Indian career paths and your provided documents.
@@ -106,17 +107,20 @@ const SparklesIcon = () => (
 
 function Header() {
     return (
-        <header className="bg-white/80 backdrop-blur-md shadow-sm fixed top-0 left-0 right-0 z-20">
+        <header className="glass-effect shadow-lg fixed top-0 left-0 right-0 z-20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    <div className="flex-shrink-0 flex items-center">
+                    <div className="flex-shrink-0 flex items-center space-x-3">
                        <SparklesIcon />
-                        <span className="text-xl font-bold text-slate-800">AI Career Advisor</span>
+                        <div>
+                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AI Career Advisor</span>
+                            <div className="text-xs text-slate-500 font-medium">Personalized Career Guidance</div>
+                        </div>
                     </div>
                     <div className="flex items-center space-x-4">
-                        <span className="text-sm font-medium text-slate-600">Prototype</span>
-                         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                            DB
+                        <span className="text-sm font-medium text-slate-600 hidden sm:block">v1.0</span>
+                         <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            🎓
                         </div>
                     </div>
                 </div>
@@ -126,10 +130,11 @@ function Header() {
 }
 
 function ProfileForm({ onProfileUpdate }) {
-    const [name, setName] = useState('Deepak Bansal');
-    const [education, setEducation] = useState('college');
-    const [selectedSkills, setSelectedSkills] = useState(['python', 'sql', 'javascript']);
-    const [interests, setInterests] = useState('Building scalable web applications, exploring machine learning.');
+    const [name, setName] = useState('');
+    const [education, setEducation] = useState('');
+    const [selectedSkills, setSelectedSkills] = useState([]);
+    const [interests, setInterests] = useState('');
+    const [error, setError] = useState('');
 
     const handleSkillToggle = (skillId) => {
         setSelectedSkills(prev =>
@@ -139,44 +144,66 @@ function ProfileForm({ onProfileUpdate }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Validation
+        if (!name.trim()) {
+            setError('Please enter your full name');
+            return;
+        }
+        if (!education) {
+            setError('Please select your education level');
+            return;
+        }
+        if (selectedSkills.length === 0) {
+            setError('Please select at least one skill');
+            return;
+        }
+        
+        setError('');
         onProfileUpdate({ name, education, skills: selectedSkills, interests });
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">Your Profile</h2>
+        <div className="glass-effect p-8 rounded-2xl shadow-xl border border-white/20 card-hover">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">Your Profile</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-slate-700">Full Name</label>
-                    <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+                    <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+                    <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name" className="input-field" />
                 </div>
                 <div>
-                    <label htmlFor="education" className="block text-sm font-medium text-slate-700">Current Education Level</label>
-                    <select id="education" value={education} onChange={e => setEducation(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <label htmlFor="education" className="block text-sm font-semibold text-slate-700 mb-2">Current Education Level</label>
+                    <select id="education" value={education} onChange={e => setEducation(e.target.value)} className="input-field">
+                        <option value="">Select your education level</option>
                         <option value="highschool">High School</option>
                         <option value="college">College / University</option>
                         <option value="graduate">Fresh Graduate</option>
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Your Skills</label>
-                    <div className="mt-2 flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Your Skills</label>
+                    <div className="mt-2 flex flex-wrap gap-2 max-h-48 overflow-y-auto p-4 border-2 border-slate-200 rounded-xl bg-gradient-to-br from-slate-50 to-white">
                         {allSkills.map(skill => (
                             <button key={skill.id} type="button" onClick={() => handleSkillToggle(skill.id)}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${selectedSkills.includes(skill.id) ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>
+                                className={`skill-tag transition-all duration-300 ${selectedSkills.includes(skill.id) ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-blue-400 shadow-md scale-105' : 'hover:bg-blue-50 hover:border-blue-300 hover:scale-105'}`}>
                                 {skill.name}
                             </button>
                         ))}
                     </div>
                 </div>
                  <div>
-                    <label htmlFor="interests" className="block text-sm font-medium text-slate-700">What are your interests?</label>
+                    <label htmlFor="interests" className="block text-sm font-semibold text-slate-700 mb-2">What are your interests?</label>
                     <textarea id="interests" value={interests} onChange={e => setInterests(e.target.value)} rows="3"
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="input-field resize-none"
                         placeholder="e.g., Gaming, AI, sustainable technology..."></textarea>
                 </div>
-                <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Generate Career Insights
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        {error}
+                    </div>
+                )}
+                <button type="submit" className="btn-primary w-full">
+                    🚀 Generate Career Insights
                 </button>
             </form>
         </div>
@@ -191,24 +218,24 @@ function CareerCard({ career, userSkills, onSelect }) {
     const matchPercentage = Math.round((matchedSkills.length / requiredSkillSet.size) * 100);
 
     return (
-        <div onClick={() => onSelect(career)} className="bg-white p-5 rounded-xl shadow-md border border-slate-200 hover:shadow-lg hover:border-blue-400 cursor-pointer transition-all duration-300">
+        <div onClick={() => onSelect(career)} className="glass-effect p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl hover:border-blue-300/50 cursor-pointer card-hover group">
             <div className="flex justify-between items-start">
-                <div>
-                    <h3 className="text-xl font-bold text-slate-800">{career.title}</h3>
-                    <p className="text-sm text-slate-500 mt-1">{career.description}</p>
+                <div className="flex-1">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">{career.title}</h3>
+                    <p className="text-sm text-slate-600 mt-2 leading-relaxed">{career.description}</p>
                 </div>
-                <div className="ml-4 flex-shrink-0">
-                    <p className="text-lg font-bold text-green-600">{career.avgSalary}</p>
-                    <p className="text-xs text-slate-500 text-right">Avg. Salary</p>
+                <div className="ml-4 flex-shrink-0 text-right">
+                    <p className="text-lg font-bold text-emerald-600">{career.avgSalary}</p>
+                    <p className="text-xs text-slate-500">Avg. Salary</p>
                 </div>
             </div>
-            <div className="mt-4">
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-blue-700">Skill Match</span>
-                    <span className="text-sm font-bold text-blue-700">{matchPercentage}%</span>
+            <div className="mt-6">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold text-blue-700">Skill Match</span>
+                    <span className="text-sm font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded-full">{matchPercentage}%</span>
                 </div>
-                <div className="w-full bg-slate-200 rounded-full h-2.5">
-                    <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${matchPercentage}%` }}></div>
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out" style={{ width: `${matchPercentage}%` }}></div>
                 </div>
             </div>
         </div>
@@ -293,25 +320,33 @@ function Dashboard({ profile }) {
     
     if (!profile) {
         return (
-            <div className="text-center text-slate-500 py-10">
-                <h2 className="text-2xl font-semibold">Welcome!</h2>
-                <p>Please fill out your profile to get personalized career recommendations.</p>
+            <div className="glass-effect p-12 rounded-2xl shadow-xl border border-white/20 text-center">
+                <div className="space-y-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto">
+                        <span className="text-3xl">🎯</span>
+                    </div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Welcome!</h2>
+                    <p className="text-slate-600 text-lg">Please fill out your profile to get personalized career recommendations.</p>
+                </div>
             </div>
         )
     }
 
     return (
         <div className="space-y-8">
-            <div>
-                <h2 className="text-3xl font-bold text-slate-800">Hi {profile.name}, Here Are Your Top Career Matches</h2>
-                <p className="text-slate-600 mt-2">Based on your skills and interests, we recommend exploring these paths.</p>
+            <div className="text-center space-y-4">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Hi {profile.name}! 👋</h2>
+                <h3 className="text-2xl font-semibold text-slate-700">Here Are Your Top Career Matches</h3>
+                <p className="text-slate-600 text-lg">Based on your skills and interests, we recommend exploring these paths.</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {recommendations.map(career => (
-                    <CareerCard key={career.id} career={career} userSkills={profile.skills} onSelect={setSelectedCareer} />
+                {recommendations.map((career, index) => (
+                    <div key={career.id} className="animate-fadeInUp" style={{animationDelay: `${index * 0.1}s`}}>
+                        <CareerCard career={career} userSkills={profile.skills} onSelect={setSelectedCareer} />
+                    </div>
                 ))}
             </div>
-            <div>
+            <div className="animate-fadeInUp" style={{animationDelay: '0.4s'}}>
                 <SkillGapAnalysis selectedCareer={selectedCareer} userSkills={profile.skills} />
             </div>
         </div>
@@ -320,9 +355,10 @@ function Dashboard({ profile }) {
 
 function Chatbot() {
     const [messages, setMessages] = useState([
-        { from: 'bot', text: "Hello! I'm your AI Career Assistant. Ask me about any career path to learn more." }
+        { from: 'bot', text: "Hello! I'm your AI Career Assistant powered by Google Gemini. Ask me about career paths, skills, or any professional guidance you need!" }
     ]);
     const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const chatEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -331,15 +367,41 @@ function Chatbot() {
 
     useEffect(scrollToBottom, [messages]);
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+    const handleSend = async () => {
+        if (!input.trim() || isLoading) return;
 
         const userMessage = { from: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
+        setIsLoading(true);
 
-        // Simple hardcoded bot responses for prototype
-        setTimeout(() => {
-            let botResponseText = "I can provide general information. For personalized advice, please use the main dashboard.";
+        try {
+            // Call the real API
+            const response = await chatAPI.sendMessage({
+                message: input,
+                session_id: null // Will create a new session
+            });
+
+            const botMessage = { 
+                from: 'bot', 
+                text: response.data?.message?.content || response.data?.message || 'I am here to help with your career questions.',
+                confidence: response.data?.confidence_score 
+            };
+            setMessages(prev => [...prev, botMessage]);
+
+            // Add suggestions if available
+            if (response.data.suggestions && response.data.suggestions.length > 0) {
+                const suggestionsMessage = {
+                    from: 'bot',
+                    text: `Here are some follow-up questions you might ask:\n${response.data.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
+                };
+                setMessages(prev => [...prev, suggestionsMessage]);
+            }
+
+        } catch (error) {
+            console.error('Chat API error:', error);
+            
+            // Fallback to mock response on error
+            let botResponseText = "I'm experiencing some technical difficulties. Let me try to help with a general response.";
             const lowerInput = input.toLowerCase();
 
             const careerMatch = careersData.find(c => lowerInput.includes(c.title.toLowerCase().split(' ')[0]));
@@ -354,39 +416,64 @@ function Chatbot() {
 
             const botMessage = { from: 'bot', text: botResponseText };
             setMessages(prev => [...prev, botMessage]);
-        }, 1000);
+        } finally {
+            setIsLoading(false);
+        }
 
         setInput('');
     };
 
     return (
-        <div className="bg-white h-full flex flex-col rounded-xl shadow-md border border-slate-200">
-            <div className="p-4 border-b border-slate-200">
-                <h3 className="text-xl font-bold text-slate-800">AI Assistant</h3>
+        <div className="glass-effect h-full flex flex-col rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+            <div className="p-6 border-b border-white/20 bg-gradient-to-r from-blue-600/5 to-purple-600/5">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
+                    🤖 AI Assistant
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">Powered by Google Gemini</p>
             </div>
-            <div className="flex-grow p-4 space-y-4 overflow-y-auto bg-slate-50">
+            <div className="flex-grow p-4 space-y-4 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white/50">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`flex items-start gap-3 ${msg.from === 'user' ? 'justify-end' : ''}`}>
-                        {msg.from === 'bot' && <div className="flex-shrink-0 text-blue-500 bg-blue-100 p-1 rounded-full"><BotIcon /></div>}
-                        <div className={`max-w-xs md:max-w-md p-3 rounded-2xl ${msg.from === 'bot' ? 'bg-slate-200 text-slate-800 rounded-tl-none' : 'bg-blue-500 text-white rounded-br-none'}`}>
-                            <p className="text-sm">{msg.text}</p>
+                    <div key={index} className={`flex items-start gap-3 ${msg.from === 'user' ? 'justify-end' : ''} animate-fadeInUp`} style={{animationDelay: `${index * 0.1}s`}}>
+                        {msg.from === 'bot' && <div className="flex-shrink-0 text-blue-500 bg-gradient-to-br from-blue-100 to-purple-100 p-2 rounded-full shadow-sm"><BotIcon /></div>}
+                        <div className={`max-w-xs md:max-w-md p-4 rounded-2xl shadow-sm ${msg.from === 'bot' ? 'bg-white border border-slate-200 text-slate-800 rounded-tl-none' : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-br-none shadow-lg'}`}>
+                            <p className="text-sm whitespace-pre-line leading-relaxed">{msg.text}</p>
+                            {msg.confidence && (
+                                <p className="text-xs mt-2 opacity-70 bg-white/10 px-2 py-1 rounded-full inline-block">Confidence: {(msg.confidence * 100).toFixed(0)}%</p>
+                            )}
                         </div>
-                         {msg.from === 'user' && <div className="flex-shrink-0 text-slate-500 bg-slate-200 p-1 rounded-full"><UserIcon /></div>}
+                         {msg.from === 'user' && <div className="flex-shrink-0 text-slate-500 bg-gradient-to-br from-slate-100 to-slate-200 p-2 rounded-full shadow-sm"><UserIcon /></div>}
                     </div>
                 ))}
+                {isLoading && (
+                    <div className="flex items-start gap-3 animate-fadeInUp">
+                        <div className="flex-shrink-0 text-blue-500 bg-gradient-to-br from-blue-100 to-purple-100 p-2 rounded-full shadow-sm"><BotIcon /></div>
+                        <div className="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-none p-4 shadow-sm">
+                            <div className="flex items-center space-x-1">
+                                <div className="animate-bounce bg-gradient-to-r from-blue-500 to-purple-500 rounded-full w-2 h-2"></div>
+                                <div className="animate-bounce bg-gradient-to-r from-blue-500 to-purple-500 rounded-full w-2 h-2" style={{animationDelay: '0.1s'}}></div>
+                                <div className="animate-bounce bg-gradient-to-r from-blue-500 to-purple-500 rounded-full w-2 h-2" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div ref={chatEndRef} />
             </div>
-            <div className="p-4 border-t border-slate-200 bg-white">
-                <div className="flex items-center space-x-2">
+            <div className="p-4 border-t border-white/20 bg-gradient-to-r from-slate-50/50 to-white/50">
+                <div className="flex items-center space-x-3">
                     <input
                         type="text"
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyPress={e => e.key === 'Enter' && handleSend()}
-                        placeholder="Ask a question..."
-                        className="flex-grow px-4 py-2 bg-slate-100 border border-slate-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={isLoading ? "AI is thinking..." : "Ask about careers, skills..."}
+                        disabled={isLoading}
+                        className="flex-grow px-4 py-3 bg-white border-2 border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 shadow-sm transition-all duration-300"
                     />
-                    <button onClick={handleSend} className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button 
+                        onClick={handleSend} 
+                        disabled={isLoading || !input.trim()}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-full hover:from-blue-700 hover:to-purple-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transform"
+                    >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                             <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.949a.75.75 0 00.95.546l4.949-1.414a.75.75 0 00.546-.95L8.204 3.11a.75.75 0 00-.95-.821l-4.14 1.182zM10 2a.75.75 0 01.75.75v.007c0 .414-.336.75-.75.75h-.007a.75.75 0 01-.75-.75V2.75A.75.75 0 0110 2z" />
                             <path d="M10 10.5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5a.75.75 0 01.75-.75z" />
@@ -401,34 +488,20 @@ function Chatbot() {
 
 export default function App() {
     const [userProfile, setUserProfile] = useState(null);
-    const [initialProfileSet, setInitialProfileSet] = useState(false);
-    
-    // Set an initial profile to demonstrate the dashboard on first load.
-    useEffect(() => {
-        if (!initialProfileSet) {
-            setUserProfile({
-                name: 'Deepak Bansal',
-                education: 'college',
-                skills: ['python', 'sql', 'javascript'],
-                interests: 'Building scalable web applications, exploring machine learning.'
-            });
-            setInitialProfileSet(true);
-        }
-    }, [initialProfileSet]);
 
     return (
-        <div className="bg-slate-50 min-h-screen font-sans">
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen font-sans">
             <Header />
             <main className="pt-24 pb-12">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         {/* Left Column: Profile & Dashboard */}
-                        <div className="lg:col-span-8 space-y-8">
+                        <div className="lg:col-span-8 space-y-8 animate-fadeInUp">
                             <ProfileForm onProfileUpdate={setUserProfile} />
                             <Dashboard profile={userProfile} />
                         </div>
                         {/* Right Column: Chatbot */}
-                        <div className="lg:col-span-4 lg:sticky lg:top-24 h-[85vh]">
+                        <div className="lg:col-span-4 lg:sticky lg:top-24 h-[85vh] animate-fadeInUp" style={{animationDelay: '0.2s'}}>
                            <Chatbot />
                         </div>
                     </div>

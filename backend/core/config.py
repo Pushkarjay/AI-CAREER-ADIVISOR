@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Google Cloud Configuration
     GOOGLE_CLOUD_PROJECT: str = "ai-career-advisor-dev"
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
-    VERTEX_AI_LOCATION: str = "us-central1"
+    VERTEX_AI_LOCATION: str = "asia-south1"
     
     # Firestore Configuration
     FIRESTORE_DATABASE: str = "(default)"
@@ -42,6 +42,21 @@ class Settings(BaseSettings):
     # Gemini Configuration
     GEMINI_MODEL: str = "gemini-pro"
     GEMINI_TEMPERATURE: float = 0.7
+    GEMINI_API_KEY: Optional[str] = None
+    
+    # Supabase Configuration
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_ANON_KEY: Optional[str] = None
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
+    
+    # Firebase Configuration
+    FIREBASE_PROJECT_ID: Optional[str] = None
+    FIREBASE_PRIVATE_KEY_ID: Optional[str] = None
+    FIREBASE_PRIVATE_KEY: Optional[str] = None
+    FIREBASE_CLIENT_EMAIL: Optional[str] = None
+    FIREBASE_CLIENT_ID: Optional[str] = None
+    FIREBASE_AUTH_URI: Optional[str] = None
+    FIREBASE_TOKEN_URI: Optional[str] = None
     
     # MCP Server Configuration
     MCP_SERVER_HOST: str = "localhost"
