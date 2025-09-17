@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -26,7 +24,8 @@ const Login = () => {
   const signInWithGoogle = async () => {
     try {
       setLoading(true);
-      await signInWithPopup(auth, googleProvider);
+      // Mock Google sign-in for development
+      await login('demo@example.com', 'password');
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
