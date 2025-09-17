@@ -44,11 +44,6 @@ class Settings(BaseSettings):
     GEMINI_TEMPERATURE: float = 0.7
     GEMINI_API_KEY: Optional[str] = None
     
-    # Supabase Configuration
-    SUPABASE_URL: Optional[str] = None
-    SUPABASE_ANON_KEY: Optional[str] = None
-    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
-    
     # Firebase Configuration
     FIREBASE_PROJECT_ID: Optional[str] = None
     FIREBASE_PRIVATE_KEY_ID: Optional[str] = None
@@ -57,6 +52,8 @@ class Settings(BaseSettings):
     FIREBASE_CLIENT_ID: Optional[str] = None
     FIREBASE_AUTH_URI: Optional[str] = None
     FIREBASE_TOKEN_URI: Optional[str] = None
+    FIREBASE_ADMIN_CREDENTIALS: Optional[str] = None
+    FIREBASE_TOKEN: Optional[str] = None
     
     # MCP Server Configuration
     MCP_SERVER_HOST: str = "localhost"
