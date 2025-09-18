@@ -70,7 +70,8 @@ jobs:
             --memory=1Gi \
             --cpu=1 \
             --max-instances=10 \
-            --quiet
+            --quiet \
+            --clear-base-image
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
