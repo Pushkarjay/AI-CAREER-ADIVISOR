@@ -43,12 +43,21 @@ jobs:
         run: |
           pytest -q
 
-      - name: Setup Artifact Registry
+      - name: Enable APIs and setup Artifact Registry
         run: |
+          # Enable required APIs
+          gcloud services enable artifactregistry.googleapis.com cloudbuild.googleapis.com run.googleapis.com --project=${{ secrets.GCP_PROJECT_ID }}
+          
+          # Wait for API to be ready
+          sleep 30
+          
+          # Create repository using elevated permissions
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
           gcloud artifacts repositories create cloud-run-source-deploy \
             --repository-format=docker \
             --location=asia-south1 \
-            --project=${{ secrets.GCP_PROJECT_ID }} || true
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --description="Repository for Cloud Run source deployments" || echo "Repository already exists"
 
       - name: Deploy Backend to Cloud Run
         run: |
@@ -60,7 +69,8 @@ jobs:
             --set-env-vars="DEBUG=False,LOG_LEVEL=INFO" \
             --memory=1Gi \
             --cpu=1 \
-            --max-instances=10
+            --max-instances=10 \
+            --quiet
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
