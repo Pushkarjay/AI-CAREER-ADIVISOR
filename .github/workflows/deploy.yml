@@ -43,6 +43,13 @@ jobs:
         run: |
           pytest -q
 
+      - name: Setup Artifact Registry
+        run: |
+          gcloud artifacts repositories create cloud-run-source-deploy \
+            --repository-format=docker \
+            --location=asia-south1 \
+            --project=${{ secrets.GCP_PROJECT_ID }} || true
+
       - name: Deploy Backend to Cloud Run
         run: |
           gcloud run deploy backend-service \
