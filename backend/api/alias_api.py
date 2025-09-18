@@ -22,6 +22,20 @@ firestore_service = FirestoreService()
 gemini = GeminiService()
 
 
+@router.get("/profile")
+async def get_profile(token: str = Depends(security)):
+    """Get user profile via alias endpoint."""
+    payload = verify_token(token.credentials)
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    profile = await firestore_service.get_user_profile(user_id)
+    if not profile:
+        return {"data": {}}  # Return empty data instead of 404 for consistency
+    return {"data": profile}
+
+
 @router.post("/profile")
 async def save_profile(profile: Dict[str, Any], token: str = Depends(security)):
     payload = verify_token(token.credentials)

@@ -65,7 +65,7 @@ export const careerAPI = {
 
 // Profile API
 export const profileAPI = {
-  fetch: () => api.get('/api/v1/profiles/me'),
+  fetch: () => api.get('/api/profile'),
   save: (profileData) => api.post('/api/profile', profileData),
   uploadResume: (file) => {
     const formData = new FormData();
