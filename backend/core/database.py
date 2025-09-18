@@ -46,17 +46,19 @@ def _init_firebase_admin_if_possible():
                 cred = credentials.Certificate(settings.FIREBASE_ADMIN_CREDENTIALS)
                 firebase_admin.initialize_app(cred)
                 logger.info(f"Initialized Firebase Admin from credentials file: {settings.FIREBASE_ADMIN_CREDENTIALS}")
+            # Check for GOOGLE_APPLICATION_CREDENTIALS file
+            elif settings.GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(settings.GOOGLE_APPLICATION_CREDENTIALS):
+                cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
+                firebase_admin.initialize_app(cred)
+                logger.info(f"Initialized Firebase Admin from Google credentials: {settings.GOOGLE_APPLICATION_CREDENTIALS}")
+            # Try using Application Default Credentials (works in Cloud Run)
             else:
-                # Fallback to GOOGLE_APPLICATION_CREDENTIALS or default application credentials
-                if settings.GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(settings.GOOGLE_APPLICATION_CREDENTIALS):
-                    cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
-                    firebase_admin.initialize_app(cred)
-                    logger.info(f"Initialized Firebase Admin from Google credentials: {settings.GOOGLE_APPLICATION_CREDENTIALS}")
-                elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+                try:
                     cred = credentials.ApplicationDefault()
                     firebase_admin.initialize_app(cred)
                     logger.info("Initialized Firebase Admin from application default credentials")
-                else:
+                except Exception as e:
+                    logger.warning(f"Failed to use Application Default Credentials: {e}")
                     logger.warning("Firebase Admin credentials not set; using mock Firestore")
                     return None
         return fa_firestore.client() if fa_firestore is not None else None
@@ -74,11 +76,20 @@ async def initialize_connections():
             firestore_db = real_client
             logger.info("Firestore connection initialized (real)")
         else:
-            logger.error("Failed to initialize Firebase Admin - no credentials found")
-            raise RuntimeError("Firestore initialization failed - credentials required")
+            logger.warning("Failed to initialize Firebase Admin - no credentials found")
+            # In production, we want this to fail, but let's try to continue
+            if os.getenv("DEBUG", "false").lower() == "false":
+                logger.error("Production environment requires Firebase credentials")
+                raise RuntimeError("Firestore initialization failed - credentials required in production")
+            else:
+                logger.warning("Running in debug mode without Firebase credentials")
     except Exception as e:
         logger.error(f"Failed to initialize Firestore connection: {e}")
-        raise
+        # Only raise in production
+        if os.getenv("DEBUG", "false").lower() == "false":
+            raise
+        else:
+            logger.warning("Continuing without Firestore in debug mode")
 
 
 def get_firestore_db():

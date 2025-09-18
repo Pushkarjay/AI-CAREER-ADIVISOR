@@ -70,8 +70,9 @@ jobs:
             --memory=1Gi \
             --cpu=1 \
             --max-instances=10 \
-            --quiet \
-            --clear-base-image
+            --timeout=300 \
+            --port=8080 \
+            --quiet
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

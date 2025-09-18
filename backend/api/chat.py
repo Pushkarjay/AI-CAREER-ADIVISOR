@@ -159,11 +159,53 @@ async def send_message(request: ChatRequest, token: str = Depends(security)):
         # Get chat history for context
         chat_history = await firestore_service.get_chat_history(session_id, limit=10)
         
-        # Generate AI response using Gemini
+        # Get user profile for personalized context
+        user_profile = await firestore_service.get_user_profile(user_id) or {}
+        
+        # Build personalized system prompt with profile context
+        system_prompt = "You are an AI career advisor for Indian students. Provide helpful, practical career guidance."
+        
+        if user_profile:
+            context_parts = []
+            
+            # Add skills context
+            skills = user_profile.get("skills", [])
+            if skills:
+                context_parts.append(f"The user has skills in: {', '.join(skills)}")
+            
+            # Add experience context
+            experience_years = user_profile.get("experience_years")
+            if experience_years:
+                context_parts.append(f"The user has {experience_years} years of professional experience")
+            
+            # Add education/field context
+            field_of_study = user_profile.get("field_of_study")
+            if field_of_study:
+                context_parts.append(f"The user studied {field_of_study}")
+            
+            # Add location context
+            location = user_profile.get("location")
+            if location:
+                context_parts.append(f"The user is located in {location}")
+            
+            # Add resume-extracted context if available
+            extracted_data = user_profile.get("extracted_from_resume", {})
+            if extracted_data:
+                resume_skills = extracted_data.get("skills", [])
+                if resume_skills and set(resume_skills) - set(skills):  # New skills from resume
+                    additional_skills = list(set(resume_skills) - set(skills))
+                    context_parts.append(f"Additional skills from resume: {', '.join(additional_skills)}")
+            
+            if context_parts:
+                profile_context = "\n\nUser Profile Context:\n" + "\n".join(f"- {part}" for part in context_parts)
+                profile_context += "\n\nUse this information to provide personalized career advice relevant to their background and goals."
+                system_prompt += profile_context
+        
+        # Generate AI response using Gemini with personalized context
         ai_response = await gemini_service.generate_chat_response(
             message=request.message,
             chat_history=chat_history,
-            system_prompt="You are an AI career advisor for Indian students. Provide helpful, practical career guidance."
+            system_prompt=system_prompt
         )
         
         # Save AI response
@@ -188,8 +230,8 @@ async def send_message(request: ChatRequest, token: str = Depends(security)):
             timestamp="2024-01-01T00:00:00"
         )
         
-        # Generate suggestions based on message content
-        suggestions = await _generate_suggestions(request.message)
+        # Generate suggestions based on message content and user profile
+        suggestions = await _generate_suggestions(request.message, user_profile)
         
         return ChatResponse(
             message=response_message,
@@ -238,34 +280,43 @@ async def analyze_career_intent(request: ChatRequest, token: str = Depends(secur
         )
 
 
-async def _generate_suggestions(message: str) -> List[str]:
-    """Generate follow-up suggestions based on user message."""
+async def _generate_suggestions(message: str, user_profile: dict = None) -> List[str]:
+    """Generate follow-up suggestions based on user message and profile."""
     suggestions = []
     
     message_lower = message.lower()
+    skills = user_profile.get("skills", []) if user_profile else []
+    experience_years = user_profile.get("experience_years", 0) if user_profile else 0
+    field_of_study = user_profile.get("field_of_study", "") if user_profile else ""
     
     if any(word in message_lower for word in ["career", "job", "profession"]):
-        suggestions.extend([
-            "What are your interests and skills?",
-            "Tell me about your educational background",
-            "What industry interests you most?"
-        ])
+        if skills:
+            suggestions.append(f"How can you leverage your {skills[0]} skills for career growth?")
+        if experience_years > 0:
+            suggestions.append(f"What senior roles match your {experience_years} years of experience?")
+        else:
+            suggestions.append("What entry-level positions interest you?")
+        suggestions.append("What industry interests you most?")
+        
     elif any(word in message_lower for word in ["skill", "learn", "course"]):
-        suggestions.extend([
-            "What specific skills do you want to develop?",
-            "What's your current skill level?",
-            "How much time can you dedicate to learning?"
-        ])
+        if skills:
+            suggestions.append(f"Want to advance your {skills[0]} skills to the next level?")
+        if field_of_study:
+            suggestions.append(f"What advanced skills complement your {field_of_study} background?")
+        suggestions.append("How much time can you dedicate to learning?")
+        
     elif any(word in message_lower for word in ["salary", "money", "pay"]):
-        suggestions.extend([
-            "What career field are you considering?",
-            "What's your experience level?",
-            "Which location are you targeting?"
-        ])
+        if skills and experience_years:
+            suggestions.append(f"What's the salary range for {skills[0]} professionals with {experience_years} years experience?")
+        elif field_of_study:
+            suggestions.append(f"What are typical salaries in {field_of_study} field?")
+        suggestions.append("Which location are you targeting?")
+        
     else:
+        if not user_profile or not any([skills, experience_years, field_of_study]):
+            suggestions.append("Tell me about your background and skills")
         suggestions.extend([
-            "Can you tell me more about your goals?",
-            "What challenges are you facing?",
+            "What are your career goals?",
             "How can I help you today?"
         ])
     
