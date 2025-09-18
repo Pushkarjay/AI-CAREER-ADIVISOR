@@ -7,11 +7,17 @@
 !.env.example
 !**/.env.example
 
-### Service Account Keys and Credentials
+### Private credentials and service accounts (moved to local folder)
+/private_credentials_local/
+*.key.json
+service-account*.json
 **/service-account-key.json
 **/firebase-admin-key.json
 **/*-key.json
 **/credentials.json
+*.p12
+*.pem
+auth-users.json
 
 ### Python
 __pycache__/
