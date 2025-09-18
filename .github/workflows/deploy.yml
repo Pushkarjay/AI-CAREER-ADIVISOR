@@ -66,7 +66,7 @@ jobs:
             --region asia-south1 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
             --allow-unauthenticated \
-            --set-env-vars="DEBUG=False,LOG_LEVEL=INFO" \
+            --set-env-vars="DEBUG=False,LOG_LEVEL=INFO,GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},FIREBASE_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}" \
             --memory=1Gi \
             --cpu=1 \
             --max-instances=10 \

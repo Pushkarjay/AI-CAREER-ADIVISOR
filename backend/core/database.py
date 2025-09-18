@@ -83,9 +83,18 @@ def _init_firebase_admin_if_possible():
                 })
                 firebase_admin.initialize_app(cred)
                 logger.info("Initialized Firebase Admin from env service account")
+            # Check for FIREBASE_ADMIN_CREDENTIALS file path
+            elif settings.FIREBASE_ADMIN_CREDENTIALS and os.path.exists(settings.FIREBASE_ADMIN_CREDENTIALS):
+                cred = credentials.Certificate(settings.FIREBASE_ADMIN_CREDENTIALS)
+                firebase_admin.initialize_app(cred)
+                logger.info(f"Initialized Firebase Admin from credentials file: {settings.FIREBASE_ADMIN_CREDENTIALS}")
             else:
                 # Fallback to GOOGLE_APPLICATION_CREDENTIALS or default application credentials
-                if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+                if settings.GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(settings.GOOGLE_APPLICATION_CREDENTIALS):
+                    cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
+                    firebase_admin.initialize_app(cred)
+                    logger.info(f"Initialized Firebase Admin from Google credentials: {settings.GOOGLE_APPLICATION_CREDENTIALS}")
+                elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
                     cred = credentials.ApplicationDefault()
                     firebase_admin.initialize_app(cred)
                     logger.info("Initialized Firebase Admin from application default credentials")

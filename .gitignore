@@ -18,6 +18,9 @@ service-account*.json
 *.p12
 *.pem
 auth-users.json
+*firebase-adminsdk*.json
+backend-firebase-admin-key.json
+backend-service-account-key.json
 
 ### Local documentation and personal files (not for public repo)
 /docs/self-local/
