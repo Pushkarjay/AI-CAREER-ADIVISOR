@@ -29,7 +29,14 @@ const Profile = () => {
           skills: (p.skills || []).join(', '),
           career_goals: p.career_goals || '',
         });
-      } catch {}
+      } catch (error) {
+        // Profile doesn't exist yet - this is normal for new users
+        console.log('No profile found yet, using empty form');
+        // Don't show error toast for 404 - it's expected for new users
+        if (error.response?.status !== 404) {
+          toast.error('Failed to load profile');
+        }
+      }
     };
     load();
   }, []);

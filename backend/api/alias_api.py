@@ -7,7 +7,6 @@ from fastapi.security import HTTPBearer
 from typing import Optional, Dict, Any
 
 from core.security import verify_token
-from services.firestore_service import FirestoreService as RealFirestoreService
 from services.firestore_service import FirestoreService
 from services.gemini_service_real import GeminiService
 
@@ -16,11 +15,8 @@ import re
 router = APIRouter()
 security = HTTPBearer()
 
-# Prefer real Firestore; fallback to mock if admin not initialized
-try:
-    firestore_service = RealFirestoreService()
-except Exception:  # pragma: no cover
-    firestore_service = FirestoreService()
+# Initialize Firestore service
+firestore_service = FirestoreService()
 
 gemini = GeminiService()
 
