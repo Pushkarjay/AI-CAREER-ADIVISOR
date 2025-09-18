@@ -7,6 +7,12 @@
 !.env.example
 !**/.env.example
 
+### Service Account Keys and Credentials
+**/service-account-key.json
+**/firebase-admin-key.json
+**/*-key.json
+**/credentials.json
+
 ### Python
 __pycache__/
 **/__pycache__/
