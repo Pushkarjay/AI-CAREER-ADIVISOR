@@ -50,7 +50,10 @@ jobs:
             --region asia-south1 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
             --allow-unauthenticated \
-            --set-env-vars="DEBUG=False,LOG_LEVEL=INFO"
+            --set-env-vars="DEBUG=False,LOG_LEVEL=INFO" \
+            --memory=1Gi \
+            --cpu=1 \
+            --max-instances=10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
