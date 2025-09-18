@@ -28,7 +28,7 @@ class ChatMessage(BaseModel):
     session_id: str
     user_id: str
     role: MessageRole
-    content: str = Field(..., min_length=1, max_length=4000)
+    content: str = Field(..., min_length=1, max_length=10000)
     message_type: MessageType = MessageType.TEXT
     metadata: Optional[Dict[str, Any]] = {}
     timestamp: datetime
@@ -39,7 +39,7 @@ class ChatMessage(BaseModel):
 
 class ChatMessageCreate(BaseModel):
     """Chat message creation model."""
-    content: str = Field(..., min_length=1, max_length=4000)
+    content: str = Field(..., min_length=1, max_length=10000)
     message_type: MessageType = MessageType.TEXT
     metadata: Optional[Dict[str, Any]] = {}
 
