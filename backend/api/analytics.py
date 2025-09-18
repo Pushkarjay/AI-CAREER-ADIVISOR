@@ -7,7 +7,7 @@ from typing import Dict, Any, List, Optional
 import logging
 
 from core.security import verify_token
-from services.firestore_service_mock import FirestoreService
+from services.firestore_service import FirestoreService
 from services.bigquery_service_mock import BigQueryService
 
 logger = logging.getLogger(__name__)

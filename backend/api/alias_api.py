@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 
 from core.security import verify_token
 from services.firestore_service import FirestoreService as RealFirestoreService
-from services.firestore_service_mock import FirestoreService as MockFirestoreService
+from services.firestore_service import FirestoreService
 from services.gemini_service_real import GeminiService
 
 import re
@@ -20,7 +20,7 @@ security = HTTPBearer()
 try:
     firestore_service = RealFirestoreService()
 except Exception:  # pragma: no cover
-    firestore_service = MockFirestoreService()
+    firestore_service = FirestoreService()
 
 gemini = GeminiService()
 

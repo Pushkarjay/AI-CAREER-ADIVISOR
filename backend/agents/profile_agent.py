@@ -7,7 +7,7 @@ from datetime import datetime
 
 from .base_agent import BaseAgent, AgentInput
 from services.document_ai_service import DocumentAIService
-from services.firestore_service_mock import FirestoreService
+from services.firestore_service import FirestoreService
 from models.user import UserProfile, UserProfileCreate
 
 

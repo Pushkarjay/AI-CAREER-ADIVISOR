@@ -9,7 +9,7 @@ import asyncio
 
 from models.chat import ChatMessage, ChatMessageCreate, ChatSession, ChatResponse
 from core.security import verify_token
-from services.firestore_service_mock import FirestoreService
+from services.firestore_service import FirestoreService
 from services.gemini_service_real import GeminiService
 from agents.base_agent import orchestrator, AgentInput
 

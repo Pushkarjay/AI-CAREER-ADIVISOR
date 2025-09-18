@@ -1,7 +1,4 @@
-"""Database connection management."""
-
-import logging
-"""Database connection management for Firestore (Firebase Admin in prod, mock in dev)."""
+"""Database connection management for Firestore."""
 
 import logging
 import os
@@ -15,45 +12,6 @@ try:
 except Exception:  # pragma: no cover
     firebase_admin = None
     fa_firestore = None
-
-
-# Mock implementations for development
-class MockFirestoreClient:
-    def __init__(self):
-        logger.info("Using mock Firestore client for development")
-    
-    def collection(self, name: str):
-        return MockCollection(name)
-
-class MockCollection:
-    def __init__(self, name: str):
-        self.name = name
-    
-    def document(self, doc_id: str):
-        return MockDocument(self.name, doc_id)
-    
-    def add(self, data: dict):
-        logger.info(f"Mock add to {self.name}: {data}")
-        return None, MockDocument(self.name, "mock_id")
-
-class MockDocument:
-    def __init__(self, collection: str, doc_id: str):
-        self.collection = collection
-        self.id = doc_id
-    
-    def get(self):
-        logger.info(f"Mock get from {self.collection}/{self.id}")
-        return MockSnapshot()
-    
-    def set(self, data: dict):
-        logger.info(f"Mock set to {self.collection}/{self.id}: {data}")
-
-class MockSnapshot:
-    def __init__(self):
-        self.exists = True
-    
-    def to_dict(self):
-        return {"mock": "data"}
 
 
 # Global database connection
@@ -108,7 +66,7 @@ def _init_firebase_admin_if_possible():
 
 
 async def initialize_connections():
-    """Initialize Firestore connection (real if possible, otherwise mock)."""
+    """Initialize Firestore connection."""
     global firestore_db
     try:
         real_client = _init_firebase_admin_if_possible()
@@ -116,8 +74,8 @@ async def initialize_connections():
             firestore_db = real_client
             logger.info("Firestore connection initialized (real)")
         else:
-            firestore_db = MockFirestoreClient()
-            logger.info("Firestore connection initialized (mock)")
+            logger.error("Failed to initialize Firebase Admin - no credentials found")
+            raise RuntimeError("Firestore initialization failed - credentials required")
     except Exception as e:
         logger.error(f"Failed to initialize Firestore connection: {e}")
         raise

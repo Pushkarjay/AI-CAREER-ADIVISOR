@@ -8,7 +8,7 @@ import logging
 
 from models.user import UserProfile, UserProfileCreate, UserProfileUpdate
 from core.security import verify_token
-from services.firestore_service_mock import FirestoreService
+from services.firestore_service import FirestoreService
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)

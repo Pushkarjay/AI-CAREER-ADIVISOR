@@ -8,7 +8,7 @@ import logging
 
 from models.user import UserCreate, User, Token
 from core.security import create_access_token, verify_token
-from services.firestore_service_mock import FirestoreService
+from services.firestore_service import FirestoreService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
