@@ -22,7 +22,18 @@ const Dashboard = () => {
           score: Math.round(item?.match_score || item?.score || 80),
         }));
         setCareers(mappedCareers);
-        // Minimal placeholder skill data for chart — real gap endpoint is available via /api/v1/profiles/skill-gap-analysis
+      } catch (e) {
+        console.error('API Error:', e);
+        setError('Failed to load recommendations');
+        // Set fallback data so dashboard still shows content
+        setCareers([
+          { title: 'Software Engineer', score: 95 },
+          { title: 'Data Scientist', score: 88 },
+          { title: 'Product Manager', score: 82 },
+          { title: 'UX Designer', score: 78 },
+        ]);
+      } finally {
+        // Always set skills data for demonstration
         setSkills([
           { skill: 'Python', user: 70, required: 90 },
           { skill: 'React', user: 60, required: 85 },
@@ -30,9 +41,6 @@ const Dashboard = () => {
           { skill: 'Git', user: 75, required: 85 },
           { skill: 'Communication', user: 90, required: 90 },
         ]);
-      } catch (e) {
-        setError('Failed to load recommendations');
-      } finally {
         setLoading(false);
       }
     };

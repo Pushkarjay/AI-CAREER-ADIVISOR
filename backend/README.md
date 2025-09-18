@@ -71,6 +71,13 @@ cp .env.example .env
 uvicorn main:app --reload
 ```
 
+### Environment notes
+
+- Use `GEMINI_TEMPERATURE` (uppercase) for the model temperature. Older docs may show `GEMINI_temperature`; the app now accepts both, but prefer `GEMINI_TEMPERATURE`.
+- Prefer `GOOGLE_APPLICATION_CREDENTIALS` pointing to a local JSON file for Google service accounts instead of embedding raw JSON in env vars. Example on Windows PowerShell:
+	- `setx GOOGLE_APPLICATION_CREDENTIALS "C:\\path\\to\\service-account.json"`
+- Extra/unknown variables in `.env` are ignored at runtime, but it's best to remove unused entries to avoid confusion.
+
 ## API Documentation
 
 Once running, visit:

@@ -1,0 +1,13 @@
+{
+  "name": "ai-career-advisor-backend",
+  "version": "1.0.0",
+  "description": "AI Career Advisor Backend Functions",
+  "main": "main.py",
+  "engines": {
+    "python": "3.11"
+  },
+  "dependencies": {},
+  "scripts": {
+    "start": "python main.py"
+  }
+}

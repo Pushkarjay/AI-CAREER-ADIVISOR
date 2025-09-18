@@ -1,0 +1,67 @@
+[debug] [2025-09-18T09:02:00.364Z] ----------------------------------------------------------------------
+[debug] [2025-09-18T09:02:00.370Z] Command:       D:\NODE\node.exe C:\Users\KIIT\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2025-09-18T09:02:00.371Z] CLI Version:   14.16.0
+[debug] [2025-09-18T09:02:00.371Z] Platform:      win32
+[debug] [2025-09-18T09:02:00.371Z] Node Version:  v22.18.0
+[debug] [2025-09-18T09:02:00.372Z] Time:          Thu Sep 18 2025 14:32:00 GMT+0530 (India Standard Time)
+[debug] [2025-09-18T09:02:00.372Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-09-18T09:02:00.736Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-09-18T09:02:00.737Z] > authorizing via signed-in user (pushkarjay.ajay1@gmail.com)
+[debug] [2025-09-18T09:02:00.738Z] [iam] checking project ai-career-advisor-id for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-09-18T09:02:00.740Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:00.740Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:00.743Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id:testIamPermissions [none]
+[debug] [2025-09-18T09:02:00.743Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id:testIamPermissions x-goog-quota-user=projects/ai-career-advisor-id
+[debug] [2025-09-18T09:02:00.743Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-09-18T09:02:02.212Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id:testIamPermissions 200
+[debug] [2025-09-18T09:02:02.212Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-09-18T09:02:02.212Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:02.212Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:02.212Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/ai-career-advisor-id/serviceAccounts/ai-career-advisor-id@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-09-18T09:02:02.212Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/ai-career-advisor-id/serviceAccounts/ai-career-advisor-id@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-09-18T09:02:03.747Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/ai-career-advisor-id/serviceAccounts/ai-career-advisor-id@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-09-18T09:02:03.747Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/ai-career-advisor-id/serviceAccounts/ai-career-advisor-id@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-09-18T09:02:03.748Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:03.748Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:03.748Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/ai-career-advisor-id [none]
+[debug] [2025-09-18T09:02:04.161Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/ai-career-advisor-id 200
+[debug] [2025-09-18T09:02:04.162Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/ai-career-advisor-id {"projectId":"ai-career-advisor-id","projectNumber":"680116190409","displayName":"ai-career-advisor","name":"projects/ai-career-advisor-id","resources":{"hostingSite":"ai-career-advisor-id"},"state":"ACTIVE","etag":"1_effbc8fa-e3ba-4a09-96a7-cfbce349f667"}
+[info] 
+[info] === Deploying to 'ai-career-advisor-id'...
+[info] 
+[info] i  deploying functions, hosting 
+[debug] [2025-09-18T09:02:04.166Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:04.167Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:04.167Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id [none]
+[debug] [2025-09-18T09:02:04.464Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id 200
+[debug] [2025-09-18T09:02:04.465Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/ai-career-advisor-id {"projectNumber":"680116190409","projectId":"ai-career-advisor-id","lifecycleState":"ACTIVE","name":"ai-career-advisor","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-09-17T10:57:54.881067Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-09-18T09:02:04.468Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:04.468Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:04.468Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/ai-career-advisor-id/adminSdkConfig [none]
+[debug] [2025-09-18T09:02:04.970Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/ai-career-advisor-id/adminSdkConfig 200
+[debug] [2025-09-18T09:02:04.971Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/ai-career-advisor-id/adminSdkConfig {"projectId":"ai-career-advisor-id","storageBucket":"ai-career-advisor-id.firebasestorage.app"}
+[debug] [2025-09-18T09:02:04.971Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:04.971Z] Checked if tokens are valid: true, expires at: 1758187493117
+[debug] [2025-09-18T09:02:04.971Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/ai-career-advisor-id/configs [none]
+[debug] [2025-09-18T09:02:06.143Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/ai-career-advisor-id/configs 200
+[debug] [2025-09-18T09:02:06.144Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/ai-career-advisor-id/configs {}
+[debug] [2025-09-18T09:02:06.145Z] Customer code is not Node
+[debug] [2025-09-18T09:02:06.146Z] Validating python source
+[debug] [2025-09-18T09:02:06.146Z] Building python source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-09-18T09:02:06.148Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-09-18T09:02:06.159Z] Running command with virtualenv: command="E:\Projects\Working\Gen-AI-Hackathon\backend\venv\Scripts\activate.bat", args=["","&&","python.exe","-c","\"import firebase_functions; import os; print(os.path.dirname(firebase_functions.__file__))\""]
+[debug] [2025-09-18T09:02:06.210Z] stderr: The system cannot find the path specified.
+
+[debug] [2025-09-18T09:02:06.410Z] Error: spawn "E:\Projects\Working\Gen-AI-Hackathon\backend\venv\Scripts\activate.bat" ENOENT
+    at notFoundError (C:\Users\KIIT\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\lib\enoent.js:6:26)
+    at verifyENOENT (C:\Users\KIIT\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\lib\enoent.js:40:16)
+    at cp.emit (C:\Users\KIIT\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\lib\enoent.js:27:25)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+[error] 
+[error] Error: An unexpected error has occurred.

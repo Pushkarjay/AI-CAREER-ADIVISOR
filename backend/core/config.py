@@ -1,8 +1,9 @@
 """Core configuration for the AI Career Advisor application."""
 
-from pydantic_settings import BaseSettings
 from typing import List, Optional
 import os
+from pydantic import AliasChoices, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -31,6 +32,8 @@ class Settings(BaseSettings):
     GOOGLE_CLOUD_PROJECT: str = "ai-career-advisor-dev"
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
     VERTEX_AI_LOCATION: str = "asia-south1"
+    # Accept optional raw SA key JSON some environments provide (not used directly by code)
+    GCP_SA_KEY: Optional[str] = None
     
     # Firestore Configuration
     FIRESTORE_DATABASE: str = "(default)"
@@ -41,7 +44,11 @@ class Settings(BaseSettings):
     
     # Gemini Configuration
     GEMINI_MODEL: str = "gemini-pro"
-    GEMINI_TEMPERATURE: float = 0.7
+    # Support both GEMINI_TEMPERATURE and legacy GEMINI_temperature from existing .env
+    GEMINI_TEMPERATURE: float = Field(
+        0.7,
+        validation_alias=AliasChoices("GEMINI_TEMPERATURE", "GEMINI_temperature"),
+    )
     GEMINI_API_KEY: Optional[str] = None
     
     # Firebase Configuration
@@ -59,9 +66,12 @@ class Settings(BaseSettings):
     MCP_SERVER_HOST: str = "localhost"
     MCP_SERVER_PORT: int = 8001
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    # Pydantic v2 settings configuration
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",  # Ignore unknown env vars in .env
+    )
 
 
 # Global settings instance
