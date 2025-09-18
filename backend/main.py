@@ -17,6 +17,7 @@ from core.database import initialize_connections
 from api import auth, chat, careers, profiles, analytics
 from api import adapter as adapter_routes
 from api.alias_api import router as alias_router
+from api import dev_auth
 
 
 # Configure logging
@@ -109,6 +110,13 @@ app.include_router(
     auth.router,
     prefix=f"{settings.API_V1_STR}/auth",
     tags=["authentication"]
+)
+
+# Development authentication (only for testing)
+app.include_router(
+    dev_auth.router,
+    prefix="/api/dev-auth",
+    tags=["development"]
 )
 
 app.include_router(
