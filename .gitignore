@@ -19,6 +19,14 @@ service-account*.json
 *.pem
 auth-users.json
 
+### Local documentation and personal files (not for public repo)
+/docs/self-local/
+/docs/orphaned-root-files/
+/docs/cleanup_preview.md
+/docs/repo-inventory.md
+/docs/repo-sanity-checks.md
+/docs/suspected_sensitive_files.md
+
 ### Python
 __pycache__/
 **/__pycache__/
