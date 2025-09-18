@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Auth Test</title>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Your Firebase config (from your .env file)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAeBiS-y1g-4xL-38DOfXYQsGfN-XjvWgw",
+            authDomain: "ai-career-advisor-id.firebaseapp.com",
+            projectId: "ai-career-advisor-id",
+            storageBucket: "ai-career-advisor-id.firebasestorage.app",
+            messagingSenderId: "680116190409",
+            appId: "1:680116190409:web:9a49fe3f2941bc028aa118"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Test function
+        window.testFirebaseAuth = async () => {
+            // Show current URL
+            document.getElementById('currentUrl').textContent = window.location.href;
+            
+            try {
+                console.log('Testing Firebase Auth...');
+                const result = await signInWithPopup(auth, provider);
+                console.log('Success! User:', result.user.email);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: green;">✅ Firebase Auth Working!</h2>
+                    <p>Signed in as: ${result.user.email}</p>
+                    <p>User ID: ${result.user.uid}</p>
+                `;
+            } catch (error) {
+                console.error('Firebase Auth Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ Firebase Auth Error</h2>
+                    <p><strong>Error Code:</strong> ${error.code}</p>
+                    <p><strong>Error Message:</strong> ${error.message}</p>
+                    <h3>Common Solutions:</h3>
+                    <ul>
+                        <li>Enable Google Sign-In in Firebase Console</li>
+                        <li>Add 'localhost' to authorized domains</li>
+                        <li>Check OAuth client configuration</li>
+                    </ul>
+                `;
+            }
+        };
+    </script>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px;">
+    <h1>🔥 Firebase Auth Test</h1>
+    <p><strong>Current URL:</strong> <span id="currentUrl"></span></p>
+    <p><strong>Your frontend runs on:</strong> http://localhost:5173</p>
+    <p>Click the button below to test Firebase Google Sign-In:</p>
+    <button onclick="testFirebaseAuth()" style="background: #4285f4; color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+        🔒 Test Google Sign-In
+    </button>
+    <div id="result" style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px;"></div>
+</body>
+</html>
