@@ -264,6 +264,40 @@ For support and questions, please open an issue or contact the development team.
 
 Built with ❤️ for the future workforce of India
 
+## Repo Organization & Local Secrets (added by repo-cleanup)
+
+### 🔒 Security & Credentials
+This repository has been organized to protect sensitive credentials:
+
+- **`/private_credentials_local/`** - Contains sensitive files (service account keys, .env files with secrets)
+  - ⚠️ **This folder is git-ignored and never committed to remote**
+  - ⚠️ **Never commit files from this directory**
+- **`/configs/`** - Contains safe example files and templates
+  - ✅ `.env.example` - Template for environment variables  
+  - ✅ `github_secrets.example.md` - Guide for setting up GitHub Secrets
+
+### 📚 Documentation Structure
+- **`/docs/`** - Main documentation directory
+  - `/docs/self-local/` - Consolidated workshop notes and local setup guides
+  - `/docs/LOCAL_CREDENTIALS_INSTRUCTIONS.md` - Guide for setting up local credentials
+  - `/docs/repo-inventory.md` - Complete repository file inventory
+- **`/docs/orphaned-root-files/`** - Former root-level files moved for organization
+
+### 🚀 Quick Setup for Developers
+1. **Clone the repository**
+2. **Set up credentials**: Follow `/docs/LOCAL_CREDENTIALS_INSTRUCTIONS.md`
+3. **Copy environment files**: Use `/configs/.env.example` as template
+4. **GitHub Secrets**: Follow `/configs/github_secrets.example.md` for CI/CD setup
+5. **Local development**: Check `/docs/self-local/` for workshop notes and setup guides
+
+### ⚠️ Important Security Reminders
+- Never commit real API keys, service account JSON files, or .env files with secrets
+- Use the example files in `/configs/` as templates
+- The `.gitignore` file protects against accidental credential commits
+- If you accidentally expose credentials, regenerate them immediately
+
+For detailed credential setup instructions, see: `/docs/LOCAL_CREDENTIALS_INSTRUCTIONS.md`
+
 ## Contribution Guide
 
 1.  Fork the repository.
