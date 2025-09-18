@@ -154,19 +154,23 @@ class FirestoreService:
         try:
             db = self._get_db()
             
+            # Simple query without ordering to avoid index requirement
             query = (db.collection("chat_messages")
                     .where(filter=FieldFilter("session_id", "==", session_id))
-                    .order_by("timestamp")
                     .limit(limit))
             
             docs = query.stream()
             messages = [doc.to_dict() for doc in docs]
             
+            # Sort in Python instead of Firestore to avoid index requirement
+            messages.sort(key=lambda x: x.get('timestamp', ''), reverse=False)
+            
             return messages
             
         except Exception as e:
             logger.error(f"Failed to get chat history: {e}")
-            raise
+            # Return empty list as fallback instead of raising
+            return []
     
     async def get_user_sessions(self, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Get chat sessions for a user."""
