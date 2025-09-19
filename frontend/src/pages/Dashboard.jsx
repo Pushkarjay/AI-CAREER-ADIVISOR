@@ -389,7 +389,7 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm mb-4">Click on a career to see detailed skill analysis</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {careers.recommendations.map((match, index) => (
+                {(careers.recommendations || []).map((match, index) => (
                   <div
                     key={index}
                     onClick={() => updateSkillAnalysis(match.title)}
@@ -442,12 +442,12 @@ const Dashboard = () => {
                   <div>
                     <h3 className="font-semibold text-green-600 mb-2">Your Current Skills ✓</h3>
                     <div className="space-y-1">
-                      {skillAnalysis.current_skills.map((skill, idx) => (
+                      {(skillAnalysis.matched_skills || []).map((skill, idx) => (
                         <span key={idx} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-1 mb-1">
                           {skill}
                         </span>
                       ))}
-                      {skillAnalysis.current_skills.length === 0 && (
+                      {(skillAnalysis.matched_skills || []).length === 0 && (
                         <p className="text-gray-500 text-sm">No matching skills found in your profile</p>
                       )}
                     </div>
@@ -456,7 +456,7 @@ const Dashboard = () => {
                   <div>
                     <h3 className="font-semibold text-orange-600 mb-2">Skills to Develop</h3>
                     <div className="space-y-1">
-                      {skillAnalysis.skill_gaps.map((skill, idx) => (
+                      {(skillAnalysis.missing_skills || []).map((skill, idx) => (
                         <span key={idx} className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded mr-1 mb-1">
                           {skill}
                         </span>
@@ -465,7 +465,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                {skillAnalysis.learning_resources.length > 0 && (
+                {skillAnalysis.learning_resources && skillAnalysis.learning_resources.length > 0 && (
                   <div className="mt-6">
                     <h3 className="font-semibold text-blue-600 mb-3">Recommended Learning Resources</h3>
                     <div className="grid md:grid-cols-2 gap-3">
@@ -615,7 +615,7 @@ const Dashboard = () => {
             <h2 className="text-xl font-bold text-gray-800 mb-4">Career Matches</h2>
             
             <div className="space-y-4">
-              {careers.recommendations.slice(0, 3).map((match, index) => (
+              {(careers.recommendations || []).slice(0, 3).map((match, index) => (
                 <div 
                   key={index}
                   onClick={() => updateSkillAnalysis(match.title)}

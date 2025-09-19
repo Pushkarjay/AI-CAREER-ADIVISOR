@@ -353,8 +353,11 @@ export const DataProvider = ({ children }) => {
         
         // Update profile with extracted skills
         if (response.data.extracted_data.skills?.length && state.profile.data) {
-          const currentSkills = state.profile.data.skills ? 
-            state.profile.data.skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+          const currentSkills = state.profile.data.skills ? (
+            Array.isArray(state.profile.data.skills) 
+              ? state.profile.data.skills 
+              : state.profile.data.skills.split(',').map(s => s.trim()).filter(Boolean)
+          ) : [];
           
           const newSkills = Array.from(new Set([
             ...currentSkills,
