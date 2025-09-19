@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { analyticsAPI } from '../services/api';
 import Navbar from '../components/Navbar';
+import SkillsAnalysisCard from '../components/SkillsAnalysisCard';
 import { 
   ChartBarIcon, 
   ArrowTrendingUpIcon, 
   UsersIcon,
   AcademicCapIcon,
   ArrowUpIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import toast from 'react-hot-toast';
@@ -117,38 +119,46 @@ const Analytics = () => {
   return (
     <>
       <Navbar />
-      {/* Desktop Layout - Full Window Width */}
-      <div className="hidden lg:block px-6 py-8 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Track your progress and explore career insights
-          </p>
-        </div>
+      {/* Desktop Layout - Full Window Width with 1:2 Grid */}
+      <div className="hidden lg:block px-6 py-8">
+        <div className="grid grid-cols-3 gap-6">
+          {/* Left Column - Skills Analysis (1 part) */}
+          <div className="col-span-1">
+            <SkillsAnalysisCard />
+          </div>
+          
+          {/* Right Column - Analytics Content (2 parts) */}
+          <div className="col-span-2 space-y-6">
+            {/* Header */}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+              <p className="mt-2 text-gray-600">
+                Track your progress and explore career insights
+              </p>
+            </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="w-5 h-5 mr-2" />
-                {tab.name}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+            {/* Tabs */}
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === tab.id
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 mr-2" />
+                      {tab.name}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
 
       {/* Dashboard Tab */}
       {activeTab === 'dashboard' && dashboardData && (
@@ -709,6 +719,27 @@ const Analytics = () => {
             </div>
           </div>
         )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="lg:hidden px-4 py-6 space-y-6">
+        {/* Skills Analysis Card - Mobile */}
+        <SkillsAnalysisCard />
+        
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="mt-1 text-gray-600">
+            Track your progress and insights
+          </p>
+        </div>
+
+        {/* Mobile content would go here - simplified version */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-gray-600">Mobile analytics view coming soon...</p>
+        </div>
       </div>
     </>
   );
