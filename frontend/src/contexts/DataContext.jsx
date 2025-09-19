@@ -351,25 +351,33 @@ export const DataProvider = ({ children }) => {
       if (response.data?.extracted_data) {
         dispatch({ type: ActionTypes.RESUME_UPLOAD_SUCCESS, payload: response.data });
         
-        // Update profile with extracted skills
-        if (response.data.extracted_data.skills?.length && state.profile.data) {
+        // Update profile with extracted skills and resume data
+        if (state.profile.data) {
           const currentSkills = state.profile.data.skills ? (
             Array.isArray(state.profile.data.skills) 
               ? state.profile.data.skills 
               : state.profile.data.skills.split(',').map(s => s.trim()).filter(Boolean)
           ) : [];
           
-          const newSkills = Array.from(new Set([
-            ...currentSkills,
-            ...response.data.extracted_data.skills
-          ]));
+          const newSkills = response.data.extracted_data.skills?.length 
+            ? Array.from(new Set([...currentSkills, ...response.data.extracted_data.skills]))
+            : currentSkills;
           
           const updatedProfile = {
             ...state.profile.data,
-            skills: newSkills.join(', ')
+            skills: newSkills.join(', '),
+            resume: response.data // Store the entire resume data
           };
           
           dispatch({ type: ActionTypes.PROFILE_UPDATE_SUCCESS, payload: updatedProfile });
+          
+          // Save the updated profile to backend
+          try {
+            await profileAPI.update(updatedProfile);
+            console.log('✅ Profile updated with resume skills and data');
+          } catch (updateError) {
+            console.error('❌ Failed to save updated profile:', updateError);
+          }
         }
         
         toast.success('Resume processed successfully');

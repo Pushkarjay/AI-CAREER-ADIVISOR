@@ -6,6 +6,7 @@ import './index.css'
 
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { DataProvider } from './contexts/DataContext.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Profile from './pages/Profile.jsx'
@@ -20,9 +21,10 @@ import PrivateRoute from './components/PrivateRoute.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <DataProvider>
-        <BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <DataProvider>
+          <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
@@ -97,5 +99,6 @@ createRoot(document.getElementById('root')).render(
       </BrowserRouter>
       </DataProvider>
     </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -167,25 +167,25 @@ const Analytics = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Chat Sessions"
-              value={dashboardData.user_stats.chat_sessions}
+              value={dashboardData?.user_stats?.chat_sessions || 0}
               icon={ChartBarIcon}
               color="blue"
             />
             <StatCard
               title="Messages Sent"
-              value={dashboardData.user_stats.messages_sent}
+              value={dashboardData?.user_stats?.messages_sent || 0}
               icon={ArrowTrendingUpIcon}
               color="green"
             />
             <StatCard
               title="Career Recommendations"
-              value={dashboardData.user_stats.career_recommendations}
+              value={dashboardData?.user_stats?.career_recommendations || 0}
               icon={UsersIcon}
               color="purple"
             />
             <StatCard
               title="Profile Completion"
-              value={`${dashboardData.user_stats.profile_completion}%`}
+              value={`${dashboardData?.user_stats?.profile_completion || 0}%`}
               icon={AcademicCapIcon}
               color="orange"
             />
@@ -211,7 +211,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
               <div className="space-y-3">
-                {dashboardData.recent_activities.map((activity, index) => (
+                {(dashboardData?.recent_activities || []).map((activity, index) => (
                   <div key={index} className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                     <div>
@@ -228,18 +228,18 @@ const Analytics = () => {
               <div className="mb-4">
                 <div className="flex justify-between text-sm font-medium text-gray-900 mb-1">
                   <span>Overall Score</span>
-                  <span>{dashboardData.career_readiness.overall_score}%</span>
+                  <span>{dashboardData?.career_readiness?.overall_score || 0}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-blue-600 h-2 rounded-full" 
-                    style={{ width: `${dashboardData.career_readiness.overall_score}%` }}
+                    style={{ width: `${dashboardData?.career_readiness?.overall_score || 0}%` }}
                   ></div>
                 </div>
               </div>
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-900">Next Steps:</h4>
-                {dashboardData.career_readiness.next_steps.map((step, index) => (
+                {(dashboardData?.career_readiness?.next_steps || []).map((step, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                     <span className="text-sm text-gray-600">{step}</span>
@@ -259,7 +259,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Skill Demand Trends</h3>
               <div className="space-y-3">
-                {marketTrends.skill_demand.map((skill, index) => (
+                {(marketTrends?.skill_demand || []).map((skill, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="font-medium text-gray-900">{skill.skill}</span>
                     <div className="text-right">
@@ -290,11 +290,11 @@ const Analytics = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Cities for Career Growth</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {marketTrends.location_insights.map((location, index) => (
+              {(marketTrends?.location_insights || []).map((location, index) => (
                 <div key={index} className="border rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900">{location.city}</h4>
                   <p className="text-sm text-gray-600">Avg Salary: {location.avg_salary}</p>
-                  <p className="text-sm text-gray-600">Jobs: {location.job_count.toLocaleString()}</p>
+                  <p className="text-sm text-gray-600">Jobs: {(location.job_count || 0).toLocaleString()}</p>
                 </div>
               ))}
             </div>
@@ -310,7 +310,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Identified Skill Gaps</h3>
               <div className="space-y-4">
-                {skillAnalytics.skill_gaps.map((gap, index) => (
+                {(skillAnalytics?.skill_gaps || []).map((gap, index) => (
                   <div key={index} className="border-l-4 border-orange-400 pl-4">
                     <h4 className="font-semibold text-gray-900">{gap.missing_skill}</h4>
                     <p className="text-sm text-gray-600">Market Demand: {gap.market_demand}</p>
@@ -331,7 +331,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Skills</h3>
               <div className="space-y-4">
-                {skillAnalytics.skill_recommendations.map((rec, index) => (
+                {(skillAnalytics?.skill_recommendations || []).map((rec, index) => (
                   <div key={index} className="border-l-4 border-blue-400 pl-4">
                     <h4 className="font-semibold text-gray-900">{rec.skill}</h4>
                     <p className="text-sm text-gray-600">{rec.reason}</p>
@@ -350,13 +350,13 @@ const Analytics = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Competitive Analysis</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{skillAnalytics.competitive_analysis.percentile}th</div>
+                <div className="text-3xl font-bold text-blue-600">{skillAnalytics?.competitive_analysis?.percentile || 0}th</div>
                 <div className="text-sm text-gray-600">Percentile</div>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Strengths</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  {skillAnalytics.competitive_analysis.strengths.map((strength, index) => (
+                  {(skillAnalytics?.competitive_analysis?.strengths || []).map((strength, index) => (
                     <li key={index}>• {strength}</li>
                   ))}
                 </ul>
@@ -364,7 +364,7 @@ const Analytics = () => {
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Areas to Improve</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  {skillAnalytics.competitive_analysis.improvement_areas.map((area, index) => (
+                  {(skillAnalytics?.competitive_analysis?.improvement_areas || []).map((area, index) => (
                     <li key={index}>• {area}</li>
                   ))}
                 </ul>
@@ -399,7 +399,7 @@ const Analytics = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Milestones</h3>
             <div className="space-y-4">
-              {careerJourney.milestones.map((milestone, index) => (
+              {(careerJourney?.milestones || []).map((milestone, index) => (
                 <div key={index} className="flex items-start space-x-4">
                   <div className={`w-4 h-4 rounded-full mt-1 ${
                     milestone.status === 'completed' ? 'bg-green-500' :
@@ -418,7 +418,7 @@ const Analytics = () => {
                     milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {milestone.status.replace('_', ' ')}
+                    {(milestone.status || '').replace('_', ' ')}
                   </span>
                 </div>
               ))}
@@ -432,16 +432,16 @@ const Analytics = () => {
               <div className="space-y-3">
                 <div>
                   <span className="font-medium text-gray-900">Estimated Job Ready:</span>
-                  <span className="ml-2 text-gray-600">{careerJourney.timeline.estimated_job_ready}</span>
+                  <span className="ml-2 text-gray-600">{careerJourney?.timeline?.estimated_job_ready || 'Not set'}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-900">Next Milestone:</span>
-                  <span className="ml-2 text-gray-600">{careerJourney.timeline.next_milestone}</span>
+                  <span className="ml-2 text-gray-600">{careerJourney?.timeline?.next_milestone || 'Not set'}</span>
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Weekly Goals:</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    {careerJourney.timeline.weekly_goals.map((goal, index) => (
+                    {(careerJourney?.timeline?.weekly_goals || []).map((goal, index) => (
                       <li key={index}>• {goal}</li>
                     ))}
                   </ul>
@@ -452,7 +452,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Next Actions</h3>
               <div className="space-y-2">
-                {careerJourney.next_actions.map((action, index) => (
+                {(careerJourney?.next_actions || []).map((action, index) => (
                   <div key={index} className="flex items-center space-x-3">
                     <input 
                       type="checkbox" 
@@ -508,25 +508,25 @@ const Analytics = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StatCard
                 title="Chat Sessions"
-                value={dashboardData.user_stats.chat_sessions}
+                value={dashboardData?.user_stats?.chat_sessions || 0}
                 icon={ChartBarIcon}
                 color="blue"
               />
               <StatCard
                 title="Messages Sent"
-                value={dashboardData.user_stats.messages_sent}
+                value={dashboardData?.user_stats?.messages_sent || 0}
                 icon={ArrowTrendingUpIcon}
                 color="green"
               />
               <StatCard
                 title="Career Recommendations"
-                value={dashboardData.user_stats.career_recommendations}
+                value={dashboardData?.user_stats?.career_recommendations || 0}
                 icon={UsersIcon}
                 color="purple"
               />
               <StatCard
                 title="Profile Completion"
-                value={`${dashboardData.user_stats.profile_completion}%`}
+                value={`${dashboardData?.user_stats?.profile_completion || 0}%`}
                 icon={AcademicCapIcon}
                 color="orange"
               />
@@ -553,7 +553,7 @@ const Analytics = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
                 <div className="space-y-3">
-                  {dashboardData.recent_activities?.map((activity, index) => (
+                  {(dashboardData?.recent_activities || []).map((activity, index) => (
                     <div key={index} className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
@@ -569,18 +569,21 @@ const Analytics = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Readiness</h3>
                 <div className="space-y-4">
-                  {dashboardData.career_readiness?.map((item, index) => (
-                    <div key={index}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-gray-700">{item.category}</span>
-                        <span className="text-sm text-gray-500">{item.score}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${item.score}%` }}
-                        ></div>
-                      </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium text-gray-700">Overall Score</span>
+                      <span className="text-sm text-gray-500">{dashboardData?.career_readiness?.overall_score || 0}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${dashboardData?.career_readiness?.overall_score || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  {(dashboardData?.career_readiness?.next_steps || []).map((step, index) => (
+                    <div key={index} className="text-sm text-gray-600">
+                      • {step}
                     </div>
                   ))}
                 </div>
@@ -611,7 +614,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Skills in Demand</h3>
               <div className="space-y-3">
-                {trendsData.top_skills?.map((skill, index) => (
+                {(trendsData?.top_skills || []).map((skill, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">{skill.name}</span>
                     <div className="flex items-center space-x-2">
@@ -648,7 +651,7 @@ const Analytics = () => {
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
-                    {skillsData.distribution?.map((entry, index) => (
+                    {(skillsData?.distribution || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -661,7 +664,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Skills to Learn</h3>
               <div className="grid grid-cols-1 gap-4">
-                {skillsData.recommendations?.map((skill, index) => (
+                {(skillsData?.recommendations || []).map((skill, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium text-gray-900">{skill.name}</h4>
@@ -690,7 +693,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Journey</h3>
               <div className="space-y-4">
-                {journeyData.milestones?.map((milestone, index) => (
+                {(journeyData?.milestones || []).map((milestone, index) => (
                   <div key={index} className="flex items-start space-x-4">
                     <div className={`w-3 h-3 rounded-full mt-1 ${
                       milestone.completed ? 'bg-green-500' : 'bg-gray-300'
@@ -709,7 +712,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Next Steps</h3>
               <div className="space-y-3">
-                {journeyData.next_steps?.map((action, index) => (
+                {(journeyData?.next_steps || []).map((action, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <CheckIcon className="w-5 h-5 text-blue-600" />
                     <span className="text-sm text-gray-700">{action}</span>

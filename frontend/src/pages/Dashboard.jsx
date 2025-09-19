@@ -495,7 +495,7 @@ const Dashboard = () => {
         </div>
 
         {/* Mobile Layout */}
-        <div className="lg:hidden space-y-6">
+        <div className="lg:hidden px-4 py-6 space-y-6">
           
           {/* Profile Form Mobile */}
           <div className="bg-white rounded-lg shadow-md p-6">
