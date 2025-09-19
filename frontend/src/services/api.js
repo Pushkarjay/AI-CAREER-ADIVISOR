@@ -61,6 +61,8 @@ export const chatAPI = {
 // Career API
 export const careerAPI = {
   getRecommendations: () => api.get('/api/recommendations'),
+  getCareers: () => api.get('/api/careers'),
+  getTrends: () => api.get('/api/career-trends'), // placeholder for future
 };
 
 // Profile API
@@ -70,8 +72,19 @@ export const profileAPI = {
   uploadResume: (file) => {
     const formData = new FormData();
     formData.append('file', file);
+    
+    console.log('Making upload request to /api/resume');
+    console.log('File details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
+    
     return api.post('/api/resume', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 
+        'Content-Type': 'multipart/form-data'
+      },
+      timeout: 60000, // 60 second timeout for file uploads
     });
   },
 };

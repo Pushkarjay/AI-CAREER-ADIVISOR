@@ -78,7 +78,8 @@ async def initialize_connections():
         else:
             logger.warning("Failed to initialize Firebase Admin - no credentials found")
             # In production, we want this to fail, but let's try to continue
-            if os.getenv("DEBUG", "false").lower() == "false":
+            from core.config import settings
+            if not settings.DEBUG:
                 logger.error("Production environment requires Firebase credentials")
                 raise RuntimeError("Firestore initialization failed - credentials required in production")
             else:
@@ -86,7 +87,8 @@ async def initialize_connections():
     except Exception as e:
         logger.error(f"Failed to initialize Firestore connection: {e}")
         # Only raise in production
-        if os.getenv("DEBUG", "false").lower() == "false":
+        from core.config import settings
+        if not settings.DEBUG:
             raise
         else:
             logger.warning("Continuing without Firestore in debug mode")

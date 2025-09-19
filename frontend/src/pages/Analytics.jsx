@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { analyticsAPI } from '../services/api';
+import Navbar from '../components/Navbar';
 import { 
   ChartBarIcon, 
-  TrendingUpIcon, 
+  ArrowTrendingUpIcon, 
   UsersIcon,
   AcademicCapIcon,
   ArrowUpIcon,
@@ -100,7 +101,7 @@ const Analytics = () => {
 
   const tabs = [
     { id: 'dashboard', name: 'Dashboard', icon: ChartBarIcon },
-    { id: 'trends', name: 'Market Trends', icon: TrendingUpIcon },
+    { id: 'trends', name: 'Market Trends', icon: ArrowTrendingUpIcon },
     { id: 'skills', name: 'Skills Analysis', icon: AcademicCapIcon },
     { id: 'journey', name: 'Career Journey', icon: UsersIcon },
   ];
@@ -114,14 +115,16 @@ const Analytics = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Track your progress and explore career insights
-        </p>
-      </div>
+    <>
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="mt-2 text-gray-600">
+            Track your progress and explore career insights
+          </p>
+        </div>
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
@@ -160,7 +163,7 @@ const Analytics = () => {
             <StatCard
               title="Messages Sent"
               value={dashboardData.user_stats.messages_sent}
-              icon={TrendingUpIcon}
+              icon={ArrowTrendingUpIcon}
               color="green"
             />
             <StatCard
@@ -452,7 +455,8 @@ const Analytics = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { careerAPI } from '../services/api';
+import Navbar from '../components/Navbar';
 import { 
   MagnifyingGlassIcon,
   BriefcaseIcon,
@@ -204,14 +205,16 @@ const Careers = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Career Explorer</h1>
-        <p className="mt-2 text-gray-600">
-          Discover career opportunities tailored to your skills and interests
-        </p>
-      </div>
+    <>
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Career Explorer</h1>
+          <p className="mt-2 text-gray-600">
+            Discover career opportunities tailored to your skills and interests
+          </p>
+        </div>
 
       {/* Search Section */}
       <div className="bg-white rounded-lg shadow p-6">
@@ -383,7 +386,8 @@ const Careers = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
