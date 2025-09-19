@@ -420,7 +420,7 @@ const Resume = () => {
                 type="file"
                 id="resume-upload"
                 accept=".pdf,.doc,.docx"
-                onChange={handleResumeUpload}
+                onChange={handleFileUpload}
                 className="hidden"
                 disabled={isUploading}
               />

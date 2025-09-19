@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { DocumentTextIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, EyeIcon, ChartBarIcon, BriefcaseIcon, DocumentIcon } from '@heroicons/react/24/outline';
 
 const Roadmap = () => {
   const [contentType, setContentType] = useState('html'); // 'html' or 'pdf'
@@ -318,7 +318,7 @@ const Roadmap = () => {
           {/* Roadmap Content */}
           <div
             className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: roadmapContent }}
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
 
           {/* Action Items */}
