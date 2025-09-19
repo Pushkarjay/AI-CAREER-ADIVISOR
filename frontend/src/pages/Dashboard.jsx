@@ -192,10 +192,10 @@ const Dashboard = () => {
 
       {/* Desktop Layout - Full Window Width */}
       <div className="hidden lg:block px-6 py-6">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
           {/* Left Panel - Profile Form */}
-          <div className="col-span-1">
+          <div className="xl:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Your Profile</h2>
 
@@ -324,7 +324,7 @@ const Dashboard = () => {
           </div>
 
           {/* Right Panel */}
-          <div className="col-span-2 space-y-6">
+          <div className="xl:col-span-2 space-y-6">
 
             {/* AI Career Assistant */}
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -495,7 +495,7 @@ const Dashboard = () => {
         </div>
 
         {/* Mobile Layout */}
-        <div className="lg:hidden px-4 py-6 space-y-6">
+        <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
           
           {/* Profile Form Mobile */}
           <div className="bg-white rounded-lg shadow-md p-6">
