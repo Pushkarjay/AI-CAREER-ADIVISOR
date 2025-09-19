@@ -1,34 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { chatAPI } from '../services/api';
+import { useData } from '../contexts/DataContext';
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    { from: 'bot', text: "Hello! I'm your AI Career Assistant powered by Google Gemini. Ask me about career paths, skills, or any professional guidance you need!" }
-  ]);
+  const { chat, sendChatMessage, initializeChat } = useData();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const endRef = useRef(null);
 
   const scrollToBottom = () => endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  useEffect(scrollToBottom, [messages]);
+  useEffect(scrollToBottom, [chat.messages]);
+
+  // Initialize chat when component loads
+  useEffect(() => {
+    initializeChat();
+  }, []);
 
   const send = async () => {
     if (!input.trim() || loading) return;
-    const userMsg = { from: 'user', text: input };
-    setMessages((m) => [...m, userMsg]);
-    setInput('');
+    
     setLoading(true);
-    try {
-      const res = await chatAPI.sendMessage({ message: userMsg.text });
-      const botText = res.data?.message?.content || res.data?.message || 'How can I help you further?';
-      const botMsg = { from: 'bot', text: botText };
-      setMessages((m) => [...m, botMsg]);
-    } catch (e) {
-      setMessages((m) => [...m, { from: 'bot', text: 'Sorry, I could not get a response right now.' }]);
-    } finally {
-      setLoading(false);
-    }
+    const message = input;
+    setInput('');
+    
+    await sendChatMessage(message);
+    setLoading(false);
   };
 
   return (
@@ -43,13 +39,24 @@ const Chat = () => {
             <p className="text-slate-600 mt-2">Ask anything about careers, skills, and learning paths</p>
           </div>
           <div className="flex-grow glass-effect p-6 rounded-2xl shadow-xl overflow-y-auto">
-            {messages.map((m, i) => (
+            {chat.messages.map((m, i) => (
               <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
                 <div className={`${m.from === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-br-none' : 'bg-white border border-slate-200 rounded-tl-none'} rounded-2xl py-2 px-4 max-w-lg shadow`}> 
                   {m.text}
                 </div>
               </div>
             ))}
+            {loading && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-white border border-slate-200 rounded-tl-none rounded-2xl py-2 px-4 max-w-lg shadow">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={endRef} />
           </div>
           <div className="mt-4 flex items-center space-x-3">
@@ -74,13 +81,24 @@ const Chat = () => {
           <p className="text-slate-600 mt-2">Ask anything about careers, skills, and learning paths</p>
         </div>
         <div className="flex-grow glass-effect p-6 rounded-2xl shadow-xl overflow-y-auto">
-          {messages.map((m, i) => (
+          {chat.messages.map((m, i) => (
             <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
               <div className={`${m.from === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-br-none' : 'bg-white border border-slate-200 rounded-tl-none'} rounded-2xl py-2 px-4 max-w-xs shadow`}> 
                 {m.text}
               </div>
             </div>
           ))}
+          {loading && (
+            <div className="flex justify-start mb-4">
+              <div className="bg-white border border-slate-200 rounded-tl-none rounded-2xl py-2 px-4 max-w-xs shadow">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
+            </div>
+          )}
           <div ref={endRef} />
         </div>
         <div className="mt-4 flex items-center space-x-3">

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-import { profileAPI } from '../services/api';
+import { useData } from '../contexts/DataContext';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
+  const { profile, updateProfile, uploadResume } = useData();
+  
   const [form, setForm] = useState({
     education_level: '',
     field_of_study: '',
@@ -15,41 +17,24 @@ const Profile = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  // Sync form with profile data when it changes
   useEffect(() => {
-    const load = async () => {
-      try {
-        console.log('🔄 Loading profile data...');
-        const res = await profileAPI.fetch();
-        console.log('✅ Profile API response:', res);
-        const p = res.data || {};
-        console.log('📊 Profile data:', p);
-        setForm({
-          education_level: p.education_level || '',
-          field_of_study: p.field_of_study || '',
-          current_year: p.current_year || '',
-          location: p.location || '',
-          interests: (p.interests || []).join(', '),
-          skills: (p.skills || []).join(', '),
-          career_goals: p.career_goals || '',
-        });
-        console.log('✅ Profile form state updated');
-      } catch (error) {
-        console.error('❌ Profile load error:', error);
-        console.error('Error details:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
-        // Profile doesn't exist yet - this is normal for new users
-        console.log('No profile found yet, using empty form');
-        // Don't show error toast for 404 - it's expected for new users
-        if (error.response?.status !== 404) {
-          toast.error('Failed to load profile');
-        }
-      }
-    };
-    load();
-  }, []);
+    if (profile.data) {
+      setForm({
+        education_level: profile.data.education_level || '',
+        field_of_study: profile.data.field_of_study || '',
+        current_year: profile.data.current_year || '',
+        location: profile.data.location || '',
+        interests: Array.isArray(profile.data.interests) 
+          ? profile.data.interests.join(', ') 
+          : profile.data.interests || '',
+        skills: Array.isArray(profile.data.skills)
+          ? profile.data.skills.join(', ')
+          : profile.data.skills || '',
+        career_goals: profile.data.career_goals || '',
+      });
+    }
+  }, [profile.data]);
 
   const onChange = (e) => {
     const { id, value } = e.target;
@@ -68,8 +53,11 @@ const Profile = () => {
         skills: form.skills ? form.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
         career_goals: form.career_goals || null,
       };
-      await profileAPI.save(payload);
-      toast.success('Profile saved');
+      
+      const success = await updateProfile(payload);
+      if (success) {
+        // Profile already updated via context, toast already shown
+      }
     } catch (e) {
       toast.error('Failed to save profile');
     } finally {
@@ -80,19 +68,23 @@ const Profile = () => {
   const onResume = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     try {
       setLoading(true);
-      const res = await profileAPI.uploadResume(file);
-      if (res.data?.extracted_data?.skills?.length) {
-        const nextSkills = Array.from(new Set([
-          ...form.skills.split(',').map(s => s.trim()).filter(Boolean),
-          ...res.data.extracted_data.skills
+      const result = await uploadResume(file);
+      
+      if (result?.extracted_data?.skills?.length) {
+        // Skills are automatically updated in the context
+        // Update local form to reflect the changes
+        const currentSkills = form.skills.split(',').map(s => s.trim()).filter(Boolean);
+        const newSkills = Array.from(new Set([
+          ...currentSkills,
+          ...result.extracted_data.skills
         ]));
-        setForm((f) => ({ ...f, skills: nextSkills.join(', ') }));
+        setForm((f) => ({ ...f, skills: newSkills.join(', ') }));
       }
-      toast.success('Resume processed');
     } catch (e) {
-      toast.error('Resume upload failed');
+      // Error already handled in context
     } finally {
       setLoading(false);
     }

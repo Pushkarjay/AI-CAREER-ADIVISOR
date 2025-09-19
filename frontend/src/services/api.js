@@ -67,13 +67,28 @@ export const careerAPI = {
 
 // Profile API
 export const profileAPI = {
-  fetch: () => api.get('/api/profile'),
-  save: (profileData) => api.post('/api/profile', profileData),
+  // Use the adapter endpoints that properly route to backend
+  fetch: () => {
+    console.log('🔄 Fetching profile from /api/profile');
+    return api.get('/api/profile').catch(error => {
+      console.error('❌ Profile fetch failed:', error.response?.status, error.response?.data);
+      throw error;
+    });
+  },
+  
+  save: (profileData) => {
+    console.log('💾 Saving profile to /api/profile:', profileData);
+    return api.post('/api/profile', profileData).catch(error => {
+      console.error('❌ Profile save failed:', error.response?.status, error.response?.data);
+      throw error;
+    });
+  },
+  
   uploadResume: (file) => {
     const formData = new FormData();
     formData.append('file', file);
     
-    console.log('Making upload request to /api/resume');
+    console.log('📄 Making upload request to /api/resume');
     console.log('File details:', {
       name: file.name,
       type: file.type,
@@ -85,6 +100,9 @@ export const profileAPI = {
         'Content-Type': 'multipart/form-data'
       },
       timeout: 60000, // 60 second timeout for file uploads
+    }).catch(error => {
+      console.error('❌ Resume upload failed:', error.response?.status, error.response?.data);
+      throw error;
     });
   },
 };

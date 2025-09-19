@@ -10,6 +10,7 @@ Exposes:
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import HTTPBearer
 from typing import Optional, Dict, Any
+import logging
 
 from . import profiles as profiles_mod
 from . import careers as careers_mod
@@ -17,6 +18,7 @@ from . import chat as chat_mod
 from core.security import verify_token
 from pydantic import BaseModel, RootModel
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
 
@@ -32,19 +34,41 @@ class ChatPayload(BaseModel):
     session_id: Optional[str] = None
 
 
+@router.get("/profile")
+async def get_profile(token = Depends(security)):
+    if token and token.credentials:
+        return await profiles_mod.get_my_profile(token=token)
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+
 @router.post("/profile")
 async def save_profile(payload: ProfilePayload, token = Depends(security)):
     if token and token.credentials:
-        # Call into profiles.create_profile with proper model
-        # Reuse the endpoint by constructing the expected Pydantic type
-        from models.user import UserProfileCreate
+        from models.user import UserProfileCreate, UserProfileUpdate
+        
         try:
             data = payload.root
-            model = UserProfileCreate(**data)
-        except Exception:
-            # Let underlying handler handle validation
-            model = payload.root  # type: ignore
-        return await profiles_mod.create_profile(model, token=token)
+            
+            # Try to get existing profile first
+            try:
+                existing = await profiles_mod.get_my_profile(token=token)
+                # Profile exists, update it
+                model = UserProfileUpdate(**data)
+                return await profiles_mod.update_profile(model, token=token)
+            except HTTPException as e:
+                if e.status_code == 404:
+                    # Profile doesn't exist, create it
+                    model = UserProfileCreate(**data)
+                    return await profiles_mod.create_profile(model, token=token)
+                else:
+                    raise
+                    
+        except Exception as e:
+            logger.error(f"Profile save error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Failed to save profile"
+            )
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
