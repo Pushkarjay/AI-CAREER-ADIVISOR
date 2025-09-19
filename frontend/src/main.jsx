@@ -6,7 +6,7 @@ import './index.css'
 
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import Login from './pages/Login.jsx'
-import Dashboard from './pages/NewDashboard.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import Profile from './pages/Profile.jsx'
 import Chat from './pages/Chat.jsx'
 import Careers from './pages/Careers.jsx'
@@ -27,11 +27,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/signup" element={<Login defaultSignUp={true} />} />
           <Route
             path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
+            element={<Dashboard />}
           />
           <Route
             path="/profile"

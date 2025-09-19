@@ -8,12 +8,13 @@ const EducationIndia = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Desktop Layout - Full Window Width */}
+      <div className="hidden lg:block px-6 py-8">
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Education in India</h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
               Comprehensive guide to educational opportunities, institutions, and career pathways in India
             </p>
           </div>
@@ -236,6 +237,218 @@ const EducationIndia = () => {
                     className="inline-block bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors"
                   >
                     📊 View Dashboard
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Layout - Container */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Education in India</h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Comprehensive guide to educational opportunities, institutions, and career pathways in India
+            </p>
+          </div>
+
+          {/* Content Type Switcher */}
+          <div className="flex justify-center">
+            <div className="bg-gray-100 p-1 rounded-lg flex space-x-1">
+              <button
+                onClick={() => setContentType('overview')}
+                className={`px-6 py-3 rounded-md text-sm font-medium transition-all flex items-center space-x-2 ${
+                  contentType === 'overview'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <EyeIcon className="w-4 h-4" />
+                <span>Overview</span>
+              </button>
+              <button
+                onClick={() => setContentType('pdf')}
+                className={`px-6 py-3 rounded-md text-sm font-medium transition-all flex items-center space-x-2 ${
+                  contentType === 'pdf'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <DocumentTextIcon className="w-4 h-4" />
+                <span>Detailed Guide</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Overview Content */}
+          {contentType === 'overview' && (
+            <>
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                  <AcademicCapIcon className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+                  <h3 className="text-2xl font-bold text-gray-900">40,000+</h3>
+                  <p className="text-gray-600">Higher Education Institutions</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                  <UsersIcon className="w-8 h-8 text-green-600 mx-auto mb-3" />
+                  <h3 className="text-2xl font-bold text-gray-900">35M+</h3>
+                  <p className="text-gray-600">Students Enrolled</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                  <BookOpenIcon className="w-8 h-8 text-purple-600 mx-auto mb-3" />
+                  <h3 className="text-2xl font-bold text-gray-900">1,000+</h3>
+                  <p className="text-gray-600">Universities</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                  <MapPinIcon className="w-8 h-8 text-orange-600 mx-auto mb-3" />
+                  <h3 className="text-2xl font-bold text-gray-900">28</h3>
+                  <p className="text-gray-600">States & UTs</p>
+                </div>
+              </div>
+
+              {/* Education System Overview */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Education System Structure</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">🎒</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">School Education</h3>
+                    <p className="text-gray-600 text-sm">Primary (1-5), Upper Primary (6-8), Secondary (9-10), Higher Secondary (11-12)</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">🎓</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Higher Education</h3>
+                    <p className="text-gray-600 text-sm">Undergraduate (3-4 years), Postgraduate (1-2 years), Doctoral (3-5 years)</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">🛠️</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Skill Development</h3>
+                    <p className="text-gray-600 text-sm">ITIs, Polytechnics, Skill India programs, Professional certifications</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Popular Streams */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Educational Streams</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Engineering & Technology</h3>
+                    <ul className="text-gray-600 text-sm space-y-1">
+                      <li>• Computer Science & IT</li>
+                      <li>• Mechanical Engineering</li>
+                      <li>• Electronics & Communication</li>
+                      <li>• Civil Engineering</li>
+                      <li>• Electrical Engineering</li>
+                    </ul>
+                  </div>
+                  <div className="border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Medical & Health Sciences</h3>
+                    <ul className="text-gray-600 text-sm space-y-1">
+                      <li>• MBBS & Medical</li>
+                      <li>• Nursing</li>
+                      <li>• Pharmacy</li>
+                      <li>• Physiotherapy</li>
+                      <li>• Ayurveda & Traditional Medicine</li>
+                    </ul>
+                  </div>
+                  <div className="border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Commerce & Management</h3>
+                    <ul className="text-gray-600 text-sm space-y-1">
+                      <li>• Business Administration (MBA)</li>
+                      <li>• Chartered Accountancy (CA)</li>
+                      <li>• Banking & Finance</li>
+                      <li>• Economics</li>
+                      <li>• Company Secretary (CS)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Universities */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Universities & Institutions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">IITs (Indian Institutes of Technology)</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">IIT Bombay</span>
+                        <span className="text-sm text-gray-600">Mumbai</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">IIT Delhi</span>
+                        <span className="text-sm text-gray-600">New Delhi</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">IIT Madras</span>
+                        <span className="text-sm text-gray-600">Chennai</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Other Premier Institutions</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">IIM Ahmedabad</span>
+                        <span className="text-sm text-gray-600">Management</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">AIIMS Delhi</span>
+                        <span className="text-sm text-gray-600">Medical</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">ISI Kolkata</span>
+                        <span className="text-sm text-gray-600">Statistics</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Items */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">Ready to Explore Your Options?</h2>
+                <p className="text-lg mb-6 text-blue-100">Use our career tools to find the best educational path for your goals.</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <a href="/careers" className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    🔍 Explore Careers
+                  </a>
+                  <a href="/chat" className="inline-block bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors">
+                    💬 Get Guidance
+                  </a>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* PDF Content */}
+          {contentType === 'pdf' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Comprehensive Education Guide</h2>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <DocumentTextIcon className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Detailed PDF Guide</h3>
+                <p className="text-gray-600 mb-6">Download our comprehensive guide covering all aspects of education in India, including admission processes, scholarships, and career pathways.</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <a href="/education-india-guide.pdf" download className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    📥 Download PDF Guide
+                  </a>
+                  <a href="/education-india-guide.pdf" target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                    👁️ View Online
                   </a>
                 </div>
               </div>

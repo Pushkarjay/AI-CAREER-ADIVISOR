@@ -222,12 +222,13 @@ const Roadmap = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Desktop Layout - Full Window Width */}
+      <div className="hidden lg:block px-6 py-8">
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Career Roadmap</h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
               Your personalized career development roadmap. Track your journey and plan your next steps.
             </p>
           </div>
@@ -287,6 +288,74 @@ const Roadmap = () => {
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">Resume Builder</h3>
                   <p className="text-sm text-gray-600">Upload and enhance your resume</p>
+                </div>
+              </a>
+            </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout - Container */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Career Roadmap</h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Your personalized career development roadmap. Track your journey and plan your next steps.
+            </p>
+          </div>
+
+          {/* Content Type Switcher */}
+          <div className="flex justify-center">
+            <div className="bg-gray-100 p-1 rounded-lg">
+              <div className="px-6 py-3 bg-white text-blue-600 shadow-sm rounded-md text-sm font-medium flex items-center space-x-2">
+                <EyeIcon className="w-4 h-4" />
+                <span>Career Roadmap</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Roadmap Content */}
+          <div
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: roadmapContent }}
+          />
+
+          {/* Action Items */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <a href="/dashboard" className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <ChartBarIcon className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Dashboard</h3>
+                    <p className="text-sm text-gray-600">Track your overall progress</p>
+                  </div>
+                </div>
+              </a>
+
+              <a href="/careers" className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <BriefcaseIcon className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Explore Careers</h3>
+                    <p className="text-sm text-gray-600">Find roles that match your skills</p>
+                  </div>
+                </div>
+              </a>
+
+              <a href="/resume" className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <DocumentIcon className="w-8 h-8 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Resume Builder</h3>
+                    <p className="text-sm text-gray-600">Upload and enhance your resume</p>
+                  </div>
                 </div>
               </a>
             </div>

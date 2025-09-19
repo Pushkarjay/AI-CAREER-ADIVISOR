@@ -326,8 +326,9 @@ const Resume = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+      {/* Desktop Layout - Full Window Width */}
+      <div className="hidden lg:block px-6 py-8">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -377,6 +378,70 @@ const Resume = () => {
 
             {/* Parsed Fields */}
             <div>
+              {renderParsedFields()}
+            </div>
+          </div>
+
+          {/* Empty State */}
+          {!resumeData && !isUploading && (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">📄</span>
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">No resume uploaded</h3>
+              <p className="text-gray-600">Upload your resume to get started with automatic skill extraction and better career recommendations.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Layout - Container */}
+      <div className="lg:hidden container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Resume Management
+            </h1>
+            <p className="text-slate-600 mt-2">Upload and manage your resume for better career recommendations</p>
+          </div>
+
+          {/* Upload Section */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Resume</h2>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📄</span>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Upload your resume</h3>
+              <p className="text-gray-600 mb-4">PDF or DOCX files up to 10MB</p>
+              
+              <input
+                type="file"
+                id="resume-upload"
+                accept=".pdf,.doc,.docx"
+                onChange={handleResumeUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
+              <label
+                htmlFor="resume-upload"
+                className={`inline-block px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
+                  isUploading
+                    ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {isUploading ? 'Uploading...' : 'Choose File'}
+              </label>
+            </div>
+          </div>
+
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 gap-8">
+            {/* Left Column - Resume and parsed info */}
+            <div className="space-y-8">
+              {renderResumePreview()}
               {renderParsedFields()}
             </div>
           </div>

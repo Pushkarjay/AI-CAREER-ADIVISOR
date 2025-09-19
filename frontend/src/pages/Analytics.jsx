@@ -117,7 +117,8 @@ const Analytics = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Desktop Layout - Full Window Width */}
+      <div className="hidden lg:block px-6 py-8 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
@@ -455,6 +456,259 @@ const Analytics = () => {
           </div>
         </div>
       )}
+      </div>
+
+      {/* Mobile Layout - Container */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="mt-2 text-gray-600">
+            Track your progress and explore career insights
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 mr-2" />
+                  {tab.name}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && dashboardData && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <StatCard
+                title="Chat Sessions"
+                value={dashboardData.user_stats.chat_sessions}
+                icon={ChartBarIcon}
+                color="blue"
+              />
+              <StatCard
+                title="Messages Sent"
+                value={dashboardData.user_stats.messages_sent}
+                icon={ArrowTrendingUpIcon}
+                color="green"
+              />
+              <StatCard
+                title="Career Recommendations"
+                value={dashboardData.user_stats.career_recommendations}
+                icon={UsersIcon}
+                color="purple"
+              />
+              <StatCard
+                title="Profile Completion"
+                value={`${dashboardData.user_stats.profile_completion}%`}
+                icon={AcademicCapIcon}
+                color="orange"
+              />
+            </div>
+
+            {/* Skill Progress Chart */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Skill Progress</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dashboardData.skill_progress}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="skill" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="current_level" fill="#3B82F6" name="Current Level" />
+                  <Bar dataKey="target_level" fill="#E5E7EB" name="Target Level" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Recent Activities & Career Readiness */}
+            <div className="grid grid-cols-1 gap-6">
+              {/* Recent Activities */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
+                <div className="space-y-3">
+                  {dashboardData.recent_activities?.map((activity, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                        <p className="text-xs text-gray-500">{activity.timestamp}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Career Readiness */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Readiness</h3>
+                <div className="space-y-4">
+                  {dashboardData.career_readiness?.map((item, index) => (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{item.category}</span>
+                        <span className="text-sm text-gray-500">{item.score}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${item.score}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Trends Tab */}
+        {activeTab === 'trends' && trendsData && (
+          <div className="space-y-6">
+            {/* Market Trends Chart */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Market Trends</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={trendsData.market_trends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="job_openings" stroke="#3B82F6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="applications" stroke="#10B981" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Top Skills in Demand */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Skills in Demand</h3>
+              <div className="space-y-3">
+                {trendsData.top_skills?.map((skill, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">{skill.name}</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${skill.demand}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-500">{skill.demand}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Skills Tab */}
+        {activeTab === 'skills' && skillsData && (
+          <div className="space-y-6">
+            {/* Skills Overview */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills Distribution</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={skillsData.distribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {skillsData.distribution?.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Skill Recommendations */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Skills to Learn</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {skillsData.recommendations?.map((skill, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium text-gray-900">{skill.name}</h4>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        {skill.priority}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">{skill.description}</p>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">Market Demand: {skill.market_demand}%</span>
+                      <button className="text-blue-600 hover:text-blue-800 font-medium">
+                        Learn More →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Journey Tab */}
+        {activeTab === 'journey' && journeyData && (
+          <div className="space-y-6">
+            {/* Career Path Visualization */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Journey</h3>
+              <div className="space-y-4">
+                {journeyData.milestones?.map((milestone, index) => (
+                  <div key={index} className="flex items-start space-x-4">
+                    <div className={`w-3 h-3 rounded-full mt-1 ${
+                      milestone.completed ? 'bg-green-500' : 'bg-gray-300'
+                    }`}></div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">{milestone.title}</h4>
+                      <p className="text-sm text-gray-600">{milestone.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">{milestone.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Next Steps */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Next Steps</h3>
+              <div className="space-y-3">
+                {journeyData.next_steps?.map((action, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <CheckIcon className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm text-gray-700">{action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -207,7 +207,8 @@ const Careers = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Desktop Layout - Full Window Width */}
+      <div className="hidden lg:block px-6 py-8 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Career Explorer</h1>
@@ -215,6 +216,173 @@ const Careers = () => {
             Discover career opportunities tailored to your skills and interests
           </p>
         </div>
+
+        {/* Search Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' ? handleSearch() : null}
+                placeholder="Search for careers, roles, or companies..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                autoComplete="off"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <select
+                value={filters.experience}
+                onChange={(e) => setFilters({ ...filters, experience: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Experience Level</option>
+                <option value="entry">Entry Level</option>
+                <option value="mid">Mid Level</option>
+                <option value="senior">Senior Level</option>
+              </select>
+
+              <select
+                value={filters.location}
+                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Location</option>
+                <option value="bangalore">Bangalore</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi</option>
+                <option value="pune">Pune</option>
+                <option value="hyderabad">Hyderabad</option>
+              </select>
+
+              <select
+                value={filters.salary}
+                onChange={(e) => setFilters({ ...filters, salary: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Salary Range</option>
+                <option value="0-5">₹0-5 LPA</option>
+                <option value="5-10">₹5-10 LPA</option>
+                <option value="10-15">₹10-15 LPA</option>
+                <option value="15+">₹15+ LPA</option>
+              </select>
+
+              <select
+                value={filters.industry}
+                onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Industry</option>
+                <option value="technology">Technology</option>
+                <option value="finance">Finance</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="education">Education</option>
+                <option value="consulting">Consulting</option>
+              </select>
+
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Searching...' : 'Search Careers'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab.name}
+                {tab.count > 0 && (
+                  <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Content */}
+        {activeTab === 'search' && (
+          <div>
+            {careers.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {careers.map((career) => (
+                  <CareerCard key={career.id} career={career} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No results found</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Try adjusting your search terms or filters.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'recommendations' && (
+          <div>
+            {recommendations.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {recommendations.map((career) => (
+                  <CareerCard key={career.id} career={career} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No recommendations</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Update your profile to get personalized career recommendations.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'trends' && (
+          <div>
+            {trends.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {trends.map((trend, index) => (
+                  <TrendCard key={index} trend={trend} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Loading trends</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Market trends data will be available shortly.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Search Section */}
       <div className="bg-white rounded-lg shadow p-6">
@@ -386,6 +554,171 @@ const Careers = () => {
           </div>
         )}
       </div>
+
+      {/* Mobile Layout - Container */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Career Explorer</h1>
+          <p className="mt-2 text-gray-600">
+            Discover career opportunities tailored to your skills and interests
+          </p>
+        </div>
+
+        {/* Search Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' ? handleSearch() : null}
+                placeholder="Search for careers, roles, or companies..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                autoComplete="off"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <select
+                value={filters.experience}
+                onChange={(e) => setFilters({ ...filters, experience: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Experience Level</option>
+                <option value="entry">Entry Level</option>
+                <option value="mid">Mid Level</option>
+                <option value="senior">Senior Level</option>
+              </select>
+
+              <select
+                value={filters.location}
+                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Location</option>
+                <option value="remote">Remote</option>
+                <option value="bangalore">Bangalore</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi</option>
+                <option value="pune">Pune</option>
+              </select>
+
+              <select
+                value={filters.salary}
+                onChange={(e) => setFilters({ ...filters, salary: e.target.value })}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Salary Range</option>
+                <option value="0-5">0-5 LPA</option>
+                <option value="5-10">5-10 LPA</option>
+                <option value="10-20">10-20 LPA</option>
+                <option value="20+">20+ LPA</option>
+              </select>
+
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab.name}
+                {tab.count > 0 && (
+                  <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+                    activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-900'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Content */}
+        {activeTab === 'search' && (
+          <div>
+            {careers.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {careers.map((career) => (
+                  <CareerCard key={career.id} career={career} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No results found</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Try adjusting your search terms or filters.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'recommendations' && (
+          <div>
+            {recommendations.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {recommendations.map((career) => (
+                  <CareerCard key={career.id} career={career} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No recommendations</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Update your profile to get personalized career recommendations.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'trends' && (
+          <div>
+            {trends.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {trends.map((trend, index) => (
+                  <TrendCard key={index} trend={trend} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Loading trends</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Market trends data will be available shortly.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
