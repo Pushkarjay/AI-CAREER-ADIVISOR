@@ -190,12 +190,12 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* Desktop Layout - Full Window Width */}
-      <div className="hidden lg:block px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Flexible Responsive Layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Left Panel - Profile Form */}
-          <div className="xl:col-span-1">
+          {/* Profile Form - Takes full width on mobile, 1/3 on large screens */}
+          <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Your Profile</h2>
 
@@ -323,8 +323,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Right Panel */}
-          <div className="xl:col-span-2 space-y-6">
+          {/* Main Content - Takes full width on mobile, 2/3 on large screens */}
+          <div className="lg:col-span-2 space-y-6">
 
             {/* AI Career Assistant */}
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -492,195 +492,6 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Mobile Layout */}
-        <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-          
-          {/* Profile Form Mobile */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Your Profile</h2>
-            
-            <form onSubmit={handleProfileUpdate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Education Level</label>
-                <select
-                  value={profileForm.education_level}
-                  onChange={(e) => setProfileForm({ ...profileForm, education_level: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Education Level</option>
-                  <option value="High School">High School</option>
-                  <option value="College / University">College / University</option>
-                  <option value="Master's Degree">Master's Degree</option>
-                  <option value="PhD">PhD</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Current Role</label>
-                <input
-                  type="text"
-                  value={profileForm.current_role}
-                  onChange={(e) => setProfileForm({ ...profileForm, current_role: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Software Engineer"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Skills</label>
-                <textarea
-                  value={profileForm.skills}
-                  onChange={(e) => setProfileForm({ ...profileForm, skills: e.target.value })}
-                  rows="2"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="List your key skills"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={profileLoading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {profileLoading ? 'Updating...' : 'Update Profile'}
-              </button>
-            </form>
-          </div>
-
-          {/* Chat Mobile */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">AI Assistant</h2>
-            
-            <div className="bg-gray-50 rounded-lg p-4 mb-4 max-h-48 overflow-y-auto">
-              {chat.messages.length === 0 ? (
-                <p className="text-gray-500 text-center text-sm">Start a conversation!</p>
-              ) : (
-                <div className="space-y-2">
-                  {chat.messages.slice(-3).map((msg, index) => (
-                    <div key={index} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                        msg.from === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-white border border-gray-200 text-gray-800'
-                      }`}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {chat.loading && (
-                <div className="flex justify-start">
-                  <div className="bg-white border border-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm">
-                    Typing...
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <form onSubmit={handleChatSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                placeholder="Ask about careers..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                disabled={chat.loading}
-              />
-              <button
-                type="submit"
-                disabled={chat.loading || !chatMessage.trim()}
-                className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
-              >
-                Send
-              </button>
-            </form>
-          </div>
-
-          {/* Career Matches Mobile */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Career Matches</h2>
-            
-            <div className="space-y-4">
-              {(careers.recommendations || []).slice(0, 3).map((match, index) => (
-                <div 
-                  key={index}
-                  onClick={() => updateSkillAnalysis(match.title)}
-                  className={`border rounded-lg p-4 cursor-pointer ${
-                    selectedCareer === match.title 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-800 text-sm">{match.title}</h3>
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                      {match.match_score}%
-                    </span>
-                  </div>
-                  <p className="text-gray-600 text-sm">{match.company}</p>
-                  <p className="text-blue-600 font-semibold text-sm">{match.salary}</p>
-                  <p className="text-gray-500 text-xs">{match.location}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Skills Analysis Mobile */}
-          {skillAnalysis && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">Skills Analysis</h2>
-                <button
-                  onClick={() => setSkillAnalysis(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <h3 className="font-semibold text-green-800 text-sm mb-2">
-                    ✅ Skills You Have ({skillAnalysis.matched_skills?.length || 0})
-                  </h3>
-                  <div className="flex flex-wrap gap-1">
-                    {skillAnalysis.matched_skills?.slice(0, 5).map((skill, idx) => (
-                      <span key={idx} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                  <h3 className="font-semibold text-orange-800 text-sm mb-2">
-                    📚 Skills to Learn ({skillAnalysis.missing_skills?.length || 0})
-                  </h3>
-                  <div className="flex flex-wrap gap-1">
-                    {skillAnalysis.missing_skills?.slice(0, 5).map((skill, idx) => (
-                      <span key={idx} className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
