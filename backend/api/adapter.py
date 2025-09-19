@@ -86,6 +86,12 @@ async def recommendations(token = Depends(security)):
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
+@router.get("/career-trends")
+async def career_trends():
+    """Get career trends - public endpoint, no auth required"""
+    return await careers_mod.get_career_trends()
+
+
 @router.post("/chat")
 async def chat(payload: ChatPayload, token = Depends(security)):
     if token and token.credentials:

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { profileAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import toast from 'react-hot-toast';
 
 const Resume = () => {
   const { user } = useAuth();
+  const { profile, uploadResume } = useData();
   const [resumeData, setResumeData] = useState(null);
   const [parsedFields, setParsedFields] = useState({
     full_name: '',
@@ -19,31 +20,24 @@ const Resume = () => {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [profile.data]);
 
   const loadProfile = async () => {
     try {
       console.log('🔄 Loading profile for resume data...');
-      const response = await profileAPI.fetch();
-      console.log('✅ Profile API response:', response);
-      const profile = response.data || {};
-      console.log('📊 Profile data:', profile);
+      const profileData = profile.data;
+      console.log('📊 Profile data:', profileData);
       
-      if (profile.resume) {
-        console.log('📄 Resume data found:', profile.resume);
-        setResumeData(profile.resume);
-        setParsedFields(profile.resume.parsed || {});
+      if (profileData?.resume) {
+        console.log('📄 Resume data found:', profileData.resume);
+        setResumeData(profileData.resume);
+        setParsedFields(profileData.resume.parsed || {});
         console.log('✅ Resume state updated');
       } else {
         console.log('ℹ️ No resume data found in profile');
       }
     } catch (error) {
       console.error('❌ Failed to load profile:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
     }
   };
 
@@ -70,28 +64,16 @@ const Resume = () => {
     console.log('Starting upload process...');
     
     try {
-      console.log('Calling profileAPI.uploadResume...');
-      const response = await profileAPI.uploadResume(file);
-      console.log('Upload response:', response);
+      console.log('Calling uploadResume from DataContext...');
+      const success = await uploadResume(file);
+      console.log('Upload result:', success);
       
-      if (response.data?.ok) {
-        setResumeData({
-          filename: file.name,
-          url: response.data.resume_url,
-          uploadedAt: new Date().toISOString(),
-          parsed: response.data.extracted,
-          confidence_score: response.data.confidence_score
-        });
-        setParsedFields(response.data.extracted || {});
-        
-        toast.success(`Resume uploaded successfully! Confidence: ${Math.round((response.data.confidence_score || 0) * 100)}%`);
-        
-        if (response.data.confidence_score < 0.7) {
-          toast.info('Low confidence in parsing. Please review and edit the extracted information.');
-        }
+      if (success) {
+        toast.success('Resume uploaded successfully!');
+        // Reload profile to get updated resume data
+        loadProfile();
       } else {
-        console.error('Upload failed:', response.data);
-        toast.error(response.data?.error || 'Failed to upload resume');
+        toast.error('Failed to upload resume');
       }
     } catch (error) {
       console.error('Resume upload failed:', error);
