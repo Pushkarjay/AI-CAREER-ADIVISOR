@@ -18,8 +18,11 @@ const Profile = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        console.log('🔄 Loading profile data...');
         const res = await profileAPI.fetch();
+        console.log('✅ Profile API response:', res);
         const p = res.data || {};
+        console.log('📊 Profile data:', p);
         setForm({
           education_level: p.education_level || '',
           field_of_study: p.field_of_study || '',
@@ -29,7 +32,14 @@ const Profile = () => {
           skills: (p.skills || []).join(', '),
           career_goals: p.career_goals || '',
         });
+        console.log('✅ Profile form state updated');
       } catch (error) {
+        console.error('❌ Profile load error:', error);
+        console.error('Error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
         // Profile doesn't exist yet - this is normal for new users
         console.log('No profile found yet, using empty form');
         // Don't show error toast for 404 - it's expected for new users

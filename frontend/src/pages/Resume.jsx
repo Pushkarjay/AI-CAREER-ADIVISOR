@@ -23,15 +23,27 @@ const Resume = () => {
 
   const loadProfile = async () => {
     try {
+      console.log('🔄 Loading profile for resume data...');
       const response = await profileAPI.fetch();
+      console.log('✅ Profile API response:', response);
       const profile = response.data || {};
+      console.log('📊 Profile data:', profile);
       
       if (profile.resume) {
+        console.log('📄 Resume data found:', profile.resume);
         setResumeData(profile.resume);
         setParsedFields(profile.resume.parsed || {});
+        console.log('✅ Resume state updated');
+      } else {
+        console.log('ℹ️ No resume data found in profile');
       }
     } catch (error) {
-      console.error('Failed to load profile:', error);
+      console.error('❌ Failed to load profile:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
     }
   };
 
