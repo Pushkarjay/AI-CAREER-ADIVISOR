@@ -4,15 +4,19 @@ import { useData } from '../contexts/DataContext';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
-  const { profile, updateProfile, uploadResume } = useData();
+  const { profile, updateProfile } = useData();
   
   const [form, setForm] = useState({
+    name: '',
+    current_role: '',
     education_level: '',
     field_of_study: '',
     current_year: '',
     location: '',
+    preferred_salary: '',
     interests: '',
     skills: '',
+    experience_years: '',
     career_goals: '',
   });
   const [loading, setLoading] = useState(false);
@@ -21,16 +25,20 @@ const Profile = () => {
   useEffect(() => {
     if (profile.data) {
       setForm({
+        name: profile.data.name || '',
+        current_role: profile.data.current_role || '',
         education_level: profile.data.education_level || '',
         field_of_study: profile.data.field_of_study || '',
         current_year: profile.data.current_year || '',
         location: profile.data.location || '',
+        preferred_salary: profile.data.preferred_salary || '',
         interests: Array.isArray(profile.data.interests) 
           ? profile.data.interests.join(', ') 
           : profile.data.interests || '',
         skills: Array.isArray(profile.data.skills)
           ? profile.data.skills.join(', ')
           : profile.data.skills || '',
+        experience_years: profile.data.experience_years ?? '',
         career_goals: profile.data.career_goals || '',
       });
     }
@@ -45,12 +53,16 @@ const Profile = () => {
     try {
       setLoading(true);
       const payload = {
+        name: form.name || null,
+        current_role: form.current_role || null,
         education_level: form.education_level || null,
         field_of_study: form.field_of_study || null,
         current_year: form.current_year ? Number(form.current_year) : null,
         location: form.location || null,
+        preferred_salary: form.preferred_salary || null,
         interests: form.interests ? form.interests.split(',').map((s) => s.trim()).filter(Boolean) : [],
         skills: form.skills ? form.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        experience_years: form.experience_years !== '' ? Number(form.experience_years) : null,
         career_goals: form.career_goals || null,
       };
       
@@ -104,6 +116,18 @@ const Profile = () => {
           <form className="w-full max-w-4xl glass-effect rounded-2xl shadow-xl p-8" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="name">
+                  Full Name
+                </label>
+                <input className="input-field" id="name" type="text" placeholder="John Doe" value={form.name} onChange={onChange} autoComplete="name" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="current_role">
+                  Current Role
+                </label>
+                <input className="input-field" id="current_role" type="text" placeholder="Software Engineer" value={form.current_role} onChange={onChange} autoComplete="organization-title" />
+              </div>
+              <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="field_of_study">
                   Field of Study
                 </label>
@@ -127,6 +151,12 @@ const Profile = () => {
                 </label>
                 <input className="input-field" id="location" type="text" placeholder="Pune, IN" value={form.location} onChange={onChange} autoComplete="address-level2" />
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="preferred_salary">
+                  Preferred Salary Range
+                </label>
+                <input className="input-field" id="preferred_salary" type="text" placeholder="12-20 LPA" value={form.preferred_salary} onChange={onChange} autoComplete="off" />
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="skills">
                   Skills (comma separated)
@@ -140,11 +170,10 @@ const Profile = () => {
                 <input className="input-field" id="interests" type="text" placeholder="AI, Cloud" value={form.interests} onChange={onChange} autoComplete="off" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="resume">
-                  Resume
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="experience_years">
+                  Years of Experience
                 </label>
-                <input id="resume" type="file" onChange={onResume} className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" autoComplete="off" />
-                <p className="text-slate-600 text-xs mt-2">Upload your resume for automated skill extraction.</p>
+                <input className="input-field" id="experience_years" type="number" min="0" step="1" placeholder="0" value={form.experience_years} onChange={onChange} autoComplete="off" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="career_goals">
@@ -162,7 +191,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Mobile Layout - Container */}
+  {/* Mobile Layout - Container */}
       <div className="lg:hidden container mx-auto p-6">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Your Profile</h1>
@@ -207,11 +236,10 @@ const Profile = () => {
               <input className="input-field" id="interests" type="text" placeholder="AI, Cloud" value={form.interests} onChange={onChange} autoComplete="off" />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="resume">
-                Resume
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="experience_years">
+                Years of Experience
               </label>
-              <input id="resume" type="file" onChange={onResume} className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" autoComplete="off" />
-              <p className="text-slate-600 text-xs mt-2">Upload your resume for automated skill extraction.</p>
+              <input className="input-field" id="experience_years" type="number" min="0" step="1" placeholder="0" value={form.experience_years} onChange={onChange} autoComplete="off" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="career_goals">
