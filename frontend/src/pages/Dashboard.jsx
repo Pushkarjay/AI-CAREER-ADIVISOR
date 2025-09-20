@@ -131,7 +131,7 @@ const Dashboard = () => {
         name: profileForm.name,
         education_level: profileForm.education_level,
         current_role: profileForm.current_role,
-        experience_years: profileForm.experience_years,
+        experience_years: profileForm.experience_years !== '' ? Number(profileForm.experience_years) : null,
         skills: profileForm.skills.split(',').map(s => s.trim()).filter(Boolean),
         interests: profileForm.interests.split(',').map(s => s.trim()).filter(Boolean),
         location: profileForm.location,
@@ -253,10 +253,10 @@ const Dashboard = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Experience</option>
-                    <option value="0-1 years">0-1 years</option>
-                    <option value="2-5 years">2-5 years</option>
-                    <option value="5-10 years">5-10 years</option>
-                    <option value="10+ years">10+ years</option>
+                    <option value="0">0-1 years</option>
+                    <option value="3">2-5 years</option>
+                    <option value="7">5-10 years</option>
+                    <option value="12">10+ years</option>
                   </select>
                 </div>
 
