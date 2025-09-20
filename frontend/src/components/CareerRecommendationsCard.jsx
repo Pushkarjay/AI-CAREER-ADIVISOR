@@ -19,31 +19,17 @@ const CareerRecommendationsCard = () => {
     try {
       setLoading(true);
       const response = await careerAPI.getRecommendations();
-      
-      // If we have real data, use it, otherwise use mock data
-      if (response?.data?.careers && response.data.careers.length > 0) {
-        setRecommendations(response.data.careers.slice(0, 10)); // Top 10
-      } else {
-        // Mock data based on your specification
-        setRecommendations([
-          { rank: 1, career: 'Software Developer', matchScore: 86 },
-          { rank: 2, career: 'Data Scientist', matchScore: 82 },
-          { rank: 3, career: 'Product Manager', matchScore: 78 },
-          { rank: 4, career: 'UX Designer', matchScore: 75 },
-          { rank: 5, career: 'DevOps Engineer', matchScore: 73 },
-          { rank: 6, career: 'Machine Learning Engineer', matchScore: 71 },
-          { rank: 7, career: 'Frontend Developer', matchScore: 69 },
-          { rank: 8, career: 'Business Analyst', matchScore: 67 },
-          { rank: 9, career: 'Cybersecurity Specialist', matchScore: 65 },
-          { rank: 10, career: 'Cloud Architect', matchScore: 63 }
-        ]);
-      }
+      const list = Array.isArray(response?.data) ? response.data : [];
+      // Map to compact display shape; keep full list (no slicing)
+      const mapped = list.map((item, idx) => ({
+        rank: idx + 1,
+        career: item.title || item.career?.title || 'Unknown',
+        matchScore: Math.round(item.match_score ?? item.skill_match_percentage ?? 0),
+      }));
+      setRecommendations(mapped);
     } catch (error) {
       console.error('Failed to fetch career recommendations:', error);
-      // Fallback data
-      setRecommendations([
-        { rank: 1, career: 'Software Developer', matchScore: 86 }
-      ]);
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }
@@ -82,6 +68,15 @@ const CareerRecommendationsCard = () => {
     );
   }
 
+  if (!recommendations.length) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Top Career Recommendations</h2>
+        <p className="text-sm text-gray-600">Feature not available in the prototype or no data yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 h-fit sticky top-6">
       <div className="space-y-6">
@@ -105,7 +100,7 @@ const CareerRecommendationsCard = () => {
           </div>
         </div>
 
-        {/* Recommendations List */}
+        {/* Recommendations List (no limit) */}
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {recommendations.map((rec, index) => (
             <div 
@@ -155,7 +150,7 @@ const CareerRecommendationsCard = () => {
             </div>
             <span className="text-sm font-semibold text-blue-600">
               {recommendations.length > 0 
-                ? Math.round(recommendations.reduce((sum, rec) => sum + rec.matchScore, 0) / recommendations.length)
+                ? Math.round(recommendations.reduce((sum, rec) => sum + (rec.matchScore || 0), 0) / recommendations.length)
                 : 0}%
             </span>
           </div>
