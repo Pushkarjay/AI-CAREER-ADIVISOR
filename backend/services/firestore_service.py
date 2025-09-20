@@ -305,3 +305,90 @@ class FirestoreService:
         except Exception as e:
             logger.error(f"Firestore health check failed: {e}")
             return False
+    
+    # Domain management methods
+    async def save_domain(self, domain_id: str, domain_data: Dict[str, Any]) -> str:
+        """Save a domain to Firestore."""
+        try:
+            db = self._get_db()
+            
+            domain_doc = {
+                "domain_id": domain_id,
+                "created_at": datetime.now(),
+                "updated_at": datetime.now(),
+                **domain_data
+            }
+            
+            doc_ref = db.collection("domains").document(domain_id)
+            doc_ref.set(domain_doc)
+            
+            logger.info(f"Domain saved: {domain_id}")
+            return domain_id
+            
+        except Exception as e:
+            logger.error(f"Failed to save domain {domain_id}: {e}")
+            raise
+    
+    async def get_domain(self, domain_id: str) -> Optional[Dict[str, Any]]:
+        """Get a domain from Firestore."""
+        try:
+            db = self._get_db()
+            
+            doc_ref = db.collection("domains").document(domain_id)
+            doc = doc_ref.get()
+            
+            if doc.exists:
+                return doc.to_dict()
+            else:
+                logger.warning(f"Domain not found: {domain_id}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to get domain {domain_id}: {e}")
+            raise
+    
+    async def get_all_domains(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get all domains from Firestore."""
+        try:
+            db = self._get_db()
+            
+            query = db.collection("domains").limit(limit)
+            docs = query.stream()
+            domains = [doc.to_dict() for doc in docs]
+            
+            return domains
+            
+        except Exception as e:
+            logger.error(f"Failed to get all domains: {e}")
+            return []
+    
+    async def save_multiple_domains(self, domains_data: Dict[str, Dict[str, Any]]) -> List[str]:
+        """Save multiple domains to Firestore in batch."""
+        try:
+            db = self._get_db()
+            
+            # Use batch writes for better performance
+            batch = db.batch()
+            saved_ids = []
+            
+            for domain_id, domain_data in domains_data.items():
+                domain_doc = {
+                    "domain_id": domain_id,
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now(),
+                    **domain_data
+                }
+                
+                doc_ref = db.collection("domains").document(domain_id)
+                batch.set(doc_ref, domain_doc)
+                saved_ids.append(domain_id)
+            
+            # Commit the batch
+            batch.commit()
+            
+            logger.info(f"Batch saved {len(saved_ids)} domains")
+            return saved_ids
+            
+        except Exception as e:
+            logger.error(f"Failed to save multiple domains: {e}")
+            raise

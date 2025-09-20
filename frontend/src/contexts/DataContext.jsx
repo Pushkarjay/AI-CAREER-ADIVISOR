@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { profileAPI, chatAPI, careerAPI, roadmapAPI } from '../services/api';
+import { calculateMatchScore } from '../services/matchUtils';
 import toast from 'react-hot-toast';
 
 // Initial state
@@ -275,6 +276,13 @@ export const DataProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Ensure recommendations load after profile is available/updated (e.g., skills set)
+  useEffect(() => {
+    if (user && state.profile?.data) {
+      fetchCareerRecommendations();
+    }
+  }, [user, state.profile?.data?.skills]);
+
   // Profile methods
   const fetchProfile = async () => {
     try {
@@ -302,7 +310,7 @@ export const DataProvider = ({ children }) => {
       }
       dispatch({ type: ActionTypes.PROFILE_FETCH_SUCCESS, payload: profileData });
     } catch (error) {
-      console.log('Profile fetch error:', error);
+  // Profile fetch error
       if (error.response?.status === 404) {
         const defaultProfile = {
           name: user?.email?.split('@')[0] || 'User',
@@ -377,38 +385,71 @@ export const DataProvider = ({ children }) => {
   const fetchCareerRecommendations = async () => {
     try {
       dispatch({ type: ActionTypes.CAREERS_FETCH_START });
-      const response = await careerAPI.getRecommendations();
-      const arr = Array.isArray(response?.data) ? response.data : [];
+      // IMPORTANT: Build recommendations exactly like Careers page
+      // Fetch full careers catalog and compute match scores from user profile skills
+      const allRes = await careerAPI.getCareers();
+      const catalog = Array.isArray(allRes?.data?.careers) ? allRes.data.careers : [];
 
-      if (arr.length > 0) {
-        // Map from backend CareerMatch shape to UI-friendly minimal object
-        const mapped = arr.map((m) => {
-          const career = m?.career || {};
-          const req = career.required_skills || m.required_skills || [];
-          return {
-            id: career.id || m.id,
-            title: career.title || m.title,
-            company: career.company || '—',
-            salary: career.salary_range_min && career.salary_range_max
-              ? `${Math.round(career.salary_range_min/100000)}-${Math.round(career.salary_range_max/100000)} LPA`
-              : m.salary || '—',
-            match_score: Math.round(m.match_score ?? m.skill_match_percentage ?? 0),
-            requirements: Array.isArray(req) ? req : [],
-            location: career.location || 'Multiple Cities',
-          };
-        });
-        dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: mapped });
-      } else {
-        // Fallback data if API doesn't return results
+      // Normalize user skills from profile
+      const userSkills = Array.isArray(state?.profile?.data?.skills)
+        ? state.profile.data.skills
+        : String(state?.profile?.data?.skills || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+      // Compute ranked list: title + match_score + requirements
+      const ranked = catalog.map((c) => {
+        const req = Array.isArray(c.requiredSkills) ? c.requiredSkills : [];
+        const { score } = calculateMatchScore(userSkills, req);
+        return {
+          id: c.id || `career-${c.title || 'unknown'}`,
+          title: c.title || 'Unknown Career',
+          company: '—',
+          salary: '—',
+          match_score: Math.round(score || 0),
+          requirements: req,
+          location: 'Multiple Cities',
+          description: c.description || '',
+          experience_level: c.experience || 'entry'
+        };
+      });
+
+      // Deduplicate titles like "Name (n)" keep highest score, filter > 0, sort desc
+      const normalizeTitle = (t) => String(t).replace(/\s*\(\d+\)\s*$/, '').trim();
+      const bestByTitle = new Map();
+      for (const r of ranked) {
+        const key = normalizeTitle(r.title);
+        const ex = bestByTitle.get(key);
+        if (!ex || (r.match_score || 0) > (ex.match_score || 0)) {
+          bestByTitle.set(key, { ...r, title: key });
+        }
+      }
+      const mapped = Array.from(bestByTitle.values())
+        .filter((c) => (c.match_score || 0) > 0)
+        .sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+
+      // If nothing matches yet (e.g., no profile skills), provide a friendly fallback
+      if (mapped.length === 0) {
         const fallbackCareers = [
-          { title: 'Software Developer', company: 'Tech Companies', salary: '12-25 LPA', match_score: 85, requirements: ['JavaScript', 'React', 'Node.js', 'Python'], location: 'Multiple Cities' },
-          { title: 'Data Analyst', company: 'Analytics Firms', salary: '10-20 LPA', match_score: 78, requirements: ['Python', 'SQL', 'Excel', 'Statistics'], location: 'Multiple Cities' },
-          { title: 'Product Manager', company: 'Product Companies', salary: '15-30 LPA', match_score: 72, requirements: ['Communication', 'Strategy', 'Analytics', 'Leadership'], location: 'Multiple Cities' },
+          { id: 'sw-dev-001', title: 'Software Developer', company: 'Tech Companies', salary: '12-25 LPA', match_score: 75, requirements: ['JavaScript', 'React', 'Node.js', 'Python'], location: 'Multiple Cities' },
+          { id: 'data-sci-001', title: 'Data Analyst', company: 'Analytics Firms', salary: '10-20 LPA', match_score: 72, requirements: ['Python', 'SQL', 'Excel', 'Statistics'], location: 'Multiple Cities' },
+          { id: 'pm-001', title: 'Product Manager', company: 'Product Companies', salary: '15-30 LPA', match_score: 68, requirements: ['Communication', 'Strategy', 'Analytics', 'Leadership'], location: 'Multiple Cities' },
         ];
         dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: fallbackCareers });
+      } else {
+        // Dispatch full ranked list; Dashboard will slice top 3
+        dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: mapped });
       }
     } catch (error) {
       console.error('Career recommendations error:', error);
+      // Always provide fallback data on error
+      const fallbackCareers = [
+        { id: 'sw-dev-001', title: 'Software Developer', company: 'Tech Companies', salary: '12-25 LPA', match_score: 85, requirements: ['JavaScript', 'React', 'Node.js', 'Python'], location: 'Multiple Cities' },
+        { id: 'data-sci-001', title: 'Data Analyst', company: 'Analytics Firms', salary: '10-20 LPA', match_score: 78, requirements: ['Python', 'SQL', 'Excel', 'Statistics'], location: 'Multiple Cities' },
+        { id: 'pm-001', title: 'Product Manager', company: 'Product Companies', salary: '15-30 LPA', match_score: 72, requirements: ['Communication', 'Strategy', 'Analytics', 'Leadership'], location: 'Multiple Cities' },
+      ];
+      dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: fallbackCareers });
       dispatch({ type: ActionTypes.CAREERS_FETCH_ERROR, payload: error.message });
     }
   };
@@ -416,12 +457,23 @@ export const DataProvider = ({ children }) => {
   // Roadmaps methods
   const fetchRoadmaps = async () => {
     try {
-      dispatch({ type: 'ROADMAPS_FETCH_START' });
+      dispatch({ type: ActionTypes.ROADMAPS_FETCH_START });
       const res = await roadmapAPI.list();
-      dispatch({ type: 'ROADMAPS_FETCH_SUCCESS', payload: res.data || [] });
+      
+      // Handle different response structures
+      let items = [];
+      if (res?.data?.items) {
+        items = res.data.items;
+      } else if (Array.isArray(res?.data)) {
+        items = res.data;
+      } else if (res?.data) {
+        items = [res.data];
+      }
+      
+      dispatch({ type: ActionTypes.ROADMAPS_FETCH_SUCCESS, payload: items });
     } catch (e) {
       console.error('Roadmaps fetch error:', e);
-      dispatch({ type: 'ROADMAPS_FETCH_ERROR', payload: e.message });
+      dispatch({ type: ActionTypes.ROADMAPS_FETCH_ERROR, payload: e.message });
     }
   };
 

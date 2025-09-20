@@ -12,7 +12,8 @@ const Dashboard = () => {
     chat,
     sendChatMessage,
     initializeChat,
-    updateProfile
+    updateProfile,
+    fetchCareerRecommendations
   } = useData();
   
   // Local state for form fields (mirrors profile data for editing)
@@ -63,6 +64,11 @@ const Dashboard = () => {
     initializeChat();
   }, []);
 
+  // Fetch career recommendations when component loads
+  useEffect(() => {
+    fetchCareerRecommendations();
+  }, []);
+
   // Initialize with first career when component loads
   useEffect(() => {
     const top3 = (careers.recommendations || []).slice(0, 3);
@@ -73,11 +79,24 @@ const Dashboard = () => {
 
   const updateSkillAnalysis = (careerMatch) => {
     if (!careerMatch) return;
-    const userSkills = profileForm.skills
-      ? profileForm.skills.split(',').map((s) => s.trim()).filter(Boolean)
-      : [];
-    const required = Array.isArray(careerMatch.requirements) ? careerMatch.requirements : [];
-    const { matched, missing } = calculateMatchScore(userSkills, required);
+
+    // Use backend-calculated skills if available, otherwise fall back to local calculation
+    let matched, missing;
+
+    if (careerMatch.matching_skills && careerMatch.missing_skills) {
+      // Use backend-calculated data
+      matched = careerMatch.matching_skills;
+      missing = careerMatch.missing_skills;
+    } else {
+      // Fallback to local calculation
+      const userSkills = profileForm.skills
+        ? profileForm.skills.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+      const required = Array.isArray(careerMatch.requirements) ? careerMatch.requirements : [];
+      const calculatedMatch = calculateMatchScore(userSkills, required);
+      matched = calculatedMatch.matched;
+      missing = calculatedMatch.missing;
+    }
 
     setSkillAnalysis({
       matched_skills: matched,
@@ -353,10 +372,24 @@ const Dashboard = () => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">Career Matches</h2>
               <p className="text-gray-600 text-sm mb-4">Click on a career to see detailed skill analysis</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {(careers.recommendations || []).slice(0,3).map((match, index) => (
+              {/* Debug info removed */}
+              
+              {careers.loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-gray-500">Loading career matches...</p>
+                </div>
+              ) : (careers.recommendations || []).length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No career matches found yet. Update your skills to see personalized matches.</p>
+                </div>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {(careers.recommendations || []).slice(0,3).map((match, index) => {
+                      return (
                   <div
-                    key={index}
+                    key={match.id || index}
                     onClick={() => updateSkillAnalysis(match)}
                     className={`border rounded-lg p-4 transition-all duration-200 cursor-pointer ${
                       selectedCareer === match.title
@@ -367,7 +400,7 @@ const Dashboard = () => {
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-gray-800 text-sm">{match.title}</h3>
                       <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                        {match.match_score}% match
+                        {Math.round(match.match_score)}% match
                       </span>
                     </div>
 
@@ -392,8 +425,11 @@ const Dashboard = () => {
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Skill Analysis */}

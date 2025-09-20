@@ -24,17 +24,11 @@ const Resume = () => {
 
   const loadProfile = async () => {
     try {
-      console.log('🔄 Loading profile for resume data...');
       const profileData = profile.data;
-      console.log('📊 Profile data:', profileData);
       
       if (profileData?.resume) {
-        console.log('📄 Resume data found:', profileData.resume);
         setResumeData(profileData.resume);
         setParsedFields(profileData.resume.parsed || {});
-        console.log('✅ Resume state updated');
-      } else {
-        console.log('ℹ️ No resume data found in profile');
       }
     } catch (error) {
       console.error('❌ Failed to load profile:', error);
@@ -44,8 +38,6 @@ const Resume = () => {
   const handleFileUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    console.log('File selected:', file.name, file.type, file.size);
 
     // Validate file type
     const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -61,12 +53,9 @@ const Resume = () => {
     }
 
     setIsUploading(true);
-    console.log('Starting upload process...');
     
     try {
-      console.log('Calling uploadResume from DataContext...');
       const success = await uploadResume(file);
-      console.log('Upload result:', success);
       
       if (success) {
         toast.success('Resume uploaded successfully!');
@@ -77,11 +66,6 @@ const Resume = () => {
       }
     } catch (error) {
       console.error('Resume upload failed:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       
       if (error.response?.status === 401) {
         toast.error('Authentication failed. Please log in again.');
