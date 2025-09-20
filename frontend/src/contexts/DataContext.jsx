@@ -31,6 +31,28 @@ const initialState = {
   }
 };
 
+// UI-only fields not persisted to backend profile schema
+const UI_ONLY_FIELDS = ['name', 'current_role', 'preferred_salary'];
+
+const getUiStorageKey = (user) => `profileUi::${user?.uid || user?.email || 'guest'}`;
+
+const loadUiOnlyFields = (user) => {
+  try {
+    const raw = localStorage.getItem(getUiStorageKey(user));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveUiOnlyFields = (user, data) => {
+  try {
+    const existing = loadUiOnlyFields(user);
+    const next = { ...existing, ...data };
+    localStorage.setItem(getUiStorageKey(user), JSON.stringify(next));
+  } catch {}
+};
+
 // Action types
 const ActionTypes = {
   // Profile actions
@@ -208,26 +230,29 @@ export const DataProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.PROFILE_FETCH_START });
       const response = await profileAPI.fetch();
-      
+      const pdata = response?.data || {};
       const profileData = {
-        name: response.data?.name || user?.email?.split('@')[0] || 'User',
-        education_level: response.data?.education_level || '',
-        current_role: response.data?.current_role || '',
-        experience_years: response.data?.experience_years || '',
-        skills: response.data?.skills || '',
-        interests: response.data?.interests || '',
-        location: response.data?.location || '',
-        preferred_salary: response.data?.preferred_salary || '',
-        field_of_study: response.data?.field_of_study || '',
-        current_year: response.data?.current_year || '',
-        career_goals: response.data?.career_goals || '',
-        ...response.data
+        name: pdata?.name || user?.email?.split('@')[0] || 'User',
+        education_level: pdata?.education_level || '',
+        current_role: pdata?.current_role || '',
+        experience_years: pdata?.experience_years || '',
+        skills: pdata?.skills || '',
+        interests: pdata?.interests || '',
+        location: pdata?.location || '',
+        preferred_salary: pdata?.preferred_salary || '',
+        field_of_study: pdata?.field_of_study || '',
+        current_year: pdata?.current_year || '',
+        career_goals: pdata?.career_goals || '',
+        ...pdata,
       };
-      
+      // Merge UI-only fields from local storage
+      const uiOnly = loadUiOnlyFields(user);
+      for (const k of UI_ONLY_FIELDS) {
+        if (uiOnly[k] !== undefined) profileData[k] = uiOnly[k];
+      }
       dispatch({ type: ActionTypes.PROFILE_FETCH_SUCCESS, payload: profileData });
     } catch (error) {
       console.log('Profile fetch error:', error);
-      // For 404 errors (new users), set default profile
       if (error.response?.status === 404) {
         const defaultProfile = {
           name: user?.email?.split('@')[0] || 'User',
@@ -242,6 +267,10 @@ export const DataProvider = ({ children }) => {
           current_year: '',
           career_goals: ''
         };
+        const uiOnly = loadUiOnlyFields(user);
+        for (const k of UI_ONLY_FIELDS) {
+          if (uiOnly[k] !== undefined) defaultProfile[k] = uiOnly[k];
+        }
         dispatch({ type: ActionTypes.PROFILE_FETCH_SUCCESS, payload: defaultProfile });
       } else {
         dispatch({ type: ActionTypes.PROFILE_FETCH_ERROR, payload: error.message });
@@ -249,10 +278,41 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Helper: filter payload to backend-allowed keys
+  const filterProfilePayload = (data) => {
+    const allowed = [
+      'education_level',
+      'field_of_study',
+      'current_year',
+      'location',
+      'interests',
+      'skills',
+      'experience_years',
+      'preferred_industries',
+      'career_goals',
+    ];
+    const out = {};
+    for (const k of allowed) if (k in (data || {})) out[k] = data[k];
+    return out;
+  };
+
   const updateProfile = async (profileData) => {
     try {
-      await profileAPI.save(profileData);
-      dispatch({ type: ActionTypes.PROFILE_UPDATE_SUCCESS, payload: profileData });
+      const filtered = filterProfilePayload(profileData);
+      // Extract UI-only fields and persist locally
+      const uiOnly = {};
+      for (const k of UI_ONLY_FIELDS) {
+        if (k in (profileData || {})) uiOnly[k] = profileData[k];
+      }
+
+      if (Object.keys(filtered).length) {
+        await profileAPI.save(filtered);
+      }
+      if (Object.keys(uiOnly).length) {
+        saveUiOnlyFields(user, uiOnly);
+      }
+
+      dispatch({ type: ActionTypes.PROFILE_UPDATE_SUCCESS, payload: { ...filtered, ...uiOnly } });
       toast.success('Profile updated successfully');
       return true;
     } catch (error) {
@@ -268,36 +328,31 @@ export const DataProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.CAREERS_FETCH_START });
       const response = await careerAPI.getRecommendations();
-      
-      if (response.data && response.data.length > 0) {
-        dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: response.data });
+      const arr = Array.isArray(response?.data) ? response.data : [];
+
+      if (arr.length > 0) {
+        // Map from backend CareerMatch shape to UI-friendly minimal object
+        const mapped = arr.map((m) => {
+          const career = m?.career || {};
+          return {
+            id: career.id || m.id,
+            title: career.title || m.title,
+            company: career.company || '—',
+            salary: career.salary_range_min && career.salary_range_max
+              ? `${Math.round(career.salary_range_min/100000)}-${Math.round(career.salary_range_max/100000)} LPA`
+              : m.salary || '—',
+            match_score: Math.round(m.match_score ?? m.skill_match_percentage ?? 0),
+            requirements: career.required_skills || m.required_skills || [],
+            location: career.location || 'Multiple Cities',
+          };
+        });
+        dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: mapped });
       } else {
         // Fallback data if API doesn't return results
         const fallbackCareers = [
-          {
-            title: 'Software Developer',
-            company: 'Tech Companies',
-            salary: '12-25 LPA',
-            match_score: 85,
-            requirements: ['JavaScript', 'React', 'Node.js', 'Python'],
-            location: 'Multiple Cities'
-          },
-          {
-            title: 'Data Analyst',
-            company: 'Analytics Firms',
-            salary: '10-20 LPA',
-            match_score: 78,
-            requirements: ['Python', 'SQL', 'Excel', 'Statistics'],
-            location: 'Multiple Cities'
-          },
-          {
-            title: 'Product Manager',
-            company: 'Product Companies',
-            salary: '15-30 LPA',
-            match_score: 72,
-            requirements: ['Communication', 'Strategy', 'Analytics', 'Leadership'],
-            location: 'Multiple Cities'
-          }
+          { title: 'Software Developer', company: 'Tech Companies', salary: '12-25 LPA', match_score: 85, requirements: ['JavaScript', 'React', 'Node.js', 'Python'], location: 'Multiple Cities' },
+          { title: 'Data Analyst', company: 'Analytics Firms', salary: '10-20 LPA', match_score: 78, requirements: ['Python', 'SQL', 'Excel', 'Statistics'], location: 'Multiple Cities' },
+          { title: 'Product Manager', company: 'Product Companies', salary: '15-30 LPA', match_score: 72, requirements: ['Communication', 'Strategy', 'Analytics', 'Leadership'], location: 'Multiple Cities' },
         ];
         dispatch({ type: ActionTypes.CAREERS_FETCH_SUCCESS, payload: fallbackCareers });
       }
@@ -347,42 +402,32 @@ export const DataProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.RESUME_UPLOAD_START });
       const response = await profileAPI.uploadResume(file);
-      
+
       if (response.data?.extracted_data) {
         dispatch({ type: ActionTypes.RESUME_UPLOAD_SUCCESS, payload: response.data });
-        
-        // Update profile with extracted skills and resume data
-        if (state.profile.data) {
-          const currentSkills = state.profile.data.skills ? (
-            Array.isArray(state.profile.data.skills) 
-              ? state.profile.data.skills 
-              : state.profile.data.skills.split(',').map(s => s.trim()).filter(Boolean)
-          ) : [];
-          
-          const newSkills = response.data.extracted_data.skills?.length 
-            ? Array.from(new Set([...currentSkills, ...response.data.extracted_data.skills]))
-            : currentSkills;
-          
-          const updatedProfile = {
-            ...state.profile.data,
-            skills: newSkills.join(', '),
-            resume: response.data // Store the entire resume data
-          };
-          
-          dispatch({ type: ActionTypes.PROFILE_UPDATE_SUCCESS, payload: updatedProfile });
-          
-          // Save the updated profile to backend
-          try {
-            await profileAPI.update(updatedProfile);
-            console.log('✅ Profile updated with resume skills and data');
-          } catch (updateError) {
-            console.error('❌ Failed to save updated profile:', updateError);
-          }
+
+        const current = state.profile.data || {};
+        const currentSkills = current.skills
+          ? (Array.isArray(current.skills) ? current.skills : String(current.skills).split(',').map((s) => s.trim()).filter(Boolean))
+          : [];
+        const newSkills = response.data.extracted_data.skills?.length
+          ? Array.from(new Set([...currentSkills, ...response.data.extracted_data.skills]))
+          : currentSkills;
+
+        const updatedProfile = { ...current, skills: newSkills };
+        dispatch({ type: ActionTypes.PROFILE_UPDATE_SUCCESS, payload: updatedProfile });
+
+        try {
+          const filtered = filterProfilePayload(updatedProfile);
+          if (Object.keys(filtered).length) await profileAPI.save(filtered);
+        } catch (updateError) {
+          console.error('Failed to persist profile after resume upload', updateError);
         }
-        
+
         toast.success('Resume processed successfully');
         return response.data;
       }
+      return null;
     } catch (error) {
       console.error('Resume upload error:', error);
       dispatch({ type: ActionTypes.RESUME_UPLOAD_ERROR, payload: error.message });
@@ -394,26 +439,18 @@ export const DataProvider = ({ children }) => {
   const value = {
     // State
     ...state,
-    
     // Profile methods
     fetchProfile,
     updateProfile,
-    
     // Career methods
     fetchCareerRecommendations,
-    
     // Chat methods
     sendChatMessage,
     initializeChat,
-    
     // Resume methods
     uploadResume,
-    
     // Utility methods
-    refreshAll: () => {
-      fetchProfile();
-      fetchCareerRecommendations();
-    }
+    refreshAll: () => { fetchProfile(); fetchCareerRecommendations(); },
   };
 
   return (
