@@ -8,14 +8,42 @@ import {
   BoltIcon
 } from '@heroicons/react/24/outline';
 import { profileAPI, analyticsAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const SkillsAnalysisCard = () => {
+  const { user } = useAuth();
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [skillRatings, setSkillRatings] = useState({}); // { [skillName]: 0-10 }
 
   useEffect(() => {
     fetchSkillsAnalysis();
   }, []);
+
+  useEffect(() => {
+    // Load saved ratings from localStorage when user changes
+    const key = `skillRatings::${user?.uid || user?.email || 'guest'}`;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        setSkillRatings(JSON.parse(saved));
+      }
+    } catch {}
+  }, [user?.uid, user?.email]);
+
+  const saveRatings = (next) => {
+    const key = `skillRatings::${user?.uid || user?.email || 'guest'}`;
+    setSkillRatings(next);
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {}
+  };
+
+  const setRatingFor = (skillName, value) => {
+    const val = Math.max(0, Math.min(10, Number(value) || 0));
+    const next = { ...skillRatings, [skillName]: val };
+    saveRatings(next);
+  };
 
   const fetchSkillsAnalysis = async () => {
     try {
@@ -157,7 +185,7 @@ const SkillsAnalysisCard = () => {
           </div>
         </div>
 
-        {/* Top Skills */}
+        {/* Top Skills + Your Rating (0-10) */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
             <CheckCircleIcon className="w-4 h-4 text-green-500 mr-2" />
@@ -165,14 +193,30 @@ const SkillsAnalysisCard = () => {
           </h3>
           <div className="space-y-2">
             {analysisData?.topSkills?.slice(0, 5).map((skill, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-900">{skill.name}</span>
+              <div key={index} className="flex items-center justify-between gap-3">
+                <div className="flex items-center space-x-2 min-w-0">
+                  <span className="text-sm font-medium text-gray-900 truncate">{skill.name}</span>
                   <span className={`px-2 py-1 text-xs rounded-full ${getSkillLevelColor(skill.level)}`}>
                     {skill.level}
                   </span>
                 </div>
-                <span className="text-sm text-blue-600 font-medium">{skill.match}%</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-blue-600 font-medium whitespace-nowrap">{skill.match}%</span>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-gray-600 whitespace-nowrap">Your rating</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={10}
+                      step={1}
+                      value={skillRatings[skill.name] ?? ''}
+                      onChange={(e) => setRatingFor(skill.name, e.target.value)}
+                      className="w-14 px-2 py-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="0-10"
+                      aria-label={`Rate ${skill.name}`}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -233,7 +277,10 @@ const SkillsAnalysisCard = () => {
         </div>
 
         {/* Action Button */}
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors">
+        <button
+          onClick={() => alert('This feature is not available in the prototype.')}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
+        >
           View Detailed Analysis
         </button>
       </div>

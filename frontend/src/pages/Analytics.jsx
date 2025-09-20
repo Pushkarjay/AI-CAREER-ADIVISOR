@@ -593,13 +593,13 @@ const Analytics = () => {
         )}
 
         {/* Trends Tab */}
-        {activeTab === 'trends' && trendsData && (
+        {activeTab === 'trends' && marketTrends && (
           <div className="space-y-6">
             {/* Market Trends Chart */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Market Trends</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trendsData.market_trends}>
+                <LineChart data={marketTrends.market_trends || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -614,7 +614,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Skills in Demand</h3>
               <div className="space-y-3">
-                {(trendsData?.top_skills || []).map((skill, index) => (
+                {(marketTrends?.top_skills || []).map((skill, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">{skill.name}</span>
                     <div className="flex items-center space-x-2">
@@ -634,7 +634,7 @@ const Analytics = () => {
         )}
 
         {/* Skills Tab */}
-        {activeTab === 'skills' && skillsData && (
+        {activeTab === 'skills' && skillAnalytics && (
           <div className="space-y-6">
             {/* Skills Overview */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -642,7 +642,7 @@ const Analytics = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={skillsData.distribution}
+                    data={skillAnalytics.distribution || []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -651,7 +651,7 @@ const Analytics = () => {
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
-                    {(skillsData?.distribution || []).map((entry, index) => (
+                    {(skillAnalytics?.distribution || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -664,7 +664,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Skills to Learn</h3>
               <div className="grid grid-cols-1 gap-4">
-                {(skillsData?.recommendations || []).map((skill, index) => (
+                {(skillAnalytics?.recommendations || []).map((skill, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium text-gray-900">{skill.name}</h4>
@@ -687,21 +687,21 @@ const Analytics = () => {
         )}
 
         {/* Journey Tab */}
-        {activeTab === 'journey' && journeyData && (
+        {activeTab === 'journey' && careerJourney && (
           <div className="space-y-6">
             {/* Career Path Visualization */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Journey</h3>
               <div className="space-y-4">
-                {(journeyData?.milestones || []).map((milestone, index) => (
+                {(careerJourney?.milestones || []).map((milestone, index) => (
                   <div key={index} className="flex items-start space-x-4">
                     <div className={`w-3 h-3 rounded-full mt-1 ${
                       milestone.completed ? 'bg-green-500' : 'bg-gray-300'
                     }`}></div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{milestone.title}</h4>
+                      <h4 className="font-medium text-gray-900">{milestone.stage || milestone.title}</h4>
                       <p className="text-sm text-gray-600">{milestone.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">{milestone.date}</p>
+                      <p className="text-xs text-gray-500 mt-1">{milestone.completion_date || milestone.date}</p>
                     </div>
                   </div>
                 ))}
@@ -712,7 +712,7 @@ const Analytics = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Next Steps</h3>
               <div className="space-y-3">
-                {(journeyData?.next_steps || []).map((action, index) => (
+                {(careerJourney?.next_actions || careerJourney?.next_steps || []).map((action, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <CheckIcon className="w-5 h-5 text-blue-600" />
                     <span className="text-sm text-gray-700">{action}</span>
