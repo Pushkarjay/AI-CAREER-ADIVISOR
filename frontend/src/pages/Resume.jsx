@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 const Resume = () => {
   const { user } = useAuth();
-  const { profile, uploadResume } = useData();
+  const { profile, uploadResume, updateProfile } = useData();
   const [resumeData, setResumeData] = useState(null);
   const [parsedFields, setParsedFields] = useState({
     full_name: '',
@@ -103,15 +103,19 @@ const Resume = () => {
     e.preventDefault();
     
     try {
-      // Update profile with manually edited fields
-      const updatedProfile = {
-        name: editForm.full_name || parsedFields.full_name,
-        skills: editForm.skills || parsedFields.skills,
-        education: editForm.education_history || parsedFields.education_history,
-        experience_years: editForm.experience_years || parsedFields.experience_years
+      // Update profile with manually edited fields, mapping to allowed backend fields
+      const allowed = {
+        // Keep only supported fields
+        skills: Array.isArray(editForm.skills)
+          ? editForm.skills
+          : (Array.isArray(parsedFields.skills) ? parsedFields.skills : []),
+        experience_years: typeof editForm.experience_years === 'number'
+          ? editForm.experience_years
+          : (parsedFields.experience_years || 0),
       };
 
-      await profileAPI.save(updatedProfile);
+      const success = await updateProfile(allowed);
+      if (!success) throw new Error('Save failed');
       
       // Update local state
       setParsedFields({
@@ -133,17 +137,18 @@ const Resume = () => {
   };
 
   const renderResumePreview = () => {
-    if (!resumeData?.url) return null;
+    const url = resumeData?.url || '/What-Next.pdf';
+    const filename = resumeData?.filename || 'What-Next.pdf';
+    const uploadedAt = resumeData?.uploadedAt || Date.now();
+    const isPdf = filename.toLowerCase().endsWith('.pdf');
 
-    const isPdf = resumeData.filename?.toLowerCase().endsWith('.pdf');
-    
     if (isPdf) {
       return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume Preview</h3>
-          <div className="border border-gray-300 rounded-lg overflow-hidden" style={{ height: '500px' }}>
+          <div className="border border-gray-300 rounded-lg overflow-hidden" style={{ height: '600px' }}>
             <iframe
-              src={resumeData.url}
+              src={url}
               width="100%"
               height="100%"
               title="Resume Preview"
@@ -151,42 +156,41 @@ const Resume = () => {
             />
           </div>
           <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
-            <span>Uploaded: {new Date(resumeData.uploadedAt).toLocaleDateString()}</span>
+            <span>Last Updated: {new Date(uploadedAt).toLocaleDateString()}</span>
             <a
-              href={resumeData.url}
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800"
             >
-              Download Original
-            </a>
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume File</h3>
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📄</span>
-            </div>
-            <p className="text-gray-700 font-medium">{resumeData.filename}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Uploaded: {new Date(resumeData.uploadedAt).toLocaleDateString()}
-            </p>
-            <a
-              href={resumeData.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Download File
+              Open in New Tab
             </a>
           </div>
         </div>
       );
     }
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume File</h3>
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">📄</span>
+          </div>
+          <p className="text-gray-700 font-medium">{filename}</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Last Updated: {new Date(uploadedAt).toLocaleDateString()}
+          </p>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Open File
+          </a>
+        </div>
+      </div>
+    );
   };
 
   const renderParsedFields = () => {
@@ -320,9 +324,9 @@ const Resume = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Navbar />
-      {/* Desktop Layout - Full Window Width */}
+      {/* Desktop Layout - Full Window Width with 1:2 grid */}
       <div className="hidden lg:block px-6 py-8">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -363,27 +367,22 @@ const Resume = () => {
             </div>
           </div>
 
-          {/* Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Resume Preview */}
-            <div>
-              {renderResumePreview()}
-            </div>
-
-            {/* Parsed Fields */}
-            <div>
+          {/* Content with 1:2 split */}
+          <div className="grid grid-cols-3 gap-8">
+            {/* Left Column (1) - Upload + Parsed Fields */}
+            <div className="col-span-1 space-y-8">
               {renderParsedFields()}
+            </div>
+            {/* Right Column (2) - PDF Preview */}
+            <div className="col-span-2">
+              {renderResumePreview()}
             </div>
           </div>
 
           {/* Empty State */}
           {!resumeData && !isUploading && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl">📄</span>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No resume uploaded</h3>
-              <p className="text-gray-600">Upload your resume to get started with automatic skill extraction and better career recommendations.</p>
+            <div className="text-center py-8 text-gray-600">
+              Showing sample PDF (What-Next.pdf) on the right as a placeholder.
             </div>
           )}
         </div>
