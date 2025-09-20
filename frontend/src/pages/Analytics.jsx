@@ -691,7 +691,13 @@ const Analytics = () => {
           <div className="space-y-6">
             {/* Career Path Visualization */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Career Journey</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-gray-900">Career Journey</h3>
+                <div className="flex gap-3">
+                  <a href="/roadmaps" className="text-sm text-blue-600 hover:underline">Explore roadmaps</a>
+                  <button onClick={() => toast('This feature is not available completely in the prototype')} className="text-sm text-slate-500 underline">Set domain goals</button>
+                </div>
+              </div>
               <div className="space-y-4">
                 {(careerJourney?.milestones || []).map((milestone, index) => (
                   <div key={index} className="flex items-start space-x-4">

@@ -15,6 +15,7 @@ import Careers from './pages/Careers.jsx'
 import Analytics from './pages/Analytics.jsx'
 import Resume from './pages/Resume.jsx'
 import Roadmap from './pages/Roadmap.jsx'
+import LearningRoadmaps from './pages/LearningRoadmaps.jsx'
 import EducationIndia from './pages/EducationIndia.jsx'
 
 import PrivateRoute from './components/PrivateRoute.jsx'
@@ -82,6 +83,14 @@ createRoot(document.getElementById('root')).render(
             element={
               <PrivateRoute>
                 <Roadmap />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/roadmaps"
+            element={
+              <PrivateRoute>
+                <LearningRoadmaps />
               </PrivateRoute>
             }
           />

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { careerAPI } from '../services/api';
+import { useData } from '../contexts/DataContext';
+import { calculateMatchScore } from '../services/matchUtils';
 import Navbar from '../components/Navbar';
 import CareerRecommendationsCard from '../components/CareerRecommendationsCard';
+import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   MagnifyingGlassIcon,
   BriefcaseIcon,
@@ -13,9 +17,9 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon, BookmarkIcon as BookmarkSolidIcon } from '@heroicons/react/24/solid';
-import toast from 'react-hot-toast';
 
 const Careers = () => {
+  const { roadmaps, fetchRoadmaps, profile } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [careers, setCareers] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -34,24 +38,53 @@ const Careers = () => {
   useEffect(() => {
     fetchRecommendations();
     fetchTrends();
+    if (!roadmaps.items?.length) fetchRoadmaps();
   }, []);
 
   const fetchRecommendations = async () => {
     try {
-      const response = await careerAPI.getRecommendations();
-      const list = Array.isArray(response?.data) ? response.data : [];
-      setRecommendations(list.map((m) => ({
-        id: m.career?.id || m.id,
-        title: m.career?.title || m.title,
-        company: m.company || '—',
-        location: m.career?.location || 'Multiple Cities',
-        salary_range: m.career?.salary_range_min && m.career?.salary_range_max
-          ? `${Math.round(m.career.salary_range_min/100000)}-${Math.round(m.career.salary_range_max/100000)} LPA`
-          : m.salary || '—',
-        experience: m.career?.experience_level || 'entry',
-        required_skills: m.career?.required_skills || m.required_skills || [],
-        match_score: Math.round(m.match_score ?? m.skill_match_percentage ?? 0),
-      })));
+      // Build recommendations from full careers catalog for consistency
+      const allRes = await careerAPI.getCareers();
+      const raw = Array.isArray(allRes?.data?.careers) ? allRes.data.careers : [];
+      const userSkills = Array.isArray(profile?.data?.skills)
+        ? profile.data.skills
+        : String(profile?.data?.skills || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+      const ranked = raw.map((c) => {
+        const req = Array.isArray(c.requiredSkills) ? c.requiredSkills : [];
+        const { score } = calculateMatchScore(userSkills, req);
+        return {
+          id: c.id,
+          title: c.title,
+          company: '—',
+          location: 'Multiple Cities',
+          salary_range: '—',
+          experience: 'entry',
+          required_skills: req,
+          match_score: Math.round(score),
+          description: c.description || '—',
+        };
+      });
+
+      // Deduplicate titles like "Name (n)" and keep highest score
+      const normalize = (t) => String(t).replace(/\s*\(\d+\)\s*$/, '').trim();
+      const bestByTitle = new Map();
+      for (const r of ranked) {
+        const key = normalize(r.title);
+        const ex = bestByTitle.get(key);
+        if (!ex || (r.match_score || 0) > (ex.match_score || 0)) bestByTitle.set(key, { ...r, title: key });
+      }
+      let mapped = Array.from(bestByTitle.values())
+        .filter((c) => (c.match_score || 0) > 0)
+        .sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+
+      setRecommendations(mapped);
+      // Auto-switch to Recommendations if we have results and currently on Search with nothing
+      if (mapped.length > 0 && activeTab !== 'recommendations') {
+        setActiveTab('recommendations');
+      }
     } catch (error) {
       console.error('Failed to fetch recommendations:', error);
       setRecommendations([]);
@@ -85,6 +118,12 @@ const Careers = () => {
       const response = await careerAPI.search(searchQuery, filters);
       const list = Array.isArray(response?.data) ? response.data : response?.data || [];
       // Response from v1 is a list of CareerMatch
+      const userSkills = Array.isArray(profile?.data?.skills)
+        ? profile.data.skills
+        : String(profile?.data?.skills || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
       const mapped = list.map((m) => ({
         id: m.career?.id || m.id,
         title: m.career?.title || m.title,
@@ -95,9 +134,15 @@ const Careers = () => {
           : '—',
         experience: m.career?.experience_level || 'entry',
         required_skills: m.career?.required_skills || [],
-        match_score: Math.round(m.match_score ?? m.skill_match_percentage ?? 0),
+        match_score: Math.round(
+          typeof m.match_score === 'number' ? m.match_score : (
+            typeof m.skill_match_percentage === 'number' ? m.skill_match_percentage :
+            calculateMatchScore(userSkills, m.career?.required_skills || []).score
+          )
+        ),
         description: m.career?.description || '—',
       }));
+      mapped.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
       setCareers(mapped);
       setActiveTab('search');
     } catch (error) {
@@ -153,6 +198,10 @@ const Careers = () => {
               <BriefcaseIcon className="w-4 h-4 mr-1" />
               {career.experience}
             </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Link to="/roadmaps" className="text-xs text-blue-600 hover:underline">View related learning roadmaps</Link>
+            <Link to={`/roadmaps?select=${encodeURIComponent(career.title || '')}`} className="text-xs text-slate-500 underline">Personalize path</Link>
           </div>
         </div>
         {showActions && (
@@ -237,6 +286,7 @@ const Careers = () => {
     { id: 'search', name: 'Search Results', count: careers.length },
     { id: 'recommendations', name: 'Recommendations', count: recommendations.length },
     { id: 'trends', name: 'Market Trends', count: trends.length },
+    { id: 'domains', name: 'All Domains', count: (roadmaps.items || []).length },
   ];
 
   return (
@@ -247,7 +297,7 @@ const Careers = () => {
         <div className="grid grid-cols-3 gap-6">
           {/* Left Column - Career Recommendations (1 part) */}
           <div className="col-span-1">
-            <CareerRecommendationsCard />
+            <CareerRecommendationsCard totalDomains={(roadmaps.items || []).length} />
           </div>
           
           {/* Right Column - Career Content (2 parts) */}
@@ -397,9 +447,12 @@ const Careers = () => {
                 ) : (
                   <div className="text-center py-12">
                     <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No recommendations</h3>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No matching recommendations</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      Update your profile to get personalized career recommendations.
+                      Add more skills to your profile to get personalized career recommendations with match scores above 0%.
+                    </p>
+                    <p className="mt-2 text-sm text-gray-400">
+                      Try the "All Domains" tab to explore career paths regardless of current match score.
                     </p>
                   </div>
                 )}
@@ -421,6 +474,44 @@ const Careers = () => {
                     <p className="mt-1 text-sm text-gray-500">
                       Market trends data will be available shortly.
                     </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'domains' && (
+              <div>
+                {(roadmaps.items || []).length > 0 ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {(roadmaps.items || []).map((d, idx) => (
+                      <div key={d.domain_id || idx} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{d.title}</h3>
+                            <p className="text-sm text-gray-600 line-clamp-2">{d.description}</p>
+                          </div>
+                          <span className="text-xs text-gray-500 capitalize">{d.difficulty_level}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <ChartBarIcon className="w-4 h-4 mr-1" />
+                            Match: {typeof d.match_score === 'number' ? Math.round(d.match_score) : 0}%
+                          </div>
+                          <Link to="/roadmaps" className="text-blue-600 hover:underline text-xs">View roadmap</Link>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(d.related_domains || []).slice(0,3).map((r) => (
+                            <span key={r} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{r}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Loading domains</h3>
+                    <p className="mt-1 text-sm text-gray-500">Discover 70+ career domains to explore paths even with 0% match.</p>
                   </div>
                 )}
               </div>

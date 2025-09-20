@@ -57,8 +57,9 @@ export const careerAPI = {
     try {
       const res = await api.get('/api/recommendations');
       const data = safeData(res);
-      // Support both shapes
+      // Support multiple shapes from adapter/alias
       if (Array.isArray(data)) return { data };
+      if (Array.isArray(data?.items)) return { data: data.items };
       if (Array.isArray(data?.recommended_careers)) return { data: data.recommended_careers };
       if (Array.isArray(data?.careers)) return { data: data.careers }; // legacy
       return { data: [] };
@@ -87,6 +88,13 @@ export const careerAPI = {
   },
   // Optional careers list if exposed later
   getCareers: () => api.get('/api/careers'),
+};
+
+// Roadmaps API client
+export const roadmapAPI = {
+  list: () => api.get('/api/v1/roadmaps/'),
+  get: (domainId) => api.get(`/api/v1/roadmaps/${encodeURIComponent(domainId)}`),
+  recommend: () => api.get('/api/v1/roadmaps/recommendations')
 };
 
 // Profile API

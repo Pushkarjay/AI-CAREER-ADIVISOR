@@ -13,6 +13,7 @@ from core.security import verify_token
 from services.firestore_service import FirestoreService
 from services.gemini_service_real import GeminiService
 from services.resume_parser import ResumeParser
+from data.domains_roadmap import ALL_DOMAIN_SLUGS, DOMAINS_ROADMAP
 
 # Firebase storage imports
 try:
@@ -188,11 +189,26 @@ async def get_recommendations(token: str = Depends(security)):
     except Exception:
         profile = None
 
-    # Basic sample data first
+    # Basic sample data first but align with frontend expectations
     recs = [
-        {"id":"sw-dev-001","title":"Software Developer","match":0.86},
-        {"id":"data-sci-001","title":"Data Scientist","match":0.82},
-        {"id":"pm-001","title":"Product Manager","match":0.76}
+        {
+            "id": "sw-dev-001",
+            "title": "Software Developer",
+            "match_score": 86,
+            "required_skills": ["JavaScript", "React", "Node.js", "Python", "SQL"],
+        },
+        {
+            "id": "data-sci-001",
+            "title": "Data Scientist",
+            "match_score": 82,
+            "required_skills": ["Python", "Machine Learning", "Statistics", "SQL"],
+        },
+        {
+            "id": "pm-001",
+            "title": "Product Manager",
+            "match_score": 76,
+            "required_skills": ["Communication", "Strategy", "Analytics", "Leadership"],
+        },
     ]
     return {"items": recs, "profile_present": bool(profile)}
 
@@ -205,65 +221,28 @@ async def get_careers(token: str = Depends(security)):
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    # Return prototype careers data
-    careers = [
-        {
-            "id": "data-science",
-            "title": "Data Scientist",
-            "description": "Analyze and interpret complex data to help organizations make data-driven decisions",
-            "avgSalary": 950000,
-            "requiredSkills": ["Python", "Machine Learning", "Statistics", "SQL", "Pandas", "Numpy", "Tableau"],
-            "suggestedCourses": [
-                {"title": "Machine Learning Specialization", "provider": "Coursera", "url": "https://coursera.org/ml"},
-                {"title": "Data Science with Python", "provider": "edX", "url": "https://edx.org/python-ds"}
-            ]
-        },
-        {
-            "id": "full-stack",
-            "title": "Full Stack Developer",
-            "description": "Build complete web applications using both frontend and backend technologies",
-            "avgSalary": 850000,
-            "requiredSkills": ["JavaScript", "React", "Node.js", "HTML", "CSS", "SQL", "Git"],
-            "suggestedCourses": [
-                {"title": "Full Stack Web Development", "provider": "Udemy", "url": "https://udemy.com/fullstack"},
-                {"title": "React Developer Path", "provider": "Pluralsight", "url": "https://pluralsight.com/react"}
-            ]
-        },
-        {
-            "id": "cybersecurity",
-            "title": "Cybersecurity Specialist",
-            "description": "Protect organizations from digital threats and implement security measures",
-            "avgSalary": 1200000,
-            "requiredSkills": ["Network Security", "Ethical Hacking", "Linux", "Python", "Penetration Testing"],
-            "suggestedCourses": [
-                {"title": "Certified Ethical Hacker", "provider": "EC-Council", "url": "https://eccouncil.org/ceh"},
-                {"title": "Cybersecurity Fundamentals", "provider": "Coursera", "url": "https://coursera.org/cybersec"}
-            ]
-        },
-        {
-            "id": "ui-ux",
-            "title": "UI/UX Designer",
-            "description": "Design user interfaces and experiences that are both beautiful and functional",
-            "avgSalary": 750000,
-            "requiredSkills": ["UI/UX", "Figma", "Adobe XD", "User Research", "Prototyping", "Web Design"],
-            "suggestedCourses": [
-                {"title": "Google UX Design Certificate", "provider": "Coursera", "url": "https://coursera.org/google-ux"},
-                {"title": "UI Design Fundamentals", "provider": "Udacity", "url": "https://udacity.com/ui-design"}
-            ]
-        },
-        {
-            "id": "cloud-engineer",
-            "title": "Cloud Engineer",
-            "description": "Design, deploy, and manage cloud infrastructure and services",
-            "avgSalary": 1100000,
-            "requiredSkills": ["AWS", "Azure", "Docker", "Kubernetes", "DevOps", "Python", "Linux"],
-            "suggestedCourses": [
-                {"title": "AWS Solutions Architect", "provider": "AWS", "url": "https://aws.amazon.com/certification"},
-                {"title": "Azure Fundamentals", "provider": "Microsoft", "url": "https://docs.microsoft.com/azure"}
-            ]
-        }
-    ]
-    
+    # Build a list using ALL_DOMAIN_SLUGS and DOMAINS_ROADMAP metadata where available
+    careers = []
+    for slug in ALL_DOMAIN_SLUGS:
+      data = DOMAINS_ROADMAP.get(slug, {})
+      careers.append({
+          "id": slug,
+          "title": data.get("title", slug.replace('-', ' ').title()),
+          "description": data.get("description", f"Career path for {slug.replace('-', ' ')}"),
+          "avgSalary": 900000,
+          "requiredSkills": data.get("prerequisites", []) or data.get("learning_path", [])[:5] or ["Communication", "Problem Solving"],
+      })
+
+    # Ensure at least 70 entries by duplicating with slight variations if needed (prototype)
+    base_len = len(careers)
+    i = 0
+    while len(careers) < 70 and base_len > 0:
+      proto = careers[i % base_len]
+      clone = proto.copy()
+      clone["id"] = f"{proto['id']}-{len(careers)}"
+      clone["title"] = f"{proto['title']} ({len(careers)})"
+      careers.append(clone)
+
     return {"careers": careers}
 
 

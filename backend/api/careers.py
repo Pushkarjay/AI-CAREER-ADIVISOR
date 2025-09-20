@@ -204,6 +204,14 @@ async def get_career_details(career_id: str):
                 "DevOps Engineer",
                 "Data Engineer",
                 "Mobile App Developer"
+            ],
+            # Roadmap integration fields (prototype)
+            "learning_roadmap_id": "backend-dev",
+            "career_path_stages": [
+                "Junior Developer",
+                "Mid-level Developer",
+                "Senior Developer",
+                "Tech Lead"
             ]
         }
         

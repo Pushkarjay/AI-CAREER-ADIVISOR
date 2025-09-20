@@ -14,9 +14,13 @@ import logging
 
 from . import profiles as profiles_mod
 from . import careers as careers_mod
+from . import roadmaps as roadmaps_mod
 from . import chat as chat_mod
 from core.security import verify_token
 from pydantic import BaseModel, RootModel
+from data.domains_roadmap import DOMAINS_ROADMAP
+from services.firestore_service import FirestoreService
+import re
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -81,9 +85,31 @@ async def parse_resume(file: UploadFile = File(...), token = Depends(security)):
 
 @router.get("/recommendations")
 async def recommendations(token = Depends(security)):
-    if token and token.credentials:
-        return await careers_mod.get_career_recommendations(token=token)
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    """
+    Return role-based career recommendations (array) for the sidebar and dashboard.
+    Uses the careers module so titles like "Software Developer"/"Data Analyst" appear,
+    which power the skill analysis card logic on the dashboard.
+    """
+    if not (token and token.credentials):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    try:
+        # Delegate to careers module which already reads the profile and computes matches
+        reco = await careers_mod.get_career_recommendations(token=token)
+        # careers_mod.get_career_recommendations returns a CareerRecommendation model or dict
+        # Normalize to an array for the frontend client
+        if isinstance(reco, dict):
+            items = reco.get("recommended_careers") or reco.get("items") or []
+        else:
+            # pydantic model -> dict
+            items = getattr(reco, "recommended_careers", None) or []
+        return items
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"adapter.recommendations failed: {e}")
+        # As a safe fallback return empty list
+        return []
 
 
 @router.get("/career-trends")

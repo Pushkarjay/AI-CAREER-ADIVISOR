@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 from core.config import settings
 from core.database import initialize_connections
 from api import auth, chat, careers, profiles, analytics
+from api import roadmaps
 from api import adapter as adapter_routes
 from api.alias_api import router as alias_router
 from api import dev_auth
@@ -141,6 +142,12 @@ app.include_router(
     analytics.router,
     prefix=f"{settings.API_V1_STR}/analytics",
     tags=["analytics"]
+)
+
+app.include_router(
+    roadmaps.router,
+    prefix=f"{settings.API_V1_STR}/roadmaps",
+    tags=["roadmaps"]
 )
 
 # Adapter routes for simplified frontend expectations

@@ -114,3 +114,33 @@ class ResourceRecommendation(BaseModel):
     recommended_resources: List[LearningResource]
     generated_at: datetime
     personalization_factors: List[str] = []
+
+
+class SkillProgression(BaseModel):
+    """Defines progression for a specific skill within a domain roadmap."""
+    skill_name: str
+    level: str = Field(..., pattern=r"^(beginner|intermediate|advanced)$")
+    learning_resources: List[LearningResource] = []
+    projects: List[str] = []
+    certifications: List[str] = []
+
+
+class LearningRoadmap(BaseModel):
+    """Learning roadmap for a domain with ordered learning path and metadata."""
+    domain_id: str
+    title: str
+    description: str
+    difficulty_level: str = Field(..., pattern=r"^(beginner|intermediate|advanced|mixed)$")
+    learning_path: List[str] = []  # ordered steps
+    prerequisites: List[str] = []
+    estimated_time: str | None = None
+    related_domains: List[str] = []
+    universal_foundations: List[str] = []
+
+
+# Extend Career to include roadmap integration fields
+class CareerWithRoadmap(Career):
+    """Career model with roadmap integration fields (non-breaking alternative)."""
+    learning_roadmap_id: Optional[str] = None
+    skill_progressions: List[SkillProgression] = []
+    career_path_stages: List[str] = []

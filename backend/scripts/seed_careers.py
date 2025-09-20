@@ -16,6 +16,7 @@ CAREERS_DATA = [
     {
         "id": "data-science",
         "title": "Data Scientist",
+        "domain_id": "data-science",
         "description": "Analyze and interpret complex data to help organizations make data-driven decisions using statistical methods, machine learning, and programming skills.",
         "avgSalary": 950000,
         "requiredSkills": [
@@ -57,6 +58,7 @@ CAREERS_DATA = [
     {
         "id": "full-stack-developer",
         "title": "Full Stack Developer",
+        "domain_id": "full-stack",
         "description": "Build complete web applications using both frontend and backend technologies, managing everything from user interfaces to databases.",
         "avgSalary": 850000,
         "requiredSkills": [
@@ -98,6 +100,7 @@ CAREERS_DATA = [
     {
         "id": "cybersecurity-specialist",
         "title": "Cybersecurity Specialist",
+        "domain_id": "cybersecurity",
         "description": "Protect organizations from digital threats by implementing security measures, conducting security assessments, and responding to incidents.",
         "avgSalary": 1200000,
         "requiredSkills": [
@@ -139,6 +142,7 @@ CAREERS_DATA = [
     {
         "id": "ui-ux-designer",
         "title": "UI/UX Designer",
+        "domain_id": "ui-ux",
         "description": "Design user interfaces and experiences that are both beautiful and functional, focusing on user research, prototyping, and visual design.",
         "avgSalary": 750000,
         "requiredSkills": [
@@ -180,6 +184,7 @@ CAREERS_DATA = [
     {
         "id": "cloud-engineer",
         "title": "Cloud Engineer",
+        "domain_id": "cloud",
         "description": "Design, deploy, and manage cloud infrastructure and services using platforms like AWS, Azure, or Google Cloud Platform.",
         "avgSalary": 1100000,
         "requiredSkills": [

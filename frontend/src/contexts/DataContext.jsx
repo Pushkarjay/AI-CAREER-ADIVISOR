@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { profileAPI, chatAPI, careerAPI } from '../services/api';
+import { profileAPI, chatAPI, careerAPI, roadmapAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 // Initial state
@@ -28,7 +28,15 @@ const initialState = {
     data: null,
     processing: false,
     error: null
-  }
+  },
+  roadmaps: {
+    items: [],
+    recommended: [],
+    loading: false,
+    error: null,
+    lastUpdated: null
+  },
+  learningProgress: {}
 };
 
 // UI-only fields not persisted to backend profile schema
@@ -76,6 +84,12 @@ const ActionTypes = {
   RESUME_UPLOAD_START: 'RESUME_UPLOAD_START',
   RESUME_UPLOAD_SUCCESS: 'RESUME_UPLOAD_SUCCESS',
   RESUME_UPLOAD_ERROR: 'RESUME_UPLOAD_ERROR',
+  
+  // Roadmaps actions
+  ROADMAPS_FETCH_START: 'ROADMAPS_FETCH_START',
+  ROADMAPS_FETCH_SUCCESS: 'ROADMAPS_FETCH_SUCCESS',
+  ROADMAPS_FETCH_ERROR: 'ROADMAPS_FETCH_ERROR',
+  ROADMAPS_RECO_SUCCESS: 'ROADMAPS_RECO_SUCCESS',
   
   // General
   RESET_ALL: 'RESET_ALL'
@@ -190,6 +204,38 @@ function dataReducer(state, action) {
         resume: { ...state.resume, processing: false, error: action.payload }
       };
     
+    // Roadmaps
+    case ActionTypes.ROADMAPS_FETCH_START:
+      return { 
+        ...state, 
+        roadmaps: { ...state.roadmaps, loading: true, error: null } 
+      };
+    case ActionTypes.ROADMAPS_FETCH_SUCCESS:
+      return {
+        ...state,
+        roadmaps: {
+          ...state.roadmaps,
+          items: action.payload,
+          loading: false,
+          error: null,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+    case ActionTypes.ROADMAPS_FETCH_ERROR:
+      return {
+        ...state,
+        roadmaps: { ...state.roadmaps, loading: false, error: action.payload }
+      };
+    case ActionTypes.ROADMAPS_RECO_SUCCESS:
+      return {
+        ...state,
+        roadmaps: {
+          ...state.roadmaps,
+          recommended: action.payload,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+    
     case ActionTypes.RESET_ALL:
       return initialState;
     
@@ -220,6 +266,10 @@ export const DataProvider = ({ children }) => {
     if (user) {
       fetchProfile();
       fetchCareerRecommendations();
+      fetchRoadmaps();
+      fetchRecommendedRoadmaps();
+      // Load learning progress from storage
+      loadLearningProgress();
     } else {
       dispatch({ type: ActionTypes.RESET_ALL });
     }
@@ -334,6 +384,7 @@ export const DataProvider = ({ children }) => {
         // Map from backend CareerMatch shape to UI-friendly minimal object
         const mapped = arr.map((m) => {
           const career = m?.career || {};
+          const req = career.required_skills || m.required_skills || [];
           return {
             id: career.id || m.id,
             title: career.title || m.title,
@@ -342,7 +393,7 @@ export const DataProvider = ({ children }) => {
               ? `${Math.round(career.salary_range_min/100000)}-${Math.round(career.salary_range_max/100000)} LPA`
               : m.salary || '—',
             match_score: Math.round(m.match_score ?? m.skill_match_percentage ?? 0),
-            requirements: career.required_skills || m.required_skills || [],
+            requirements: Array.isArray(req) ? req : [],
             location: career.location || 'Multiple Cities',
           };
         });
@@ -360,6 +411,52 @@ export const DataProvider = ({ children }) => {
       console.error('Career recommendations error:', error);
       dispatch({ type: ActionTypes.CAREERS_FETCH_ERROR, payload: error.message });
     }
+  };
+
+  // Roadmaps methods
+  const fetchRoadmaps = async () => {
+    try {
+      dispatch({ type: 'ROADMAPS_FETCH_START' });
+      const res = await roadmapAPI.list();
+      dispatch({ type: 'ROADMAPS_FETCH_SUCCESS', payload: res.data || [] });
+    } catch (e) {
+      console.error('Roadmaps fetch error:', e);
+      dispatch({ type: 'ROADMAPS_FETCH_ERROR', payload: e.message });
+    }
+  };
+
+  const fetchRecommendedRoadmaps = async () => {
+    try {
+      const res = await roadmapAPI.recommend();
+      dispatch({ type: ActionTypes.ROADMAPS_RECO_SUCCESS, payload: res.data || [] });
+    } catch (e) {
+      // Prototype-friendly: just ignore and show empty recommended list
+      dispatch({ type: ActionTypes.ROADMAPS_RECO_SUCCESS, payload: [] });
+    }
+  };
+
+  // Learning progress persistence (per-user, per-domain)
+  const progressKey = () => `learningProgress::${user?.uid || user?.email || 'guest'}`;
+  const loadLearningProgress = () => {
+    try {
+      const raw = localStorage.getItem(progressKey());
+      const parsed = raw ? JSON.parse(raw) : {};
+      // Sync into state
+      state.learningProgress = parsed; // minimal mutation; UI derives from value spread below
+    } catch {}
+  };
+  const saveLearningProgress = (next) => {
+    try {
+      localStorage.setItem(progressKey(), JSON.stringify(next));
+      state.learningProgress = next;
+    } catch {}
+  };
+  const toggleRoadmapStep = (domainId, stepIndex) => {
+    const current = state.learningProgress || {};
+    const set = new Set(current[domainId] || []);
+    if (set.has(stepIndex)) set.delete(stepIndex); else set.add(stepIndex);
+    const next = { ...current, [domainId]: Array.from(set).sort((a,b)=>a-b) };
+    saveLearningProgress(next);
   };
 
   // Chat methods
@@ -449,6 +546,11 @@ export const DataProvider = ({ children }) => {
     initializeChat,
     // Resume methods
     uploadResume,
+    // Roadmaps
+    fetchRoadmaps,
+    fetchRecommendedRoadmaps,
+    // Learning progress
+    toggleRoadmapStep,
     // Utility methods
     refreshAll: () => { fetchProfile(); fetchCareerRecommendations(); },
   };

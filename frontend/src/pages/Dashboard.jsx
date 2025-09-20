@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import Navbar from '../components/Navbar';
+import { calculateMatchScore } from '../services/matchUtils';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -64,63 +65,27 @@ const Dashboard = () => {
 
   // Initialize with first career when component loads
   useEffect(() => {
-    if (careers.recommendations.length > 0 && !selectedCareer) {
-      updateSkillAnalysis(careers.recommendations[0].title);
+    const top3 = (careers.recommendations || []).slice(0, 3);
+    if (top3.length > 0 && !selectedCareer) {
+      updateSkillAnalysis(top3[0]);
     }
   }, [careers.recommendations, selectedCareer]);
 
-  // Career-specific skill data
-  const careerSkillData = {
-    'Software Developer': {
-      required_skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Git', 'APIs'],
-      learning_resources: [
-        { title: 'freeCodeCamp - Full Stack Development', url: 'https://www.freecodecamp.org/', type: 'Course' },
-        { title: 'JavaScript Complete Course', url: 'https://www.youtube.com/watch?v=PkZNo7MFNFg', type: 'YouTube' },
-        { title: 'Python for Beginners', url: 'https://www.python.org/about/gettingstarted/', type: 'Documentation' },
-        { title: 'Git Tutorial', url: 'https://www.youtube.com/watch?v=SWYqp7iY_Tc', type: 'YouTube' }
-      ]
-    },
-    'Data Analyst': {
-      required_skills: ['Python', 'SQL', 'Excel', 'Statistics', 'Tableau', 'Power BI'],
-      learning_resources: [
-        { title: 'Google Data Analytics Certificate', url: 'https://www.coursera.org/professional-certificates/google-data-analytics', type: 'Course' },
-        { title: 'SQL for Data Science', url: 'https://www.youtube.com/watch?v=HXV3zeQKqGY', type: 'YouTube' },
-        { title: 'Python for Data Analysis', url: 'https://pandas.pydata.org/docs/', type: 'Documentation' },
-        { title: 'Tableau Public Training', url: 'https://public.tableau.com/app/learn/how-to-videos', type: 'Course' }
-      ]
-    },
-    'Product Manager': {
-      required_skills: ['Communication', 'Strategy', 'Analytics', 'Leadership', 'User Research', 'Agile'],
-      learning_resources: [
-        { title: 'Product Management Course', url: 'https://www.coursera.org/specializations/product-management', type: 'Course' },
-        { title: 'Product Management Framework', url: 'https://www.youtube.com/watch?v=2JzgIgLYFJ4', type: 'YouTube' },
-        { title: 'User Story Mapping', url: 'https://www.atlassian.com/agile/product-management/user-story-mapping', type: 'Documentation' },
-        { title: 'Google Analytics Academy', url: 'https://analytics.google.com/analytics/academy/', type: 'Course' }
-      ]
-    }
-  };
+  const updateSkillAnalysis = (careerMatch) => {
+    if (!careerMatch) return;
+    const userSkills = profileForm.skills
+      ? profileForm.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    const required = Array.isArray(careerMatch.requirements) ? careerMatch.requirements : [];
+    const { matched, missing } = calculateMatchScore(userSkills, required);
 
-  const updateSkillAnalysis = (careerTitle) => {
-    const userSkills = profileForm.skills ? profileForm.skills.split(',').map(s => s.trim()) : [];
-    const careerData = careerSkillData[careerTitle];
-    
-    if (careerData) {
-      const required = careerData.required_skills;
-      const current = required.filter(skill => 
-        userSkills.some(userSkill => userSkill.toLowerCase().includes(skill.toLowerCase()))
-      );
-      const gaps = required.filter(skill => 
-        !userSkills.some(userSkill => userSkill.toLowerCase().includes(skill.toLowerCase()))
-      );
-
-      setSkillAnalysis({
-        matched_skills: current,
-        missing_skills: gaps,
-        recommendations: gaps.map(skill => `Learn ${skill} to enhance your ${careerTitle} capabilities`),
-        learning_resources: careerData.learning_resources
-      });
-      setSelectedCareer(careerTitle);
-    }
+    setSkillAnalysis({
+      matched_skills: matched,
+      missing_skills: missing,
+      recommendations: missing.map((skill) => `Learn ${skill} to enhance your ${careerMatch.title} capabilities`),
+      learning_resources: [],
+    });
+    setSelectedCareer(careerMatch.title);
   };
 
   const handleProfileUpdate = async (e) => {
@@ -389,10 +354,10 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm mb-4">Click on a career to see detailed skill analysis</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {(careers.recommendations || []).map((match, index) => (
+                {(careers.recommendations || []).slice(0,3).map((match, index) => (
                   <div
                     key={index}
-                    onClick={() => updateSkillAnalysis(match.title)}
+                    onClick={() => updateSkillAnalysis(match)}
                     className={`border rounded-lg p-4 transition-all duration-200 cursor-pointer ${
                       selectedCareer === match.title
                         ? 'border-blue-500 bg-blue-50 shadow-lg'
