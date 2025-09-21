@@ -121,10 +121,21 @@ const Resume = () => {
   };
 
   const renderResumePreview = () => {
-    const url = resumeData?.url || '/What-Next.pdf';
-    const filename = resumeData?.filename || 'What-Next.pdf';
-    const uploadedAt = resumeData?.uploadedAt || Date.now();
-    const isPdf = filename.toLowerCase().endsWith('.pdf');
+    if (!resumeData) {
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center justify-center h-[600px]">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <span className="text-4xl">📄</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Resume Uploaded</h3>
+          <p className="text-gray-600 text-center max-w-xs">Upload your resume to preview it here and unlock personalized career recommendations.</p>
+        </div>
+      );
+    }
+    const url = resumeData.url;
+    const filename = resumeData.filename;
+    const uploadedAt = resumeData.uploadedAt;
+    const isPdf = filename && filename.toLowerCase().endsWith('.pdf');
 
     if (isPdf) {
       return (
@@ -140,7 +151,7 @@ const Resume = () => {
             />
           </div>
           <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
-            <span>Last Updated: {new Date(uploadedAt).toLocaleDateString()}</span>
+            <span>Last Updated: {uploadedAt ? new Date(uploadedAt).toLocaleDateString() : ''}</span>
             <a
               href={url}
               target="_blank"
@@ -162,7 +173,7 @@ const Resume = () => {
           </div>
           <p className="text-gray-700 font-medium">{filename}</p>
           <p className="text-sm text-gray-500 mt-2">
-            Last Updated: {new Date(uploadedAt).toLocaleDateString()}
+            Last Updated: {uploadedAt ? new Date(uploadedAt).toLocaleDateString() : ''}
           </p>
           <a
             href={url}
@@ -364,11 +375,7 @@ const Resume = () => {
           </div>
 
           {/* Empty State */}
-          {!resumeData && !isUploading && (
-            <div className="text-center py-8 text-gray-600">
-              Showing sample PDF (What-Next.pdf) on the right as a placeholder.
-            </div>
-          )}
+          {/* Removed sample PDF placeholder message */}
         </div>
       </div>
 

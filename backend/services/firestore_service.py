@@ -20,31 +20,61 @@ class FirestoreService:
     
     def __init__(self):
         self.db = None
+        # Development fallback (in-memory) when Firestore isn't initialized
+        self.use_mock = False
+        self._mock_profiles: Dict[str, Any] = {}
     
     def _get_db(self):
         """Get Firestore database client."""
+        if self.use_mock:
+            return None
         if self.db is None:
-            self.db = get_firestore_db()
+            try:
+                self.db = get_firestore_db()
+            except Exception as e:
+                logger.warning(f"Falling back to in-memory Firestore mock: {e}")
+                self.use_mock = True
+                self.db = None
         return self.db
     
     async def save_user_profile(self, user_id: str, profile_data: Dict[str, Any]) -> str:
         """Save user profile to Firestore."""
         try:
             db = self._get_db()
-            
+
             # Prepare profile document
             profile_doc = {
                 "user_id": user_id,
-                "created_at": datetime.now(),
                 "updated_at": datetime.now(),
                 **profile_data
             }
+            # created_at should not be overwritten if already present
+            if not self.use_mock:
+                # Merge without overwriting existing fields
+                doc_ref = db.collection("profiles").document(user_id)
+                # Preserve created_at if exists; otherwise set it
+                try:
+                    existing = doc_ref.get()
+                    if existing.exists:
+                        # Merge with existing; do not touch created_at
+                        doc_ref.set(profile_doc, merge=True)
+                    else:
+                        profile_doc["created_at"] = datetime.now()
+                        doc_ref.set(profile_doc, merge=True)
+                except Exception:
+                    profile_doc["created_at"] = datetime.now()
+                    doc_ref.set(profile_doc, merge=True)
+            else:
+                # In-memory mock upsert
+                existing = self._mock_profiles.get(user_id) or {}
+                if "created_at" not in existing:
+                    profile_doc["created_at"] = datetime.now()
+                else:
+                    profile_doc["created_at"] = existing.get("created_at")
+                merged = {**existing, **profile_doc}
+                self._mock_profiles[user_id] = merged
             
-            # Save to profiles collection
-            doc_ref = db.collection("profiles").document(user_id)
-            doc_ref.set(profile_doc)
-            
-            logger.info(f"User profile saved for user: {user_id}")
+            logger.info(f"User profile saved (merge) for user: {user_id}")
             return user_id
             
         except Exception as e:
@@ -55,6 +85,9 @@ class FirestoreService:
         """Get user profile from Firestore."""
         try:
             db = self._get_db()
+
+            if self.use_mock:
+                return self._mock_profiles.get(user_id)
             
             doc_ref = db.collection("profiles").document(user_id)
             doc = doc_ref.get()
@@ -74,12 +107,18 @@ class FirestoreService:
         try:
             db = self._get_db()
             
-            updates["updated_at"] = datetime.now()
+            updates = {**(updates or {}), "updated_at": datetime.now()}
+
+            if self.use_mock:
+                existing = self._mock_profiles.get(user_id) or {"user_id": user_id, "created_at": datetime.now()}
+                existing.update(updates)
+                self._mock_profiles[user_id] = existing
+            else:
+                doc_ref = db.collection("profiles").document(user_id)
+                # Upsert via merge to avoid failures when doc doesn't exist
+                doc_ref.set(updates, merge=True)
             
-            doc_ref = db.collection("profiles").document(user_id)
-            doc_ref.update(updates)
-            
-            logger.info(f"User profile updated for user: {user_id}")
+            logger.info(f"User profile updated (merge) for user: {user_id}")
             return True
             
         except Exception as e:

@@ -2,13 +2,14 @@
 
 These endpoints forward to existing logic in profiles, careers, and chat modules.
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from fastapi.security import HTTPBearer
 from typing import Optional, Dict, Any
 from datetime import datetime
 import re
 import uuid
 import logging
+import os
 
 from core.security import verify_token
 from services.firestore_service import FirestoreService
@@ -56,12 +57,13 @@ async def save_profile(profile: Dict[str, Any], token: str = Depends(security)):
     user_id = payload.get("user_id")
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    await firestore_service.save_user_profile(user_id, profile)
-    return {"ok": True}
+    # Use update (merge) semantics so it works whether profile exists or not
+    await firestore_service.update_user_profile(user_id, profile)
+    return {"ok": True, "updated": True}
 
 
 @router.post("/resume")
-async def parse_resume(file: UploadFile = File(...), token: str = Depends(security)):
+async def parse_resume(request: Request, file: UploadFile = File(...), token: str = Depends(security)):
     """Enhanced resume parsing with profile auto-population and file storage."""
     payload = verify_token(token.credentials)
     user_id = payload.get("user_id")
@@ -77,35 +79,45 @@ async def parse_resume(file: UploadFile = File(...), token: str = Depends(securi
         
         if not parse_result["success"]:
             return {
-                "ok": False, 
+                "ok": False,
                 "error": parse_result.get("error", "Failed to parse resume"),
-                "extracted": {}
+                "extracted_data": {}
             }
         
         parsed_data = parse_result["parsed"]
         
-        # Store file in Firebase Storage (if available)
+        # Store file in Firebase Storage if available, else local uploads fallback
         resume_url = None
+        stored = False
         if FIREBASE_STORAGE_AVAILABLE:
             try:
                 bucket = storage.bucket()
-                
-                # Create unique filename
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
                 storage_filename = f"resumes/{user_id}/{timestamp}_{uuid.uuid4().hex[:8]}.{file_extension}"
-                
-                # Upload file
                 blob = bucket.blob(storage_filename)
                 blob.upload_from_string(file_content, content_type=file.content_type)
-                
-                # Make file publicly readable (or use signed URLs)
                 blob.make_public()
                 resume_url = blob.public_url
-                
+                stored = True
             except Exception as e:
-                # Log error but continue - file storage is not critical
-                print(f"Failed to store resume file: {e}")
+                print(f"Failed to store resume in Firebase Storage: {e}")
+        if not stored:
+            # Local filesystem fallback
+            try:
+                os.makedirs(os.path.join("uploads", "resumes", user_id), exist_ok=True)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                ext = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
+                fname = f"{timestamp}_{uuid.uuid4().hex[:8]}.{ext}"
+                fpath = os.path.join("uploads", "resumes", user_id, fname)
+                with open(fpath, "wb") as fh:
+                    fh.write(file_content)
+                rel_path = f"/uploads/resumes/{user_id}/{fname}"
+                # Build absolute URL for frontend iframe
+                base = str(request.base_url).rstrip('/')
+                resume_url = f"{base}{rel_path}"
+            except Exception as e:
+                print(f"Failed to store resume locally: {e}")
         
         # Get current profile
         current_profile = {}
@@ -164,15 +176,19 @@ async def parse_resume(file: UploadFile = File(...), token: str = Depends(securi
                     profile_updates["field_of_study"] = field.title()
                     break
         
-        # Update profile in Firestore
+        # Update profile in Firestore (merge/upsert)
         await firestore_service.update_user_profile(user_id, profile_updates)
-        
+
+        # Normalize response shape for frontend client
         return {
-            "ok": True, 
-            "extracted": parsed_data,
-            "resume_url": resume_url,
-            "confidence_score": confidence,
-            "profile_updated": True
+            "ok": True,
+            "extracted_data": parsed_data,
+            "resume": {
+                "url": resume_url,
+                "filename": file.filename,
+                "uploadedAt": resume_metadata["uploadedAt"],
+                "confidence_score": confidence
+            }
         }
         
     except Exception as e:

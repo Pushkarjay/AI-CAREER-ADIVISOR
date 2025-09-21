@@ -1,6 +1,7 @@
 """Profile API endpoints for user profile management."""
 
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Request
+from typing import Optional
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -137,36 +138,127 @@ async def update_profile(profile_updates: UserProfileUpdate, token: str = Depend
 
 
 @router.post("/upload-resume")
-async def upload_resume(file: UploadFile = File(...), token: str = Depends(security)):
-    """Upload and parse resume using lightweight text parsing (no paid APIs)."""
+async def upload_resume(request: Request = None, file: UploadFile = File(...), token: str = Depends(security)):
+    """Upload, store, parse resume and update user profile; returns resume metadata for preview."""
+    # Lazy imports to avoid heavy deps at import time
+    from services.resume_parser import ResumeParser
     try:
+        # Optional Firebase Storage
+        try:
+            import firebase_admin  # noqa: F401
+            from firebase_admin import storage as fb_storage
+            FIREBASE_STORAGE_AVAILABLE = True
+        except Exception:
+            FIREBASE_STORAGE_AVAILABLE = False
+
         payload = verify_token(token.credentials)
         user_id = payload.get("user_id")
-        # Read file (expect text; PDFs/Docs would need extra libs, omitted per constraints)
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+        # Read file
         content_bytes = await file.read()
-        text = content_bytes.decode(errors="ignore")
 
-        # Very simple skill extraction via keyword matching
-        known_skills = [
-            "python","java","javascript","react","node","sql","nosql","aws","gcp","azure",
-            "docker","kubernetes","machine learning","ml","data analysis","pandas","numpy","git"
-        ]
-        found = []
-        lower = text.lower()
-        for sk in known_skills:
-            if sk in lower:
-                # Normalize formatting
-                found.append(sk.title() if sk.isalpha() else sk)
+        # Parse using ResumeParser
+        parser = ResumeParser()
+        try:
+            parsed_result = await parser.parse_file(content_bytes, file.filename)
+            extracted_data = parsed_result.get("parsed") if parsed_result.get("success") else {}
+        except Exception as pe:
+            logger.warning(f"Resume parsing error, falling back to raw decode: {pe}")
+            # Fallback minimal extraction: raw text only
+            extracted_data = {
+                "skills": [],
+                "education_history": [],
+                "experience_years": 0,
+                "raw_text": content_bytes.decode('utf-8', errors='ignore')[:1000],
+                "confidence_score": 0
+            }
 
-        extracted = {
-            "skills": sorted(list(set(found)))[:20],
+        # Try to store the file: Firebase first, else local fallback (/uploads)
+        resume_url = None
+        stored = False
+        if FIREBASE_STORAGE_AVAILABLE:
+            try:
+                bucket = fb_storage.bucket()
+                from datetime import datetime as _dt
+                import uuid as _uuid
+                ts = _dt.now().strftime("%Y%m%d_%H%M%S")
+                ext = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
+                storage_path = f"resumes/{user_id}/{ts}_{_uuid.uuid4().hex[:8]}.{ext}"
+                blob = bucket.blob(storage_path)
+                blob.upload_from_string(content_bytes, content_type=file.content_type)
+                blob.make_public()
+                resume_url = blob.public_url
+                stored = True
+            except Exception as se:
+                logger.warning(f"Firebase Storage upload failed; will fallback to local: {se}")
+        if not stored:
+            try:
+                import os
+                from datetime import datetime as _dt
+                import uuid as _uuid
+                os.makedirs(os.path.join("uploads", "resumes", user_id), exist_ok=True)
+                ts = _dt.now().strftime("%Y%m%d_%H%M%S")
+                ext = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
+                fname = f"{ts}_{_uuid.uuid4().hex[:8]}.{ext}"
+                fpath = os.path.join("uploads", "resumes", user_id, fname)
+                with open(fpath, "wb") as fh:
+                    fh.write(content_bytes)
+                rel = f"/uploads/resumes/{user_id}/{fname}"
+                if request is not None:
+                    base = str(request.base_url).rstrip('/')
+                    resume_url = f"{base}{rel}"
+                else:
+                    # Fallback to relative URL when Request is not provided
+                    resume_url = rel
+            except Exception as le:
+                logger.error(f"Local resume store failed: {le}")
+
+        # Update profile with resume metadata and parsed fields where sensible
+        try:
+            current_profile = await firestore_service.get_user_profile(user_id) or {}
+        except Exception:
+            current_profile = {}
+
+        from datetime import datetime as _dt
+        resume_meta = {
+            "url": resume_url,
+            "filename": file.filename,
+            "uploadedAt": _dt.now().isoformat(),
+            "confidence_score": extracted_data.get("confidence_score", 0),
+            "parsed": extracted_data,
         }
-        
+        updates = {"resume": resume_meta, "resume_parsed_at": _dt.now().isoformat()}
+
+        if not current_profile.get("name") and extracted_data.get("full_name"):
+            updates["name"] = extracted_data["full_name"]
+        if not current_profile.get("skills") and extracted_data.get("skills"):
+            updates["skills"] = extracted_data["skills"]
+        if not current_profile.get("experience_years") and extracted_data.get("experience_years"):
+            updates["experience_years"] = extracted_data["experience_years"]
+
+        update_ok = True
+        try:
+            await firestore_service.update_user_profile(user_id, updates)
+        except Exception as ue:
+            logger.error(f"Profile update failed after resume upload: {ue}")
+            update_ok = False
+
         return {
             "message": "Resume uploaded successfully",
-            "extracted_data": extracted
+            "extracted_data": extracted_data,
+            "resume": {
+                "url": resume_url,
+                "filename": file.filename,
+                "uploadedAt": resume_meta["uploadedAt"],
+                "confidence_score": resume_meta.get("confidence_score", 0),
+            },
+            "profile_updated": update_ok,
         }
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to upload resume: {e}")
         raise HTTPException(

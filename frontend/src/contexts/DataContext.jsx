@@ -348,6 +348,7 @@ export const DataProvider = ({ children }) => {
       'experience_years',
       'preferred_industries',
       'career_goals',
+      'resume',
     ];
     const out = {};
     for (const k of allowed) if (k in (data || {})) out[k] = data[k];
@@ -551,19 +552,28 @@ export const DataProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.RESUME_UPLOAD_START });
       const response = await profileAPI.uploadResume(file);
-
-      if (response.data?.extracted_data) {
-        dispatch({ type: ActionTypes.RESUME_UPLOAD_SUCCESS, payload: response.data });
+      const res = response?.data || {};
+      if (res?.extracted_data) {
+        dispatch({ type: ActionTypes.RESUME_UPLOAD_SUCCESS, payload: res });
 
         const current = state.profile.data || {};
         const currentSkills = current.skills
           ? (Array.isArray(current.skills) ? current.skills : String(current.skills).split(',').map((s) => s.trim()).filter(Boolean))
           : [];
-        const newSkills = response.data.extracted_data.skills?.length
-          ? Array.from(new Set([...currentSkills, ...response.data.extracted_data.skills]))
+        const newSkills = res.extracted_data.skills?.length
+          ? Array.from(new Set([...currentSkills, ...res.extracted_data.skills]))
           : currentSkills;
 
-        const updatedProfile = { ...current, skills: newSkills };
+        const resumeMeta = res.resume || {
+          url: res.resume_url || '',
+          filename: file.name,
+          uploadedAt: new Date().toISOString(),
+          confidence_score: res.confidence_score || 0,
+        };
+        // Attach parsed to resume meta for UI
+        const resumeField = { ...resumeMeta, parsed: res.extracted_data };
+
+        const updatedProfile = { ...current, skills: newSkills, resume: resumeField };
         dispatch({ type: ActionTypes.PROFILE_UPDATE_SUCCESS, payload: updatedProfile });
 
         try {
@@ -574,7 +584,7 @@ export const DataProvider = ({ children }) => {
         }
 
         toast.success('Resume processed successfully');
-        return response.data;
+        return res;
       }
       return null;
     } catch (error) {

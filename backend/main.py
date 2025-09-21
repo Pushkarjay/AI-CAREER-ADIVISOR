@@ -8,9 +8,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
 from contextlib import asynccontextmanager
+import os
 
 from core.config import settings
 from core.database import initialize_connections
@@ -34,6 +36,12 @@ async def lifespan(app: FastAPI):
     """Application lifespan management."""
     # Startup
     logger.info("Starting AI Career Advisor Backend...")
+    # Ensure uploads directory exists for local storage fallback
+    try:
+        os.makedirs("uploads", exist_ok=True)
+        os.makedirs(os.path.join("uploads", "resumes"), exist_ok=True)
+    except Exception as e:
+        logger.warning(f"Could not create uploads directory: {e}")
     await initialize_connections()
     logger.info("Application startup complete.")
     
@@ -163,6 +171,13 @@ app.include_router(
     prefix="/api",
     tags=["alias"]
 )
+
+# Serve uploaded files in development/local fallback
+try:
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+    logger.info("Mounted /uploads static file serving")
+except Exception as e:
+    logger.warning(f"Failed to mount /uploads static: {e}")
 
 
 if __name__ == "__main__":

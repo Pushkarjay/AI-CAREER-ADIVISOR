@@ -107,7 +107,11 @@ export const roadmapAPI = {
 
 // Profile API
 export const profileAPI = {
-  fetch: () => api.get('/api/profile').catch((error) => { throw error; }),
+  // Backend alias_api returns { data: profile }
+  fetch: async () => {
+    const res = await api.get('/api/profile').catch((error) => { throw error; });
+    return { data: res?.data?.data || res?.data || {} };
+  },
   save: (profileData) => api.post('/api/profile', profileData).catch((error) => { throw error; }),
   uploadResume: (file) => {
     const formData = new FormData();

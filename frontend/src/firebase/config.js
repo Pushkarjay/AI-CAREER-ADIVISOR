@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getStorage } from 'firebase/storage';
 import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
 
 // Validate required env vars and provide actionable error messages in dev
@@ -26,6 +27,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+export const storage = getStorage(app);
 
 // For development - you can enable this when you have Firebase emulator running
 // if (import.meta.env.DEV && !auth._config.emulator) {
