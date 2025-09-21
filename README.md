@@ -2,6 +2,21 @@
 
 A multi-agent, AI-driven career guidance platform for students in India, built with FastAPI backend and React frontend.
 
+## 🖼️ Demo Screenshots
+
+
+### Dashboard (Profile, Chat, Career Matches, Skill Analysis)
+![Dashboard Screenshot](docs/screenshots/Dashboard.png)
+
+### Analytics Dashboard (Skill Trends, Industry Growth, Top Cities)
+![Analytics Screenshot](docs/screenshots/Analytics.png)
+
+### Career Roadmaps (Action Items, Learning Roadmap, Resources, Job Strategy)
+![Career Roadmaps Screenshot](docs/screenshots/Career_Roadmaps.png)
+
+### Learning Roadmaps (Explore Career Domains)
+![Learning Roadmaps Screenshot](docs/screenshots/Learning_Roadmaps.png)
+
 ## 🏗️ Architecture
 
 ```mermaid
