@@ -22,6 +22,7 @@ const Profile = () => {
     additional_info: '',
     certifications: [],
     projects: [],
+    internships: [],
     languages: '',
   });
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,7 @@ const Profile = () => {
         additional_info: profile.data.additional_info || '',
         certifications: profile.data.certifications || [],
         projects: profile.data.projects || [],
+        internships: profile.data.internships || [],
         languages: Array.isArray(profile.data.languages)
           ? profile.data.languages.join(', ')
           : profile.data.languages || '',
@@ -130,6 +132,29 @@ const Profile = () => {
     }));
   };
 
+  const addInternship = () => {
+    setForm(f => ({
+      ...f,
+      internships: [...f.internships, { company: '', role: '', duration: '', description: '', location: '' }]
+    }));
+  };
+
+  const removeInternship = (index) => {
+    setForm(f => ({
+      ...f,
+      internships: f.internships.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateInternship = (index, field, value) => {
+    setForm(f => ({
+      ...f,
+      internships: f.internships.map((intern, i) => 
+        i === index ? { ...intern, [field]: value } : intern
+      )
+    }));
+  };
+
   const onSave = async () => {
     try {
       setLoading(true);
@@ -149,6 +174,7 @@ const Profile = () => {
         additional_info: form.additional_info || null,
         certifications: form.certifications || [],
         projects: form.projects || [],
+        internships: form.internships || [],
         languages: form.languages ? form.languages.split(',').map((s) => s.trim()).filter(Boolean) : [],
       };
       
@@ -411,6 +437,70 @@ const Profile = () => {
                   </div>
                 ) : (
                   <p className="text-sm text-slate-500 italic">No projects added yet.</p>
+                )}
+              </div>
+
+              {/* Internships Section */}
+              <div className="md:col-span-2">
+                <div className="flex justify-between items-center mb-3">
+                  {renderFieldLabel('Internships', 'internships')}
+                  <button type="button" onClick={addInternship} className="text-sm px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    + Add Internship
+                  </button>
+                </div>
+                {form.internships && form.internships.length > 0 ? (
+                  <div className="space-y-3">
+                    {form.internships.map((intern, index) => (
+                      <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="grid grid-cols-1 gap-3">
+                          <input
+                            type="text"
+                            placeholder="Company Name *"
+                            value={intern.company || ''}
+                            onChange={(e) => updateInternship(index, 'company', e.target.value)}
+                            className="input-field text-sm"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Role/Position"
+                            value={intern.role || ''}
+                            onChange={(e) => updateInternship(index, 'role', e.target.value)}
+                            className="input-field text-sm"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Duration (e.g., Jun 2023 - Aug 2023)"
+                            value={intern.duration || ''}
+                            onChange={(e) => updateInternship(index, 'duration', e.target.value)}
+                            className="input-field text-sm"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Location"
+                            value={intern.location || ''}
+                            onChange={(e) => updateInternship(index, 'location', e.target.value)}
+                            className="input-field text-sm"
+                          />
+                          <textarea
+                            placeholder="Description of responsibilities and achievements"
+                            value={intern.description || ''}
+                            onChange={(e) => updateInternship(index, 'description', e.target.value)}
+                            className="input-field text-sm"
+                            rows="2"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeInternship(index)}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">No internships added yet.</p>
                 )}
               </div>
             </div>

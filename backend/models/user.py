@@ -47,6 +47,15 @@ class ProjectItem(BaseModel):
     url: Optional[str] = None
 
 
+class InternshipItem(BaseModel):
+    """Individual internship entry."""
+    company: str
+    role: Optional[str] = None
+    duration: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+
+
 class ResumeMetadata(BaseModel):
     """Resume metadata and parsing information."""
     url: Optional[str] = None
@@ -81,6 +90,7 @@ class UserProfile(BaseModel):
     # New fields from resume parsing
     certifications: List[CertificationItem] = []
     projects: List[ProjectItem] = []
+    internships: List[InternshipItem] = []
     languages: List[str] = []  # Spoken languages
     
     # Data tracking
@@ -105,6 +115,7 @@ class UserProfileCreate(BaseModel):
     additional_info: Optional[str] = None
     certifications: List[CertificationItem] = []
     projects: List[ProjectItem] = []
+    internships: List[InternshipItem] = []
     languages: List[str] = []
 
 
@@ -123,6 +134,7 @@ class UserProfileUpdate(BaseModel):
     additional_info: Optional[str] = None
     certifications: Optional[List[CertificationItem]] = None
     projects: Optional[List[ProjectItem]] = None
+    internships: Optional[List[InternshipItem]] = None
     languages: Optional[List[str]] = None
 
 

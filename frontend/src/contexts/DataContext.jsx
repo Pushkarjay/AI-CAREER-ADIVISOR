@@ -351,6 +351,7 @@ export const DataProvider = ({ children }) => {
       'resume',
       'certifications',
       'projects',
+      'internships',
       'languages',
     ];
     const out = {};

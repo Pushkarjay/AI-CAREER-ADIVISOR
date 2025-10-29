@@ -138,9 +138,10 @@ async def update_profile(profile_updates: UserProfileUpdate, token: str = Depend
 
 
 @router.post("/upload-resume")
-async def upload_resume(request: Request = None, file: UploadFile = File(...), token: str = Depends(security)):
+async def upload_resume(file: UploadFile = File(...), token: str = Depends(security), request: Request = None):
     """Upload, store, parse resume and update user profile; returns resume metadata for preview and confirmation."""
     from services.resume_parser import ResumeParser
+    from fastapi import Request
     try:
         # Optional Firebase Storage
         try:
@@ -329,6 +330,32 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
             merged_languages = list(set(existing_languages + parsed_languages))
             updates["languages"] = merged_languages
             data_sources["languages"] = "resume_merged" if existing_languages else "resume"
+        
+        # Internships - merge with existing
+        existing_internships = current_profile.get("internships", [])
+        parsed_internships = extracted_data.get("internships", [])
+        if parsed_internships:
+            # Convert parsed internships to proper format
+            formatted_internships = [
+                {
+                    "company": internship.get("company", ""),
+                    "role": internship.get("role", ""),
+                    "duration": internship.get("duration", ""),
+                    "description": internship.get("description", ""),
+                    "location": internship.get("location", "")
+                }
+                for internship in parsed_internships
+                if internship.get("company")  # Only include if company name exists
+            ]
+            # Merge with existing (avoid duplicates by company+role)
+            existing_keys = {(i.get("company", "").lower(), i.get("role", "").lower()) for i in existing_internships}
+            new_internships = [
+                i for i in formatted_internships 
+                if (i["company"].lower(), i["role"].lower()) not in existing_keys
+            ]
+            if new_internships:
+                updates["internships"] = existing_internships + new_internships
+                data_sources["internships"] = "resume_merged" if existing_internships else "resume"
         
         # Update data_sources tracking
         updates["data_sources"] = data_sources

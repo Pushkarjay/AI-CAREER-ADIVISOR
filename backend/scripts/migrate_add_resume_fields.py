@@ -4,6 +4,7 @@ Migration script to add new resume-related fields to existing user profiles.
 This script adds:
 - certifications: List[CertificationItem]
 - projects: List[ProjectItem]
+- internships: List[InternshipItem]
 - languages: List[str]
 - data_sources: Dict[str, str]
 
@@ -46,6 +47,11 @@ async def migrate_profile(firestore_service: FirestoreService, user_id: str, pro
         # Add languages field if not present
         if 'languages' not in profile_data:
             updates['languages'] = []
+            modified = True
+        
+        # Add internships field if not present
+        if 'internships' not in profile_data:
+            updates['internships'] = []
             modified = True
         
         # Add data_sources field if not present
