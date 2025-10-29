@@ -303,6 +303,13 @@ export const DataProvider = ({ children }) => {
         career_goals: pdata?.career_goals || '',
         ...pdata,
       };
+      
+      // Normalize resume data: rename parsed_data to parsed for frontend consistency
+      if (profileData.resume && profileData.resume.parsed_data) {
+        profileData.resume.parsed = profileData.resume.parsed_data;
+        delete profileData.resume.parsed_data;
+      }
+      
       // Merge UI-only fields from local storage
       const uiOnly = loadUiOnlyFields(user);
       for (const k of UI_ONLY_FIELDS) {
