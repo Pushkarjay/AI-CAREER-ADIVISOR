@@ -34,8 +34,8 @@ class GeminiService:
             # Configure the API
             genai.configure(api_key=self.api_key)
             
-            # Initialize the model
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            # Initialize the model - using gemini-2.5-flash (stable and fast)
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
             
             # Safety settings
             self.safety_settings = {
@@ -120,13 +120,13 @@ Please provide a helpful, specific response as an AI career advisor for Indian s
                 return {
                     "response": response.text,
                     "confidence": 0.85,
-                    "model_used": "gemini-1.5-flash"
+                    "model_used": "gemini-2.5-flash"
                 }
             else:
                 return {
                     "response": "I couldn't generate a proper response. Could you please rephrase your question?",
                     "confidence": 0.3,
-                    "model_used": "gemini-1.5-flash"
+                    "model_used": "gemini-2.5-flash"
                 }
                 
         except Exception as e:
@@ -134,7 +134,7 @@ Please provide a helpful, specific response as an AI career advisor for Indian s
             return {
                 "response": "I'm having trouble processing your request right now. Please try again.",
                 "confidence": 0.1,
-                "model_used": "gemini-1.5-flash"
+                "model_used": "gemini-2.5-flash"
             }
     
     async def analyze_intent(self, message: str) -> Dict[str, Any]:
