@@ -139,8 +139,7 @@ async def update_profile(profile_updates: UserProfileUpdate, token: str = Depend
 
 @router.post("/upload-resume")
 async def upload_resume(request: Request = None, file: UploadFile = File(...), token: str = Depends(security)):
-    """Upload, store, parse resume and update user profile; returns resume metadata for preview."""
-    # Lazy imports to avoid heavy deps at import time
+    """Upload, store, parse resume and update user profile; returns resume metadata for preview and confirmation."""
     from services.resume_parser import ResumeParser
     try:
         # Optional Firebase Storage
@@ -158,12 +157,18 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
 
         # Read file
         content_bytes = await file.read()
+        file_size = len(content_bytes)
 
         # Parse using ResumeParser
         parser = ResumeParser()
+        parsed_result = None
+        extracted_data = {}
+        parsing_successful = False
+        
         try:
             parsed_result = await parser.parse_file(content_bytes, file.filename)
             extracted_data = parsed_result.get("parsed") if parsed_result.get("success") else {}
+            parsing_successful = parsed_result.get("success", False)
         except Exception as pe:
             logger.warning(f"Resume parsing error, falling back to raw decode: {pe}")
             # Fallback minimal extraction: raw text only
@@ -172,7 +177,10 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
                 "education_history": [],
                 "experience_years": 0,
                 "raw_text": content_bytes.decode('utf-8', errors='ignore')[:1000],
-                "confidence_score": 0
+                "confidence_score": 0,
+                "certifications": [],
+                "projects": [],
+                "languages": []
             }
 
         # Try to store the file: Firebase first, else local fallback (/uploads)
@@ -193,6 +201,7 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
                 stored = True
             except Exception as se:
                 logger.warning(f"Firebase Storage upload failed; will fallback to local: {se}")
+        
         if not stored:
             try:
                 import os
@@ -215,29 +224,116 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
             except Exception as le:
                 logger.error(f"Local resume store failed: {le}")
 
-        # Update profile with resume metadata and parsed fields where sensible
+        # Get current profile or create empty one
         try:
             current_profile = await firestore_service.get_user_profile(user_id) or {}
         except Exception:
             current_profile = {}
 
+        # Track data sources for fields populated from resume
+        data_sources = current_profile.get("data_sources", {})
+        
+        # Build comprehensive resume metadata
         from datetime import datetime as _dt
         resume_meta = {
             "url": resume_url,
             "filename": file.filename,
-            "uploadedAt": _dt.now().isoformat(),
+            "uploaded_at": _dt.now().isoformat(),
+            "file_size": file_size,
             "confidence_score": extracted_data.get("confidence_score", 0),
-            "parsed": extracted_data,
+            "parsed_data": extracted_data,
+            "version": current_profile.get("resume", {}).get("version", 0) + 1,  # Increment version
         }
-        updates = {"resume": resume_meta, "resume_parsed_at": _dt.now().isoformat()}
+        
+        # Prepare profile updates with resume data
+        updates = {
+            "resume": resume_meta, 
+            "resume_parsed_at": _dt.now().isoformat()
+        }
 
+        # Auto-populate profile fields from parsed data if not already set
+        # Name
         if not current_profile.get("name") and extracted_data.get("full_name"):
             updates["name"] = extracted_data["full_name"]
-        if not current_profile.get("skills") and extracted_data.get("skills"):
-            updates["skills"] = extracted_data["skills"]
+            data_sources["name"] = "resume"
+        
+        # Skills - merge with existing
+        existing_skills = current_profile.get("skills", [])
+        if isinstance(existing_skills, str):
+            existing_skills = [s.strip() for s in existing_skills.split(',') if s.strip()]
+        parsed_skills = extracted_data.get("skills", [])
+        if parsed_skills:
+            merged_skills = list(set(existing_skills + parsed_skills))
+            updates["skills"] = merged_skills
+            data_sources["skills"] = "resume_merged" if existing_skills else "resume"
+        
+        # Experience years
         if not current_profile.get("experience_years") and extracted_data.get("experience_years"):
             updates["experience_years"] = extracted_data["experience_years"]
+            data_sources["experience_years"] = "resume"
+        
+        # Education (store raw parsed data in additional_info if not already populated)
+        if extracted_data.get("education_history") and not current_profile.get("education_level"):
+            # Try to extract degree level from first education entry
+            first_edu = extracted_data["education_history"][0] if extracted_data["education_history"] else {}
+            if first_edu.get("degree"):
+                updates["education_level"] = first_edu["degree"]
+                data_sources["education_level"] = "resume"
+        
+        # Certifications - merge with existing
+        existing_certs = current_profile.get("certifications", [])
+        parsed_certs = extracted_data.get("certifications", [])
+        if parsed_certs:
+            # Convert parsed certs to proper format
+            formatted_certs = [
+                {
+                    "name": cert.get("name", cert.get("raw_text", "")),
+                    "issuer": cert.get("issuer", ""),
+                    "year": cert.get("year", ""),
+                    "url": ""
+                }
+                for cert in parsed_certs
+            ]
+            # Merge with existing (avoid duplicates by name)
+            existing_names = {c.get("name", "").lower() for c in existing_certs}
+            new_certs = [c for c in formatted_certs if c["name"].lower() not in existing_names]
+            if new_certs:
+                updates["certifications"] = existing_certs + new_certs
+                data_sources["certifications"] = "resume_merged" if existing_certs else "resume"
+        
+        # Projects - merge with existing
+        existing_projects = current_profile.get("projects", [])
+        parsed_projects = extracted_data.get("projects", [])
+        if parsed_projects:
+            # Convert parsed projects to proper format
+            formatted_projects = [
+                {
+                    "name": proj.get("name", ""),
+                    "description": proj.get("description", ""),
+                    "technologies": [],
+                    "url": ""
+                }
+                for proj in parsed_projects
+            ]
+            # Merge with existing (avoid duplicates by name)
+            existing_names = {p.get("name", "").lower() for p in existing_projects}
+            new_projects = [p for p in formatted_projects if p["name"].lower() not in existing_names]
+            if new_projects:
+                updates["projects"] = existing_projects + new_projects
+                data_sources["projects"] = "resume_merged" if existing_projects else "resume"
+        
+        # Languages - merge with existing
+        existing_languages = current_profile.get("languages", [])
+        parsed_languages = extracted_data.get("languages", [])
+        if parsed_languages:
+            merged_languages = list(set(existing_languages + parsed_languages))
+            updates["languages"] = merged_languages
+            data_sources["languages"] = "resume_merged" if existing_languages else "resume"
+        
+        # Update data_sources tracking
+        updates["data_sources"] = data_sources
 
+        # Save profile updates
         update_ok = True
         try:
             await firestore_service.update_user_profile(user_id, updates)
@@ -245,16 +341,25 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
             logger.error(f"Profile update failed after resume upload: {ue}")
             update_ok = False
 
+        # Return comprehensive confirmation with preview data
         return {
-            "message": "Resume uploaded successfully",
-            "extracted_data": extracted_data,
+            "success": True,
+            "message": "Resume uploaded and parsed successfully",
+            "upload_confirmed": stored or (resume_url is not None),
+            "parsing_successful": parsing_successful,
+            "storage_location": "firebase" if stored else "local",
             "resume": {
                 "url": resume_url,
                 "filename": file.filename,
-                "uploadedAt": resume_meta["uploadedAt"],
+                "uploaded_at": resume_meta["uploaded_at"],
+                "file_size": file_size,
                 "confidence_score": resume_meta.get("confidence_score", 0),
+                "version": resume_meta.get("version", 1),
             },
+            "extracted_data": extracted_data,
             "profile_updated": update_ok,
+            "fields_updated": list(updates.keys()),
+            "data_sources": data_sources,
         }
 
     except HTTPException:
@@ -263,7 +368,7 @@ async def upload_resume(request: Request = None, file: UploadFile = File(...), t
         logger.error(f"Failed to upload resume: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload resume"
+            detail=f"Failed to upload resume: {str(e)}"
         )
 
 

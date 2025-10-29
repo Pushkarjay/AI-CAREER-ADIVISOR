@@ -12,9 +12,14 @@ const Resume = () => {
     full_name: '',
     skills: [],
     education_history: [],
-    experience_years: 0
+    experience_years: 0,
+    certifications: [],
+    projects: [],
+    languages: []
   });
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadConfirmation, setUploadConfirmation] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
 
@@ -53,12 +58,27 @@ const Resume = () => {
     }
 
     setIsUploading(true);
+    setShowConfirmation(false);
     
     try {
-      const success = await uploadResume(file);
+      const result = await uploadResume(file);
       
-      if (success) {
-        toast.success('Resume uploaded successfully!');
+      if (result) {
+        // Show comprehensive upload confirmation
+        setUploadConfirmation({
+          success: result.success !== false,
+          upload_confirmed: result.upload_confirmed,
+          parsing_successful: result.parsing_successful,
+          storage_location: result.storage_location,
+          resume: result.resume,
+          extracted_data: result.extracted_data,
+          fields_updated: result.fields_updated || [],
+          data_sources: result.data_sources || {}
+        });
+        setShowConfirmation(true);
+        
+        toast.success('Resume uploaded and parsed successfully!');
+        
         // Reload profile to get updated resume data
         loadProfile();
       } else {
@@ -297,10 +317,54 @@ const Resume = () => {
                 <p className="text-gray-900">{parsedFields.experience_years} years</p>
               </div>
             )}
+
+            {parsedFields.certifications && parsedFields.certifications.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
+                <div className="space-y-2">
+                  {parsedFields.certifications.map((cert, index) => (
+                    <div key={index} className="p-3 bg-green-50 rounded-lg">
+                      <p className="font-medium text-green-900">{cert.name}</p>
+                      {cert.year && <p className="text-sm text-green-700">{cert.year}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {parsedFields.projects && parsedFields.projects.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Projects</label>
+                <div className="space-y-2">
+                  {parsedFields.projects.map((project, index) => (
+                    <div key={index} className="p-3 bg-purple-50 rounded-lg">
+                      <p className="font-medium text-purple-900">{project.name}</p>
+                      {project.description && <p className="text-sm text-purple-700">{project.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {parsedFields.languages && parsedFields.languages.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Languages</label>
+                <div className="flex flex-wrap gap-2">
+                  {parsedFields.languages.map((lang, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm"
+                    >
+                      {lang}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {resumeData?.confidence_score && (
+        {resumeData?.confidence_score !== undefined && (
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600">
               Parsing Confidence: <span className="font-medium">{Math.round(resumeData.confidence_score * 100)}%</span>
@@ -312,6 +376,47 @@ const Resume = () => {
             )}
           </div>
         )}
+      </div>
+    );
+  };
+
+  const renderUploadConfirmation = () => {
+    if (!showConfirmation || !uploadConfirmation) return null;
+
+    return (
+      <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="ml-3 flex-1">
+            <h3 className="text-lg font-medium text-green-900">Upload Successful!</h3>
+            <div className="mt-2 text-sm text-green-700 space-y-2">
+              <p>✓ File uploaded to {uploadConfirmation.storage_location === 'firebase' ? 'Firebase Storage' : 'local storage'}</p>
+              <p>✓ Resume parsed {uploadConfirmation.parsing_successful ? 'successfully' : 'with basic extraction'}</p>
+              {uploadConfirmation.fields_updated && uploadConfirmation.fields_updated.length > 0 && (
+                <p>✓ Profile updated with: {uploadConfirmation.fields_updated.join(', ')}</p>
+              )}
+              <div className="mt-4 p-3 bg-white rounded border border-green-200">
+                <p className="font-medium text-green-900">File Details:</p>
+                <ul className="mt-1 space-y-1 text-sm">
+                  <li>Filename: {uploadConfirmation.resume?.filename}</li>
+                  <li>Size: {(uploadConfirmation.resume?.file_size / 1024).toFixed(2)} KB</li>
+                  <li>Confidence: {Math.round((uploadConfirmation.resume?.confidence_score || 0) * 100)}%</li>
+                  <li>Version: {uploadConfirmation.resume?.version || 1}</li>
+                </ul>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowConfirmation(false)}
+              className="mt-4 text-sm text-green-600 hover:text-green-800 font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -333,6 +438,7 @@ const Resume = () => {
           {/* Upload Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Resume</h2>
+            {renderUploadConfirmation()}
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📄</span>
@@ -393,6 +499,7 @@ const Resume = () => {
           {/* Upload Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Resume</h2>
+            {renderUploadConfirmation()}
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📄</span>

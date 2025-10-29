@@ -31,6 +31,33 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class CertificationItem(BaseModel):
+    """Individual certification entry."""
+    name: str
+    issuer: Optional[str] = None
+    year: Optional[str] = None
+    url: Optional[str] = None
+
+
+class ProjectItem(BaseModel):
+    """Individual project entry."""
+    name: str
+    description: Optional[str] = None
+    technologies: Optional[List[str]] = []
+    url: Optional[str] = None
+
+
+class ResumeMetadata(BaseModel):
+    """Resume metadata and parsing information."""
+    url: Optional[str] = None
+    filename: Optional[str] = None
+    uploaded_at: Optional[datetime] = None
+    file_size: Optional[int] = None
+    confidence_score: Optional[float] = None
+    parsed_data: Optional[Dict[str, Any]] = None
+    version: int = 1  # For tracking resume versions
+
+
 class UserProfile(BaseModel):
     """Extended user profile model."""
     user_id: str
@@ -45,7 +72,20 @@ class UserProfile(BaseModel):
     career_goals: Optional[str] = None
     internships_experience: Optional[str] = None
     additional_info: Optional[str] = None
-    resume_url: Optional[str] = None
+    
+    # Resume-related fields
+    resume_url: Optional[str] = None  # Deprecated: use resume.url instead
+    resume: Optional[ResumeMetadata] = None  # New structured resume metadata
+    resume_parsed_at: Optional[datetime] = None
+    
+    # New fields from resume parsing
+    certifications: List[CertificationItem] = []
+    projects: List[ProjectItem] = []
+    languages: List[str] = []  # Spoken languages
+    
+    # Data tracking
+    data_sources: Optional[Dict[str, str]] = None  # Track which fields came from resume vs manual
+    
     created_at: datetime
     updated_at: datetime
 
@@ -63,6 +103,9 @@ class UserProfileCreate(BaseModel):
     career_goals: Optional[str] = None
     internships_experience: Optional[str] = None
     additional_info: Optional[str] = None
+    certifications: List[CertificationItem] = []
+    projects: List[ProjectItem] = []
+    languages: List[str] = []
 
 
 class UserProfileUpdate(BaseModel):
@@ -78,6 +121,9 @@ class UserProfileUpdate(BaseModel):
     career_goals: Optional[str] = None
     internships_experience: Optional[str] = None
     additional_info: Optional[str] = None
+    certifications: Optional[List[CertificationItem]] = None
+    projects: Optional[List[ProjectItem]] = None
+    languages: Optional[List[str]] = None
 
 
 class User(UserBase):

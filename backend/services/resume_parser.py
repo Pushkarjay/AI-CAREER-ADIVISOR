@@ -58,6 +58,19 @@ class ResumeParser:
             "engineering", "computer science", "information technology", "software engineering",
             "data science", "business administration", "management", "marketing", "finance"
         ]
+        
+        # Certification keywords
+        self.certification_keywords = [
+            "certified", "certification", "certificate", "accredited", "credential",
+            "aws", "azure", "google cloud", "gcp", "cisco", "microsoft", "oracle",
+            "pmp", "scrum master", "cissp", "ceh", "comptia", "itil"
+        ]
+        
+        # Project section keywords
+        self.project_keywords = [
+            "project", "portfolio", "work sample", "developed", "built", "created",
+            "implemented", "designed", "architected"
+        ]
     
     async def parse_file(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         """Parse resume file and extract structured data."""
@@ -79,6 +92,9 @@ class ResumeParser:
                 "skills": self._extract_skills(text),
                 "contact_info": self._extract_contact_info(text),
                 "experience_years": self._extract_experience_years(text),
+                "certifications": self._extract_certifications(text),
+                "projects": self._extract_projects(text),
+                "languages": self._extract_languages(text),
                 "raw_text": text[:1000],  # First 1000 chars for preview
                 "confidence_score": 0
             }
@@ -316,3 +332,91 @@ class ResumeParser:
             score += 1.0
         
         return round(score / max_score, 2)
+    
+    def _extract_certifications(self, text: str) -> List[Dict[str, str]]:
+        """Extract certifications from resume text."""
+        certifications = []
+        lines = text.split('\n')
+        
+        for i, line in enumerate(lines):
+            line_lower = line.lower().strip()
+            
+            # Check if line contains certification keywords
+            if any(keyword in line_lower for keyword in self.certification_keywords):
+                cert_entry = {"raw_text": line.strip()}
+                
+                # Try to extract year
+                year_match = re.search(r'\b(19|20)\d{2}\b', line)
+                if year_match:
+                    cert_entry["year"] = year_match.group()
+                
+                # Extract certification name
+                cert_entry["name"] = line.strip()
+                
+                certifications.append(cert_entry)
+        
+        return certifications[:5]  # Return max 5 certifications
+    
+    def _extract_projects(self, text: str) -> List[Dict[str, str]]:
+        """Extract projects from resume text."""
+        projects = []
+        lines = text.split('\n')
+        
+        in_project_section = False
+        current_project = None
+        
+        for i, line in enumerate(lines):
+            line_lower = line.lower().strip()
+            
+            # Detect project section
+            if any(keyword in line_lower for keyword in ["projects", "portfolio", "work samples"]):
+                in_project_section = True
+                continue
+            
+            # Stop at next major section
+            if in_project_section and any(keyword in line_lower for keyword in 
+                                          ["experience", "education", "skills", "certifications"]):
+                in_project_section = False
+            
+            # Extract project names (usually bullet points or numbered)
+            if in_project_section and line.strip() and (
+                line.strip().startswith('-') or 
+                line.strip().startswith('•') or 
+                line.strip().startswith('*') or
+                re.match(r'^\d+\.', line.strip())
+            ):
+                project_text = re.sub(r'^[-•*]\s*|\d+\.\s*', '', line.strip())
+                if project_text:
+                    projects.append({
+                        "name": project_text[:100],  # Limit length
+                        "description": project_text
+                    })
+        
+        return projects[:5]  # Return max 5 projects
+    
+    def _extract_languages(self, text: str) -> List[str]:
+        """Extract spoken languages from resume text."""
+        languages = []
+        common_languages = [
+            "english", "hindi", "spanish", "french", "german", "chinese", "mandarin",
+            "japanese", "korean", "arabic", "portuguese", "russian", "italian",
+            "tamil", "telugu", "marathi", "bengali", "gujarati", "kannada", "malayalam"
+        ]
+        
+        text_lower = text.lower()
+        
+        # Look for language section
+        lang_section_match = re.search(r'languages?\s*:?\s*(.*?)(?:\n\n|\Z)', text_lower, re.DOTALL)
+        if lang_section_match:
+            lang_text = lang_section_match.group(1)
+            for lang in common_languages:
+                if lang in lang_text:
+                    languages.append(lang.title())
+        
+        # Also check in full text if no language section found
+        if not languages:
+            for lang in common_languages:
+                if lang in text_lower:
+                    languages.append(lang.title())
+        
+        return list(set(languages))[:5]  # Return max 5 unique languages

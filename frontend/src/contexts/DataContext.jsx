@@ -349,6 +349,9 @@ export const DataProvider = ({ children }) => {
       'preferred_industries',
       'career_goals',
       'resume',
+      'certifications',
+      'projects',
+      'languages',
     ];
     const out = {};
     for (const k of allowed) if (k in (data || {})) out[k] = data[k];
