@@ -43,6 +43,8 @@ class UserProfile(BaseModel):
     experience_years: Optional[int] = 0
     preferred_industries: List[str] = []
     career_goals: Optional[str] = None
+    internships_experience: Optional[str] = None
+    additional_info: Optional[str] = None
     resume_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
@@ -59,6 +61,8 @@ class UserProfileCreate(BaseModel):
     experience_years: Optional[int] = Field(0, ge=0, le=50)
     preferred_industries: List[str] = []
     career_goals: Optional[str] = None
+    internships_experience: Optional[str] = None
+    additional_info: Optional[str] = None
 
 
 class UserProfileUpdate(BaseModel):
@@ -72,6 +76,8 @@ class UserProfileUpdate(BaseModel):
     experience_years: Optional[int] = Field(None, ge=0, le=50)
     preferred_industries: Optional[List[str]] = None
     career_goals: Optional[str] = None
+    internships_experience: Optional[str] = None
+    additional_info: Optional[str] = None
 
 
 class User(UserBase):

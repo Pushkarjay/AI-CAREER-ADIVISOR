@@ -18,6 +18,8 @@ const Profile = () => {
     skills: '',
     experience_years: '',
     career_goals: '',
+    internships_experience: '',
+    additional_info: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -40,6 +42,8 @@ const Profile = () => {
           : profile.data.skills || '',
         experience_years: profile.data.experience_years ?? '',
         career_goals: profile.data.career_goals || '',
+        internships_experience: profile.data.internships_experience || '',
+        additional_info: profile.data.additional_info || '',
       });
     }
   }, [profile.data]);
@@ -64,6 +68,8 @@ const Profile = () => {
         skills: form.skills ? form.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
         experience_years: form.experience_years !== '' ? Number(form.experience_years) : null,
         career_goals: form.career_goals || null,
+        internships_experience: form.internships_experience || null,
+        additional_info: form.additional_info || null,
       };
       
       const success = await updateProfile(payload);
@@ -181,6 +187,18 @@ const Profile = () => {
                 </label>
                 <textarea id="career_goals" className="input-field" rows="3" placeholder="What do you want to achieve?" value={form.career_goals} onChange={onChange} autoComplete="off" />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="internships_experience">
+                  Internships & Experience
+                </label>
+                <textarea id="internships_experience" className="input-field" rows="3" placeholder="Describe your internships, work experience, or relevant projects..." value={form.internships_experience} onChange={onChange} autoComplete="off" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="additional_info">
+                  Additional Milestones & Information
+                </label>
+                <textarea id="additional_info" className="input-field" rows="3" placeholder="Any extra achievements, certifications, or personal information to help personalize your experience..." value={form.additional_info} onChange={onChange} autoComplete="off" />
+              </div>
             </div>
             <div className="mt-8 flex justify-end">
               <button className="btn-primary" type="button" onClick={onSave} disabled={loading}>
@@ -246,6 +264,18 @@ const Profile = () => {
                 Career Goals
               </label>
               <textarea id="career_goals" className="input-field" rows="3" placeholder="What do you want to achieve?" value={form.career_goals} onChange={onChange} autoComplete="off" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="internships_experience">
+                Internships & Experience
+              </label>
+              <textarea id="internships_experience" className="input-field" rows="3" placeholder="Describe your internships, work experience, or relevant projects..." value={form.internships_experience} onChange={onChange} autoComplete="off" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="additional_info">
+                Additional Milestones & Information
+              </label>
+              <textarea id="additional_info" className="input-field" rows="3" placeholder="Any extra achievements, certifications, or personal information to help personalize your experience..." value={form.additional_info} onChange={onChange} autoComplete="off" />
             </div>
           </div>
           <div className="mt-8 flex justify-end">
