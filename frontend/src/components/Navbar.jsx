@@ -46,35 +46,35 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
       {/* Desktop Layout - Full Width */}
-      <div className="hidden lg:flex items-center h-16 px-6">
+      <div className="hidden lg:flex items-center h-14 px-3 xl:px-4">
         {/* Logo - Extreme Left */}
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center flex-shrink-0 mr-2">
           <Link to="/dashboard" className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 shadow-md">
+            <div className="w-7 h-7 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-2 shadow-md">
               <span className="text-white font-bold text-xs">🎓</span>
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+            <span className="text-sm xl:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
               Career Advisor
             </span>
           </Link>
         </div>
 
         {/* Desktop navigation - Center */}
-        <div className="flex-1 flex justify-center">
-          <div className="flex items-center space-x-1">
+        <div className="flex-1 flex justify-center overflow-x-auto">
+          <div className="flex items-center space-x-0.5 xl:space-x-1">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center px-2 xl:px-2.5 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-all duration-200 ${
                     isActive(item.href)
                       ? 'text-blue-700 bg-blue-50 border border-blue-200'
                       : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
                   }`}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
+                  <Icon className="w-3.5 h-3.5 xl:w-4 xl:h-4 mr-1 xl:mr-1.5 flex-shrink-0" />
                   <span className="whitespace-nowrap">{item.name}</span>
                 </Link>
               );
@@ -83,26 +83,26 @@ const Navbar = () => {
         </div>
 
         {/* User menu - Extreme Right */}
-        <div className="flex items-center space-x-3 flex-shrink-0">
-          <div className="flex items-center text-sm text-gray-700">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-2">
+        <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+          <div className="flex items-center text-xs xl:text-sm text-gray-700">
+            <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center mr-1.5">
               {user?.photoURL ? (
                 <img
                   src={user.photoURL}
                   alt="Profile"
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-7 h-7 rounded-full object-cover"
                 />
               ) : (
-                <UserIcon className="w-4 h-4 text-gray-600" />
+                <UserIcon className="w-3.5 h-3.5 text-gray-600" />
               )}
             </div>
-            <span className="mr-3 max-w-32 truncate">
+            <span className="mr-2 max-w-24 xl:max-w-32 truncate hidden xl:inline">
               {user?.displayName || user?.email}
             </span>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-4 rounded-md transition-colors duration-200"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs xl:text-sm py-1.5 px-3 xl:px-4 rounded-md transition-colors duration-200 whitespace-nowrap"
           >
             Logout
           </button>
@@ -110,15 +110,15 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Layout - Container */}
-      <div className="lg:hidden max-w-7xl mx-auto pl-1 pr-4 sm:pl-2 sm:pr-6">
-        <div className="flex items-center h-16">
+      <div className="lg:hidden max-w-7xl mx-auto pl-2 pr-3 sm:pl-3 sm:pr-4">
+        <div className="flex items-center h-14">
           {/* Logo - Mobile */}
-          <div className="flex items-center flex-shrink-0 mr-6">
+          <div className="flex items-center flex-shrink-0 mr-4">
             <Link to="/dashboard" className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 shadow-md">
+              <div className="w-7 h-7 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-2 shadow-md">
                 <span className="text-white font-bold text-xs">🎓</span>
               </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+              <span className="text-sm sm:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
                 Career Advisor
               </span>
             </Link>
@@ -131,9 +131,9 @@ const Navbar = () => {
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200"
             >
               {isOpen ? (
-                <XMarkIcon className="block h-6 w-6" />
+                <XMarkIcon className="block h-5 w-5" />
               ) : (
-                <Bars3Icon className="block h-6 w-6" />
+                <Bars3Icon className="block h-5 w-5" />
               )}
             </button>
           </div>

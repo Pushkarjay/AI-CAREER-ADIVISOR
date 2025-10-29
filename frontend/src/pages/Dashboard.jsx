@@ -171,19 +171,19 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
       <Navbar />
 
-      {/* Flexible Responsive Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 16:9 Optimized Layout */}
+      <div className="container-16-9 py-6 hd:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 hd:gap-8">
 
           {/* Profile Form - Takes full width on mobile, 1/3 on large screens */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Your Profile</h2>
+          <div className="lg:col-span-1 w-full">
+            <div className="bg-white rounded-xl shadow-md p-6 hd:p-8 w-full">
+              <h2 className="text-xl hd:text-2xl font-bold text-gray-800 mb-4">Your Profile</h2>
 
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
+              <form onSubmit={handleProfileUpdate} className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Full Name
@@ -192,7 +192,7 @@ const Dashboard = () => {
                     type="text"
                     value={profileForm.name}
                     onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -204,7 +204,7 @@ const Dashboard = () => {
                   <select
                     value={profileForm.education_level}
                     onChange={(e) => setProfileForm({ ...profileForm, education_level: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Education Level</option>
                     <option value="High School">High School</option>
@@ -222,7 +222,7 @@ const Dashboard = () => {
                     type="text"
                     value={profileForm.current_role}
                     onChange={(e) => setProfileForm({ ...profileForm, current_role: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Software Engineer"
                   />
                 </div>
@@ -234,7 +234,7 @@ const Dashboard = () => {
                   <select
                     value={profileForm.experience_years}
                     onChange={(e) => setProfileForm({ ...profileForm, experience_years: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Experience</option>
                     <option value="0">0-1 years</option>
@@ -252,7 +252,7 @@ const Dashboard = () => {
                     value={profileForm.skills}
                     onChange={(e) => setProfileForm({ ...profileForm, skills: e.target.value })}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     placeholder="List your key skills (comma separated)"
                   />
                 </div>
@@ -265,7 +265,7 @@ const Dashboard = () => {
                     value={profileForm.interests}
                     onChange={(e) => setProfileForm({ ...profileForm, interests: e.target.value })}
                     rows="2"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     placeholder="What interests you?"
                   />
                 </div>
@@ -278,7 +278,7 @@ const Dashboard = () => {
                     type="text"
                     value={profileForm.location}
                     onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="City, Country"
                   />
                 </div>
@@ -291,7 +291,7 @@ const Dashboard = () => {
                     type="text"
                     value={profileForm.preferred_salary}
                     onChange={(e) => setProfileForm({ ...profileForm, preferred_salary: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., 12-20 LPA"
                   />
                 </div>
@@ -299,7 +299,7 @@ const Dashboard = () => {
                 <button
                   type="submit"
                   disabled={profileLoading}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-sm sm:text-base"
                 >
                   {profileLoading ? 'Updating...' : 'Update Profile'}
                 </button>
@@ -308,26 +308,26 @@ const Dashboard = () => {
           </div>
 
           {/* Main Content - Takes full width on mobile, 2/3 on large screens */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 w-full min-w-0">
 
             {/* AI Career Assistant */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 w-full">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">
                 Hi {profileForm.name || 'there'} 👋
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
                 I'm your AI Career Assistant. Ask me anything about your career path, skills, or job opportunities!
               </p>
 
               {/* Chat History */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-4 max-h-64 overflow-y-auto">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 max-h-48 sm:max-h-64 overflow-y-auto">
                 {chat.messages.length === 0 ? (
-                  <p className="text-gray-500 text-center">Start a conversation with your AI assistant!</p>
+                  <p className="text-gray-500 text-center text-sm">Start a conversation with your AI assistant!</p>
                 ) : (
                   <div className="space-y-3">
                     {chat.messages.map((msg, index) => (
                       <div key={index} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        <div className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm break-words ${
                           msg.from === 'user' 
                             ? 'bg-blue-600 text-white' 
                             : 'bg-white border border-gray-200 text-gray-800'
@@ -340,7 +340,7 @@ const Dashboard = () => {
                 )}
                 {chat.loading && (
                   <div className="flex justify-start">
-                    <div className="bg-white border border-gray-200 text-gray-800 px-3 py-2 rounded-lg">
+                    <div className="bg-white border border-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm">
                       Typing...
                     </div>
                   </div>
@@ -354,13 +354,13 @@ const Dashboard = () => {
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   placeholder="Ask about your career path..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={chat.loading}
                 />
                 <button
                   type="submit"
                   disabled={chat.loading || !chatMessage.trim()}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-sm sm:text-base flex-shrink-0"
                 >
                   Send
                 </button>
@@ -368,49 +368,49 @@ const Dashboard = () => {
             </div>
 
             {/* Career Matches */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Career Matches</h2>
-              <p className="text-gray-600 text-sm mb-4">Click on a career to see detailed skill analysis</p>
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 w-full">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Career Matches</h2>
+              <p className="text-gray-600 text-xs sm:text-sm mb-4">Click on a career to see detailed skill analysis</p>
               
               {/* Debug info removed */}
               
               {careers.loading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                  <p className="text-gray-500">Loading career matches...</p>
+                  <p className="text-gray-500 text-sm">Loading career matches...</p>
                 </div>
               ) : (careers.recommendations || []).length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No career matches found yet. Update your skills to see personalized matches.</p>
+                  <p className="text-gray-500 text-sm">No career matches found yet. Update your skills to see personalized matches.</p>
                 </div>
               ) : (
                 <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                     {(careers.recommendations || []).slice(0,3).map((match, index) => {
                       return (
                   <div
                     key={match.id || index}
                     onClick={() => updateSkillAnalysis(match)}
-                    className={`border rounded-lg p-4 transition-all duration-200 cursor-pointer ${
+                    className={`border rounded-lg p-3 sm:p-4 transition-all duration-200 cursor-pointer w-full ${
                       selectedCareer === match.title
                         ? 'border-blue-500 bg-blue-50 shadow-lg'
                         : 'border-gray-200 hover:shadow-md hover:border-blue-300'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-800 text-sm">{match.title}</h3>
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                    <div className="flex flex-col sm:flex-row justify-between items-start mb-2 gap-2">
+                      <h3 className="font-semibold text-gray-800 text-sm break-words">{match.title}</h3>
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex-shrink-0">
                         {Math.round(match.match_score)}% match
                       </span>
                     </div>
 
-                    <p className="text-gray-600 text-sm mb-2">{match.company}</p>
-                    <p className="text-blue-600 font-semibold text-sm mb-2">{match.salary}</p>
+                    <p className="text-gray-600 text-xs sm:text-sm mb-2 break-words">{match.company}</p>
+                    <p className="text-blue-600 font-semibold text-xs sm:text-sm mb-2">{match.salary}</p>
                     <p className="text-gray-500 text-xs mb-3">{match.location}</p>
 
                     <div className="flex flex-wrap gap-1">
                       {match.requirements?.slice(0, 3).map((req, idx) => (
-                        <span key={idx} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        <span key={idx} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded break-all">
                           {req}
                         </span>
                       ))}
@@ -434,31 +434,31 @@ const Dashboard = () => {
 
             {/* Skill Analysis */}
             {selectedCareer && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 w-full">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 break-words">
                   Skill Analysis: {selectedCareer}
                 </h2>
                 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <h3 className="font-semibold text-green-600 mb-2">Your Current Skills ✓</h3>
+                    <h3 className="font-semibold text-green-600 mb-2 text-sm sm:text-base">Your Current Skills ✓</h3>
                     <div className="space-y-1">
                       {(skillAnalysis.matched_skills || []).map((skill, idx) => (
-                        <span key={idx} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-1 mb-1">
+                        <span key={idx} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-1 mb-1 break-all">
                           {skill}
                         </span>
                       ))}
                       {(skillAnalysis.matched_skills || []).length === 0 && (
-                        <p className="text-gray-500 text-sm">No matching skills found in your profile</p>
+                        <p className="text-gray-500 text-xs sm:text-sm">No matching skills found in your profile</p>
                       )}
                     </div>
                   </div>
                   
                   <div>
-                    <h3 className="font-semibold text-orange-600 mb-2">Skills to Develop</h3>
+                    <h3 className="font-semibold text-orange-600 mb-2 text-sm sm:text-base">Skills to Develop</h3>
                     <div className="space-y-1">
                       {(skillAnalysis.missing_skills || []).map((skill, idx) => (
-                        <span key={idx} className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded mr-1 mb-1">
+                        <span key={idx} className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded mr-1 mb-1 break-all">
                           {skill}
                         </span>
                       ))}
@@ -467,9 +467,9 @@ const Dashboard = () => {
                 </div>
                 
                 {skillAnalysis.learning_resources && skillAnalysis.learning_resources.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-blue-600 mb-3">Recommended Learning Resources</h3>
-                    <div className="grid md:grid-cols-2 gap-3">
+                  <div className="mt-4 sm:mt-6">
+                    <h3 className="font-semibold text-blue-600 mb-3 text-sm sm:text-base">Recommended Learning Resources</h3>
+                    <div className="grid sm:grid-cols-2 gap-3">
                       {skillAnalysis.learning_resources.slice(0, 4).map((resource, idx) => (
                         <a
                           key={idx}
@@ -478,11 +478,11 @@ const Dashboard = () => {
                           rel="noopener noreferrer"
                           className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-800">{resource.title}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs sm:text-sm font-medium text-gray-800 break-words">{resource.title}</p>
                             <p className="text-xs text-gray-500">{resource.type}</p>
                           </div>
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
                         </a>
