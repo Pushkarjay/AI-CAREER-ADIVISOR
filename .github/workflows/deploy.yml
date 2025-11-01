@@ -82,6 +82,7 @@ jobs:
       - name: Install dependencies & build frontend
         working-directory: frontend
         env:
+          NODE_ENV: production
           VITE_API_BASE_URL: https://backend-service-680116190409.asia-south1.run.app
           VITE_API_VERSION: v1
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
@@ -93,6 +94,9 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
         run: |
           echo "Building with API URL: https://backend-service-680116190409.asia-south1.run.app"
+          echo "Node Environment: $NODE_ENV"
+          # Remove .env file to prevent it from overriding environment variables
+          rm -f .env
           npm ci || npm install
           npm run build
       - name: Deploy Frontend to Firebase Hosting
