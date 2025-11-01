@@ -27,7 +27,8 @@ class Settings(BaseSettings):
         "http://localhost:5173", 
         "http://localhost:8080",
         "https://ai-career-advisor-id.web.app",
-        "https://ai-career-advisor-id.firebaseapp.com"
+        "https://ai-career-advisor-id.firebaseapp.com",
+        "https://backend-service-680116190409.asia-south1.run.app"
     ]
     
     # Google Cloud Configuration

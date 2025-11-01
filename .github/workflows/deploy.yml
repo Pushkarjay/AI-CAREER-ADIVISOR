@@ -95,10 +95,8 @@ jobs:
           echo "Building with API URL: https://backend-service-680116190409.asia-south1.run.app"
           # Install all dependencies including devDependencies (vite is in devDependencies)
           npm ci
-          # Remove .env file to prevent it from overriding environment variables
-          rm -f .env
-          # Build using npm script which will use the installed vite
-          NODE_ENV=production npm run build
+          # Build using npm script - env vars above will be used
+          npm run build
       - name: Deploy Frontend to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
