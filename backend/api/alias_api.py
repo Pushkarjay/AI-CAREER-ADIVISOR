@@ -433,12 +433,10 @@ async def get_careers(token: str = Depends(security)):
 
 
 @router.get("/roadmaps")
-async def get_roadmaps(token: str = Depends(security)):
-    """Get all available roadmaps/domains for the roadmaps page."""
-    payload = verify_token(token.credentials)
-    user_id = payload.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+async def get_roadmaps():
+    """Get all available roadmaps/domains for the roadmaps page. Public endpoint."""
+    # Make this public - no authentication required to browse roadmaps
+    user_id = None  # No user context for public endpoint
     
     try:
         # Try to get domains from database first

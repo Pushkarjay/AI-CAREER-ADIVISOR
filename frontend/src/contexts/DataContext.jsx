@@ -482,10 +482,14 @@ export const DataProvider = ({ children }) => {
         items = [res.data];
       }
       
+      console.log('Roadmaps fetched successfully:', items.length, 'items');
       dispatch({ type: ActionTypes.ROADMAPS_FETCH_SUCCESS, payload: items });
     } catch (e) {
       console.error('Roadmaps fetch error:', e);
-      dispatch({ type: ActionTypes.ROADMAPS_FETCH_ERROR, payload: e.message });
+      console.error('Error details:', e.response?.data || e.message);
+      // Provide empty array as fallback instead of error state
+      dispatch({ type: ActionTypes.ROADMAPS_FETCH_SUCCESS, payload: [] });
+      toast.error('Unable to load roadmaps. Please try again later.');
     }
   };
 

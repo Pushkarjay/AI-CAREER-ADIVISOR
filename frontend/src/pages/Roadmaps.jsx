@@ -16,6 +16,7 @@ const Roadmaps = () => {
   const { roadmaps, fetchRoadmaps, fetchRecommendedRoadmaps, learningProgress, toggleRoadmapStep } = useData();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' or 'learning'
 
   useEffect(() => {
     if (!roadmaps.items?.length) fetchRoadmaps();
@@ -29,6 +30,24 @@ const Roadmaps = () => {
       r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q) || (r.learning_path || []).some(s => s.toLowerCase().includes(q))
     );
   }, [roadmaps.items, query]);
+
+  // Show loading state
+  if (roadmaps.loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-slate-600">Loading domains...</p>
+              <p className="text-xs text-slate-400 mt-2">Discover 85+ career domains to explore learning paths.</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -53,8 +72,57 @@ const Roadmaps = () => {
           />
         </div>
 
+        <div className="mb-6 border-b">
+          <div className="flex gap-6">
+            <button
+              onClick={() => setActiveTab('learning')}
+              className={`pb-2 px-1 relative ${
+                activeTab === 'learning'
+                  ? 'text-blue-600 font-medium'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Learning Roadmaps
+              {activeTab === 'learning' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`pb-2 px-1 relative ${
+                activeTab === 'all'
+                  ? 'text-blue-600 font-medium'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              All Domains
+              <span className="ml-2 text-sm text-slate-500">{filtered.length}</span>
+              {activeTab === 'all' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'all' && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-900 mb-1">Explore {filtered.length} Career Domains</h3>
+            <p className="text-sm text-blue-700">
+              Discover comprehensive learning paths across data science, engineering, design, and more. Each domain includes detailed roadmaps, skill requirements, and career progression paths.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
+            {filtered.length === 0 && !roadmaps.loading && (
+              <div className="text-center py-12 px-4 border-2 border-dashed rounded-xl">
+                <p className="text-slate-600 mb-2">No roadmaps found</p>
+                <p className="text-sm text-slate-400">
+                  {query ? 'Try a different search term' : 'Loading roadmaps data...'}
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(filtered || []).map((r) => (
                 <div key={r.domain_id} className="p-4 border rounded-xl bg-white hover:shadow" onClick={() => setSelected(r)}>
