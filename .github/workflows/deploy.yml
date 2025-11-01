@@ -99,8 +99,8 @@ jobs:
           npm ci
           # Remove .env file to prevent it from overriding environment variables
           rm -f .env
-          # Build with environment variables
-          npm run build
+          # Build with environment variables using the node_modules binary directly
+          ./node_modules/.bin/vite build
       - name: Deploy Frontend to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
