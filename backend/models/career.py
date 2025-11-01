@@ -144,3 +144,58 @@ class CareerWithRoadmap(Career):
     learning_roadmap_id: Optional[str] = None
     skill_progressions: List[SkillProgression] = []
     career_path_stages: List[str] = []
+
+
+class JobSearchRequest(BaseModel):
+    """Job search request model."""
+    search_term: str = Field(..., min_length=1, max_length=200)
+    location: str = Field(default="India", max_length=200)
+    results_wanted: int = Field(default=20, ge=1, le=100)
+    hours_old: int = Field(default=72, ge=1, le=720)
+    country_indeed: str = Field(default="India", max_length=100)
+    google_search_term: Optional[str] = Field(None, max_length=500)
+    site_name: Optional[List[str]] = None
+    linkedin_fetch_description: bool = False
+
+
+class Job(BaseModel):
+    """Job listing model."""
+    id: str
+    title: str
+    company: str
+    location: str
+    job_type: Optional[str] = None
+    date_posted: Optional[str] = None
+    salary_source: Optional[str] = None
+    interval: Optional[str] = None
+    min_amount: Optional[float] = None
+    max_amount: Optional[float] = None
+    currency: Optional[str] = None
+    is_remote: bool = False
+    job_url: Optional[str] = None
+    job_url_direct: Optional[str] = None
+    site: str
+    description: Optional[str] = None
+    emails: List[str] = []
+    company_url: Optional[str] = None
+    company_url_direct: Optional[str] = None
+    company_addresses: Optional[str] = None
+    company_num_employees: Optional[str] = None
+    company_revenue: Optional[str] = None
+    company_description: Optional[str] = None
+    ceo_name: Optional[str] = None
+    ceo_photo_url: Optional[str] = None
+    logo_photo_url: Optional[str] = None
+    banner_photo_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class JobSearchResponse(BaseModel):
+    """Job search response model."""
+    jobs: List[Job]
+    total_count: int
+    search_term: str
+    location: str
+    timestamp: datetime

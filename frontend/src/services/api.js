@@ -96,6 +96,21 @@ export const careerAPI = {
   },
   // Optional careers list if exposed later
   getCareers: () => api.get('/api/careers'),
+  
+  // Real job search using jobspy
+  searchJobs: (searchParams) => {
+    const body = {
+      search_term: searchParams.search_term,
+      location: searchParams.location || 'India',
+      results_wanted: searchParams.results_wanted || 20,
+      hours_old: searchParams.hours_old || 72,
+      country_indeed: searchParams.country_indeed || 'India',
+      google_search_term: searchParams.google_search_term || null,
+      site_name: searchParams.site_name || null,
+      linkedin_fetch_description: searchParams.linkedin_fetch_description || false
+    };
+    return api.post('/api/v1/careers/jobs/search', body);
+  }
 };
 
 // Roadmaps API client

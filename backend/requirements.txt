@@ -45,3 +45,6 @@ watchfiles==0.21.0
 
 # Gunicorn for production server
 gunicorn==21.2.0
+
+# Job scraping
+python-jobspy==1.1.76

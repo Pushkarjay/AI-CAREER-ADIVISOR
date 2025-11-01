@@ -24,6 +24,7 @@ const Careers = () => {
   const [careers, setCareers] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [trends, setTrends] = useState([]);
+  const [realJobs, setRealJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
   const [filters, setFilters] = useState({
@@ -31,6 +32,11 @@ const Careers = () => {
     location: '',
     salary: '',
     industry: ''
+  });
+  const [jobSearchParams, setJobSearchParams] = useState({
+    location: 'India',
+    results_wanted: 20,
+    hours_old: 72
   });
   const [savedCareers, setSavedCareers] = useState(new Set());
   const [likedCareers, setLikedCareers] = useState(new Set());
@@ -153,6 +159,33 @@ const Careers = () => {
     }
   };
 
+  const handleJobSearch = async () => {
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a job search term');
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await careerAPI.searchJobs({
+        search_term: searchQuery,
+        location: jobSearchParams.location,
+        results_wanted: jobSearchParams.results_wanted,
+        hours_old: jobSearchParams.hours_old,
+        country_indeed: jobSearchParams.location === 'India' ? 'India' : 'USA'
+      });
+      
+      const jobsList = response?.data?.jobs || [];
+      setRealJobs(jobsList);
+      setActiveTab('jobs');
+      toast.success(`Found ${jobsList.length} real job listings`);
+    } catch (error) {
+      console.error('Job search failed:', error);
+      toast.error('Failed to search jobs. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
@@ -265,6 +298,133 @@ const Careers = () => {
     </div>
   );
 
+  const RealJobCard = ({ job }) => {
+    const formatSalary = () => {
+      if (job.min_amount && job.max_amount) {
+        return `${job.currency || '₹'} ${Math.round(job.min_amount / 1000)}k - ${Math.round(job.max_amount / 1000)}k ${job.interval || ''}`;
+      }
+      return 'Not specified';
+    };
+
+    const formatDate = (dateStr) => {
+      if (!dateStr) return 'Recently';
+      try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        return date.toLocaleDateString();
+      } catch {
+        return 'Recently';
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
+              {job.is_remote && (
+                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                  Remote
+                </span>
+              )}
+            </div>
+            <p className="text-gray-600 mb-2 font-medium">{job.company}</p>
+            <div className="flex items-center text-sm text-gray-500 space-x-4 flex-wrap">
+              <div className="flex items-center">
+                <MapPinIcon className="w-4 h-4 mr-1" />
+                {job.location}
+              </div>
+              <div className="flex items-center">
+                <CurrencyRupeeIcon className="w-4 h-4 mr-1" />
+                {formatSalary()}
+              </div>
+              {job.job_type && (
+                <div className="flex items-center">
+                  <BriefcaseIcon className="w-4 h-4 mr-1" />
+                  {job.job_type}
+                </div>
+              )}
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-xs">
+              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                {job.site}
+              </span>
+              <span className="text-gray-500">{formatDate(job.date_posted)}</span>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => toggleLiked(job.id)}
+              className="p-2 rounded-full hover:bg-gray-100"
+            >
+              {likedCareers.has(job.id) ? (
+                <HeartSolidIcon className="w-5 h-5 text-red-500" />
+              ) : (
+                <HeartIcon className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+            <button
+              onClick={() => toggleSaved(job.id)}
+              className="p-2 rounded-full hover:bg-gray-100"
+            >
+              {savedCareers.has(job.id) ? (
+                <BookmarkSolidIcon className="w-5 h-5 text-blue-500" />
+              ) : (
+                <BookmarkIcon className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {job.description && (
+          <p className="text-gray-700 mb-4 line-clamp-3">{job.description}</p>
+        )}
+
+        <div className="flex justify-between items-center pt-4 border-t">
+          <div className="flex gap-2">
+            {job.job_url && (
+              <a
+                href={job.job_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                View on {job.site}
+              </a>
+            )}
+            {job.job_url_direct && job.job_url !== job.job_url_direct && (
+              <a
+                href={job.job_url_direct}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Apply Direct
+              </a>
+            )}
+          </div>
+          {job.company_url && (
+            <a
+              href={job.company_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline text-sm"
+            >
+              Company Info
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const TrendCard = ({ trend }) => (
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex justify-between items-start mb-2">
@@ -283,7 +443,8 @@ const Careers = () => {
   );
 
   const tabs = [
-    { id: 'search', name: 'Search Results', count: careers.length },
+    { id: 'jobs', name: 'Real Jobs', count: realJobs.length },
+    { id: 'search', name: 'Career Paths', count: careers.length },
     { id: 'recommendations', name: 'Recommendations', count: recommendations.length },
     { id: 'trends', name: 'Market Trends', count: trends.length },
   ];
@@ -386,6 +547,14 @@ const Careers = () => {
                   >
                     {loading ? 'Searching...' : 'Search Careers'}
                   </button>
+
+                  <button
+                    onClick={handleJobSearch}
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Searching...' : 'Search Real Jobs'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -415,6 +584,31 @@ const Careers = () => {
             </div>
 
             {/* Content */}
+            {activeTab === 'jobs' && (
+              <div>
+                {realJobs.length > 0 ? (
+                  <div className="space-y-6">
+                    <div className="text-sm text-gray-600">
+                      Found {realJobs.length} real job listings from Indeed, LinkedIn, ZipRecruiter, and Google Jobs
+                    </div>
+                    <div className="grid grid-cols-1 gap-6">
+                      {realJobs.map((job) => (
+                        <RealJobCard key={job.id} job={job} />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <BriefcaseIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No jobs found</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Click "Search Real Jobs" to find current job openings from multiple job boards.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'search' && (
               <div>
                 {careers.length > 0 ? (
@@ -568,6 +762,14 @@ const Careers = () => {
             className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Searching...' : 'Search Careers'}
+          </button>
+
+          <button
+            onClick={handleJobSearch}
+            disabled={loading}
+            className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Searching...' : 'Search Real Jobs'}
           </button>
         </div>
       </div>

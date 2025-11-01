@@ -5,10 +5,15 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
+from datetime import datetime
 
-from models.career import Career, CareerMatch, CareerRecommendation
+from models.career import (
+    Career, CareerMatch, CareerRecommendation,
+    Job, JobSearchRequest, JobSearchResponse
+)
 from core.security import verify_token
 from services.firestore_service import FirestoreService
+from services.job_scraper_service import job_scraper_service
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)
@@ -222,6 +227,59 @@ async def get_career_details(career_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get career details"
+        )
+
+
+@router.post("/jobs/search", response_model=JobSearchResponse)
+async def search_jobs(request: JobSearchRequest, token: str = Depends(security)):
+    """
+    Search for real job listings using jobspy.
+    
+    This endpoint scrapes job listings from multiple job boards including:
+    - Indeed
+    - LinkedIn
+    - ZipRecruiter
+    - Google Jobs
+    """
+    try:
+        payload = verify_token(token.credentials)
+        user_id = payload.get("user_id")
+        
+        logger.info(f"User {user_id} searching jobs: {request.search_term} in {request.location}")
+        
+        # Scrape jobs using the job scraper service
+        jobs_data = job_scraper_service.scrape_jobs(
+            search_term=request.search_term,
+            location=request.location,
+            results_wanted=request.results_wanted,
+            hours_old=request.hours_old,
+            country_indeed=request.country_indeed,
+            google_search_term=request.google_search_term,
+            site_name=request.site_name,
+            linkedin_fetch_description=request.linkedin_fetch_description
+        )
+        
+        # Convert to Job models
+        jobs = [Job(**job_data) for job_data in jobs_data]
+        
+        # Create response
+        response = JobSearchResponse(
+            jobs=jobs,
+            total_count=len(jobs),
+            search_term=request.search_term,
+            location=request.location,
+            timestamp=datetime.utcnow()
+        )
+        
+        logger.info(f"Found {len(jobs)} jobs for user {user_id}")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Job search failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search jobs: {str(e)}"
         )
 
 
