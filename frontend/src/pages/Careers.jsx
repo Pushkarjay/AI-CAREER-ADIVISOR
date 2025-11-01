@@ -6,6 +6,8 @@ import Navbar from '../components/Navbar';
 import CareerRecommendationsCard from '../components/CareerRecommendationsCard';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import PrototypeButton from '../components/PrototypeButton';
+import { notifications } from '../utils/prototypeNotifications';
 import { 
   MagnifyingGlassIcon,
   BriefcaseIcon,
@@ -203,6 +205,8 @@ const Careers = () => {
     } else {
       newSaved.add(careerId);
       toast.success('Added to saved careers');
+      // Show notification that saved items work locally in prototype
+      notifications.savedItems();
     }
     setSavedCareers(newSaved);
   };

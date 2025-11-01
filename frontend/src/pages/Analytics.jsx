@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { analyticsAPI } from '../services/api';
 import Navbar from '../components/Navbar';
 import SkillsAnalysisCard from '../components/SkillsAnalysisCard';
+import PrototypeButton from '../components/PrototypeButton';
+import { notifications } from '../utils/prototypeNotifications';
 import { 
   ChartBarIcon, 
   ArrowTrendingUpIcon, 
@@ -52,7 +54,9 @@ const Analytics = () => {
   const refreshMarketTrends = async () => {
     try {
       setLoadingTrends(true);
-      toast.loading('Fetching latest market trends...', { id: 'market-trends' });
+      toast.loading('Fetching latest market trends with AI...', { id: 'market-trends' });
+      // Show notification about AI-powered trends
+      notifications.marketTrends();
       const trends = await analyticsAPI.getMarketTrends();
       setMarketTrends(trends.data);
       toast.success('Market trends updated!', { id: 'market-trends' });
@@ -801,7 +805,13 @@ const Analytics = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Career Journey</h3>
                 <div className="flex gap-3">
                   <a href="/roadmaps" className="text-sm text-blue-600 hover:underline">Explore roadmaps</a>
-                  <button onClick={() => toast('This feature is not available completely in the prototype')} className="text-sm text-slate-500 underline">Set domain goals</button>
+                  <PrototypeButton
+                    featureType="setGoals"
+                    label="Set domain goals"
+                    variant="tertiary"
+                    size="sm"
+                    className="text-sm text-slate-500 underline"
+                  />
                 </div>
               </div>
               <div className="space-y-4">

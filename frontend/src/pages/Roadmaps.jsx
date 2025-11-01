@@ -3,16 +3,8 @@ import Navbar from '../components/Navbar';
 import { useData } from '../contexts/DataContext';
 import { roadmapAPI } from '../services/api';
 import toast from 'react-hot-toast';
-
-const PrototypeButton = ({ label = 'View personalized path', onClick, disabled = false }) => (
-  <button
-    onClick={onClick || (() => toast('This feature is not available completely in the prototype'))}
-    disabled={disabled}
-    className="px-3 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 border disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    {label}
-  </button>
-);
+import PrototypeButton from '../components/PrototypeButton';
+import { notifications } from '../utils/prototypeNotifications';
 
 const Roadmaps = () => {
   const { roadmaps, fetchRoadmaps, fetchRecommendedRoadmaps, learningProgress, toggleRoadmapStep } = useData();
@@ -87,11 +79,13 @@ const Roadmaps = () => {
             <p className="text-slate-600 text-sm">Universal Foundations + 70+ domains. Search and explore.</p>
           </div>
           <div className="flex gap-2">
-            <PrototypeButton 
-              label={generatingPersonalizedRoadmap ? "Generating..." : "Generate personalized path"} 
+            <button
               onClick={() => selected && handleGeneratePersonalizedRoadmap(selected.domain_id, selected.title)}
               disabled={!selected || generatingPersonalizedRoadmap}
-            />
+              className="px-3 py-2 text-sm rounded-md bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingPersonalizedRoadmap ? "Generating..." : "🤖 AI Personalized Path"}
+            </button>
           </div>
         </div>
 
@@ -201,13 +195,20 @@ const Roadmaps = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <PrototypeButton label="Download roadmap (PDF)" />
+                  <PrototypeButton
+                    featureType="downloadPDF"
+                    label="📄 Download PDF"
+                    variant="secondary"
+                    size="sm"
+                    showBadge={true}
+                    badgeType="prototype"
+                  />
                   <button
                     onClick={() => handleGeneratePersonalizedRoadmap(selected.domain_id, selected.title)}
                     disabled={generatingPersonalizedRoadmap}
                     className="px-3 py-2 text-sm rounded-md bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {generatingPersonalizedRoadmap ? 'Generating...' : 'AI Personalized Path'}
+                    {generatingPersonalizedRoadmap ? 'Generating...' : '🤖 AI Personalized Path'}
                   </button>
                 </div>
               </div>
