@@ -95,12 +95,12 @@ jobs:
         run: |
           echo "Building with API URL: https://backend-service-680116190409.asia-south1.run.app"
           echo "Node Environment: $NODE_ENV"
+          # Install dependencies first
+          npm ci
           # Remove .env file to prevent it from overriding environment variables
           rm -f .env
-          # Install dependencies
-          npm install
           # Build with environment variables
-          npx vite build
+          npm run build
       - name: Deploy Frontend to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
