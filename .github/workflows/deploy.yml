@@ -92,6 +92,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
         run: |
+          echo "Building with API URL: https://backend-service-680116190409.asia-south1.run.app"
           npm ci || npm install
           npm run build
       - name: Deploy Frontend to Firebase Hosting
