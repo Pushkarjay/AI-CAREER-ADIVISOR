@@ -20,6 +20,7 @@ const Analytics = () => {
   const [skillAnalytics, setSkillAnalytics] = useState(null);
   const [careerJourney, setCareerJourney] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingTrends, setLoadingTrends] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
@@ -45,6 +46,21 @@ const Analytics = () => {
       toast.error('Failed to load analytics data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshMarketTrends = async () => {
+    try {
+      setLoadingTrends(true);
+      toast.loading('Fetching latest market trends...', { id: 'market-trends' });
+      const trends = await analyticsAPI.getMarketTrends();
+      setMarketTrends(trends.data);
+      toast.success('Market trends updated!', { id: 'market-trends' });
+    } catch (error) {
+      console.error('Failed to refresh market trends:', error);
+      toast.error('Failed to refresh market trends', { id: 'market-trends' });
+    } finally {
+      setLoadingTrends(false);
     }
   };
 
@@ -254,17 +270,46 @@ const Analytics = () => {
       {/* Market Trends Tab */}
       {activeTab === 'trends' && marketTrends && (
         <div className="space-y-6">
+          {/* Header with Refresh Button */}
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900">Market Trends & Insights</h2>
+            <button
+              onClick={refreshMarketTrends}
+              disabled={loadingTrends}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loadingTrends ? 'Refreshing...' : 'Refresh Trends'}
+            </button>
+          </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Skill Demand */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Skill Demand Trends</h3>
               <div className="space-y-3">
                 {(marketTrends?.skill_demand || []).map((skill, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="font-medium text-gray-900">{skill.skill}</span>
+                  <div key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                    <div>
+                      <span className="font-medium text-gray-900">{skill.skill}</span>
+                      {skill.trend && (
+                        <span className={`ml-2 text-xs px-2 py-1 rounded ${
+                          skill.trend === 'rising' ? 'bg-green-100 text-green-700' :
+                          skill.trend === 'stable' ? 'bg-blue-100 text-blue-700' :
+                          'bg-orange-100 text-orange-700'
+                        }`}>
+                          {skill.trend}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-right">
                       <span className="text-green-600 font-semibold">{skill.demand_change}</span>
                       <div className="text-sm text-gray-500">{skill.avg_salary}</div>
+                      {skill.job_openings && (
+                        <div className="text-xs text-gray-400">{skill.job_openings.toLocaleString()} jobs</div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -291,14 +336,75 @@ const Analytics = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Cities for Career Growth</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {(marketTrends?.location_insights || []).map((location, index) => (
-                <div key={index} className="border rounded-lg p-4">
+                <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <h4 className="font-semibold text-gray-900">{location.city}</h4>
                   <p className="text-sm text-gray-600">Avg Salary: {location.avg_salary}</p>
                   <p className="text-sm text-gray-600">Jobs: {(location.job_count || 0).toLocaleString()}</p>
+                  {location.growth_rate && (
+                    <p className="text-sm text-green-600 font-medium">Growth: {location.growth_rate}</p>
+                  )}
+                  {location.cost_of_living && (
+                    <p className="text-xs text-gray-500 mt-1">Cost of Living: {location.cost_of_living}</p>
+                  )}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Emerging Roles */}
+          {marketTrends?.emerging_roles && marketTrends.emerging_roles.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Emerging & Hot Roles</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {marketTrends.emerging_roles.map((role, index) => (
+                  <div key={index} className="border-l-4 border-purple-500 pl-4 p-3 bg-purple-50 rounded">
+                    <h4 className="font-semibold text-gray-900">{role.role}</h4>
+                    <p className="text-sm text-green-600 font-medium">Growth: {role.growth}</p>
+                    <p className="text-sm text-gray-700">Avg Salary: {role.avg_salary}</p>
+                    {role.demand_score && (
+                      <p className="text-sm text-blue-600">Demand Score: {role.demand_score}/10</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Market Insights Summary */}
+          {marketTrends?.insights && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Market Insights</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {marketTrends.insights.opportunities && (
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-2">Opportunities</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                      {marketTrends.insights.opportunities.map((opp, idx) => (
+                        <li key={idx}>{opp}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {marketTrends.insights.recommendations && (
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-2">Recommendations</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                      {marketTrends.insights.recommendations.map((rec, idx) => (
+                        <li key={idx}>{rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Generation timestamp */}
+          {marketTrends?.generated_at && (
+            <p className="text-xs text-gray-500 text-center">
+              Data generated: {new Date(marketTrends.generated_at).toLocaleString()}
+            </p>
+          )}
         </div>
       )}
 

@@ -14,6 +14,7 @@ from models.career import (
 from core.security import verify_token
 from services.firestore_service import FirestoreService
 from services.job_scraper_service import job_scraper_service
+from services.market_trends_service import market_trends_service
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)
@@ -238,6 +239,54 @@ async def get_career_details(career_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get career details"
+        )
+
+
+@router.get("/{career_id}/market-trends")
+async def get_career_market_trends(career_id: str, title: Optional[str] = None):
+    """Get market trends specific to a career using Gemini AI."""
+    try:
+        # Try to fetch actual career details
+        career_data = None
+        try:
+            # Attempt to get from firestore or database
+            # This assumes careers are stored in a 'careers' collection
+            careers_ref = firestore_service.db.collection('careers').document(career_id)
+            career_doc = careers_ref.get()
+            if career_doc.exists:
+                career_data = career_doc.to_dict()
+                career_data['id'] = career_id
+                logger.info(f"Found career in Firestore: {career_data.get('title', career_id)}")
+        except Exception as e:
+            logger.warning(f"Could not fetch career from Firestore: {e}")
+        
+        # If we couldn't fetch from DB, construct from provided data or career_id
+        if not career_data:
+            # Use provided title or convert career_id to Title Case
+            career_title = title if title else career_id.replace('-', ' ').replace('_', ' ').title()
+            career_data = {
+                "id": career_id,
+                "title": career_title,
+                "industry": "technology",
+                "description": f"Career opportunities in {career_title}",
+                "required_skills": [],
+                "preferred_skills": [],
+            }
+            logger.info(f"Using constructed career data for: {career_title}")
+        
+        # Fetch career-specific market trends using Gemini AI
+        trends = await market_trends_service.get_career_specific_trends(
+            career_title=career_data.get("title", career_id),
+            career_data=career_data
+        )
+        
+        return trends
+        
+    except Exception as e:
+        logger.error(f"Failed to get career market trends: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get career market trends"
         )
 
 

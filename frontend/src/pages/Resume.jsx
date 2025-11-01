@@ -32,8 +32,21 @@ const Resume = () => {
       const profileData = profile.data;
       
       if (profileData?.resume) {
+        console.log('📄 Resume data loaded:', {
+          hasUrl: !!profileData.resume.url,
+          hasResumeUrl: !!profileData.resume.resume_url,
+          hasUploadedAt: !!profileData.resume.uploadedAt,
+          hasUploadedAtSnake: !!profileData.resume.uploaded_at,
+          hasParsed: !!profileData.resume.parsed,
+          hasParsedData: !!profileData.resume.parsed_data,
+          filename: profileData.resume.filename,
+          url: profileData.resume.url || profileData.resume.resume_url || 'MISSING'
+        });
+        
         setResumeData(profileData.resume);
-        setParsedFields(profileData.resume.parsed || {});
+        setParsedFields(profileData.resume.parsed || profileData.resume.parsed_data || {});
+      } else {
+        console.log('📄 No resume data in profile');
       }
     } catch (error) {
       console.error('❌ Failed to load profile:', error);
@@ -64,6 +77,8 @@ const Resume = () => {
       const result = await uploadResume(file);
       
       if (result) {
+        console.log('✅ Resume upload result:', result);
+        
         // Show comprehensive upload confirmation
         setUploadConfirmation({
           success: result.success !== false,
@@ -80,8 +95,9 @@ const Resume = () => {
         toast.success('Resume uploaded and parsed successfully!');
         
         // Reload profile to get updated resume data
-        loadProfile();
+        await loadProfile();
       } else {
+        console.error('❌ Resume upload returned null result');
         toast.error('Failed to upload resume');
       }
     } catch (error) {
@@ -152,38 +168,82 @@ const Resume = () => {
         </div>
       );
     }
-    const url = resumeData.url;
-    const filename = resumeData.filename;
-    const uploadedAt = resumeData.uploadedAt;
+    
+    // Get resume data with fallbacks
+    const url = resumeData.url || resumeData.resume_url || null;
+    const filename = resumeData.filename || 'resume.pdf';
+    const uploadedAt = resumeData.uploadedAt || resumeData.uploaded_at || null;
     const isPdf = filename && filename.toLowerCase().endsWith('.pdf');
 
-    if (isPdf) {
+    // Check if URL is missing
+    if (!url) {
       return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume Preview</h3>
-          <div className="border border-gray-300 rounded-lg overflow-hidden" style={{ height: '600px' }}>
-            <iframe
-              src={url}
-              width="100%"
-              height="100%"
-              title="Resume Preview"
-              className="border-0"
-            />
-          </div>
-          <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
-            <span>Last Updated: {uploadedAt ? new Date(uploadedAt).toLocaleDateString() : ''}</span>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
-            >
-              Open in New Tab
-            </a>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume Upload Issue</h3>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <p className="text-gray-700 font-medium mb-2">Resume file could not be loaded</p>
+            <p className="text-sm text-gray-500 mb-4">
+              The resume was uploaded but the file URL is missing. Please try uploading again.
+            </p>
+            <p className="text-xs text-gray-400">
+              Filename: {filename}<br />
+              {uploadedAt && `Uploaded: ${new Date(uploadedAt).toLocaleDateString()}`}
+            </p>
           </div>
         </div>
       );
     }
+
+    if (isPdf) {
+      // Ensure URL is absolute - if it starts with /, prepend the backend URL
+      let absoluteUrl = url;
+      if (url.startsWith('/uploads/')) {
+        // Local storage - need to point to backend server
+        const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        absoluteUrl = `${backendUrl}${url}`;
+      }
+      
+      console.log('📄 PDF URL:', { original: url, absolute: absoluteUrl });
+      
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume Preview</h3>
+          <div className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50" style={{ height: '600px' }}>
+            <embed
+              src={`${absoluteUrl}#toolbar=0`}
+              type="application/pdf"
+              width="100%"
+              height="100%"
+              style={{ border: 'none' }}
+            />
+          </div>
+          <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
+            <span>Last Updated: {uploadedAt ? new Date(uploadedAt).toLocaleDateString() : 'Unknown'}</span>
+            <div className="flex gap-4">
+              <a
+                href={absoluteUrl}
+                download={filename}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Download
+              </a>
+              <a
+                href={absoluteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Open in New Tab
+              </a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Resume File</h3>
@@ -193,7 +253,7 @@ const Resume = () => {
           </div>
           <p className="text-gray-700 font-medium">{filename}</p>
           <p className="text-sm text-gray-500 mt-2">
-            Last Updated: {uploadedAt ? new Date(uploadedAt).toLocaleDateString() : ''}
+            Last Updated: {uploadedAt ? new Date(uploadedAt).toLocaleDateString() : 'Unknown'}
           </p>
           <a
             href={url}

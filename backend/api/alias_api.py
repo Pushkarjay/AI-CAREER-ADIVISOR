@@ -130,8 +130,10 @@ async def parse_resume(request: Request, file: UploadFile = File(...), token: st
         resume_metadata = {
             "url": resume_url,
             "filename": file.filename,
-            "uploadedAt": datetime.now().isoformat(),
-            "parsed": parsed_data,
+            "uploadedAt": datetime.now().isoformat(),  # Use camelCase for frontend
+            "uploaded_at": datetime.now().isoformat(),  # Keep snake_case for backend
+            "parsed": parsed_data,  # Use 'parsed' for frontend consistency
+            "parsed_data": parsed_data,  # Keep 'parsed_data' for backend compatibility
             "confidence_score": parsed_data.get("confidence_score", 0)
         }
         

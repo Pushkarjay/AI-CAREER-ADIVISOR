@@ -138,10 +138,9 @@ async def update_profile(profile_updates: UserProfileUpdate, token: str = Depend
 
 
 @router.post("/upload-resume")
-async def upload_resume(file: UploadFile = File(...), token: str = Depends(security), request: Request = None):
+async def upload_resume(request: Request, file: UploadFile = File(...), token: str = Depends(security)):
     """Upload, store, parse resume and update user profile; returns resume metadata for preview and confirmation."""
     from services.resume_parser import ResumeParser
-    from fastapi import Request
     try:
         # Optional Firebase Storage
         try:
@@ -216,12 +215,10 @@ async def upload_resume(file: UploadFile = File(...), token: str = Depends(secur
                 with open(fpath, "wb") as fh:
                     fh.write(content_bytes)
                 rel = f"/uploads/resumes/{user_id}/{fname}"
-                if request is not None:
-                    base = str(request.base_url).rstrip('/')
-                    resume_url = f"{base}{rel}"
-                else:
-                    # Fallback to relative URL when Request is not provided
-                    resume_url = rel
+                # Always build absolute URL using request.base_url
+                base = str(request.base_url).rstrip('/')
+                resume_url = f"{base}{rel}"
+                logger.info(f"Resume stored locally at: {fpath}, URL: {resume_url}")
             except Exception as le:
                 logger.error(f"Local resume store failed: {le}")
 
@@ -239,10 +236,12 @@ async def upload_resume(file: UploadFile = File(...), token: str = Depends(secur
         resume_meta = {
             "url": resume_url,
             "filename": file.filename,
-            "uploaded_at": _dt.now().isoformat(),
+            "uploadedAt": _dt.now().isoformat(),  # Use camelCase for frontend compatibility
+            "uploaded_at": _dt.now().isoformat(),  # Keep snake_case for backend compatibility
             "file_size": file_size,
             "confidence_score": extracted_data.get("confidence_score", 0),
-            "parsed_data": extracted_data,
+            "parsed": extracted_data,  # Use 'parsed' for frontend consistency
+            "parsed_data": extracted_data,  # Keep 'parsed_data' for backend compatibility
             "version": current_profile.get("resume", {}).get("version", 0) + 1,  # Increment version
         }
         
@@ -378,10 +377,12 @@ async def upload_resume(file: UploadFile = File(...), token: str = Depends(secur
             "resume": {
                 "url": resume_url,
                 "filename": file.filename,
-                "uploaded_at": resume_meta["uploaded_at"],
+                "uploadedAt": resume_meta["uploadedAt"],  # Use camelCase
+                "uploaded_at": resume_meta["uploaded_at"],  # Keep both for compatibility
                 "file_size": file_size,
                 "confidence_score": resume_meta.get("confidence_score", 0),
                 "version": resume_meta.get("version", 1),
+                "parsed": extracted_data,  # Include parsed data in response
             },
             "extracted_data": extracted_data,
             "profile_updated": update_ok,

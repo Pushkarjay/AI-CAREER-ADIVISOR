@@ -304,10 +304,22 @@ export const DataProvider = ({ children }) => {
         ...pdata,
       };
       
-      // Normalize resume data: rename parsed_data to parsed for frontend consistency
-      if (profileData.resume && profileData.resume.parsed_data) {
-        profileData.resume.parsed = profileData.resume.parsed_data;
-        delete profileData.resume.parsed_data;
+      // Normalize resume data for frontend consistency
+      if (profileData.resume) {
+        // Ensure uploadedAt is available (convert from uploaded_at if needed)
+        if (!profileData.resume.uploadedAt && profileData.resume.uploaded_at) {
+          profileData.resume.uploadedAt = profileData.resume.uploaded_at;
+        }
+        
+        // Ensure parsed data is available (rename parsed_data to parsed for consistency)
+        if (profileData.resume.parsed_data && !profileData.resume.parsed) {
+          profileData.resume.parsed = profileData.resume.parsed_data;
+        }
+        
+        // Ensure URL is available
+        if (!profileData.resume.url && profileData.resume.resume_url) {
+          profileData.resume.url = profileData.resume.resume_url;
+        }
       }
       
       // Merge UI-only fields from local storage
@@ -567,7 +579,11 @@ export const DataProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.RESUME_UPLOAD_START });
       const response = await profileAPI.uploadResume(file);
+      console.log('📤 Resume upload response:', response);
+      
       const res = response?.data || {};
+      console.log('📦 Resume response data:', res);
+      
       if (res?.extracted_data) {
         dispatch({ type: ActionTypes.RESUME_UPLOAD_SUCCESS, payload: res });
 
@@ -585,6 +601,9 @@ export const DataProvider = ({ children }) => {
           uploadedAt: new Date().toISOString(),
           confidence_score: res.confidence_score || 0,
         };
+        
+        console.log('📄 Resume metadata:', resumeMeta);
+        
         // Attach parsed to resume meta for UI
         const resumeField = { ...resumeMeta, parsed: res.extracted_data };
 

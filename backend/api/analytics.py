@@ -9,6 +9,7 @@ import logging
 from core.security import verify_token
 from services.firestore_service import FirestoreService
 from services.bigquery_service_mock import BigQueryService
+from services.market_trends_service import market_trends_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -74,32 +75,10 @@ async def get_dashboard_analytics(token: str = Depends(security)):
 
 @router.get("/market-trends")
 async def get_market_trends():
-    """Get current market trends and insights."""
+    """Get current market trends and insights using Gemini AI."""
     try:
-        trends = {
-            "skill_demand": [
-                {"skill": "Python", "demand_change": "+35%", "avg_salary": "₹8.5L"},
-                {"skill": "React", "demand_change": "+28%", "avg_salary": "₹7.2L"},
-                {"skill": "AWS", "demand_change": "+45%", "avg_salary": "₹12.0L"},
-                {"skill": "Machine Learning", "demand_change": "+60%", "avg_salary": "₹15.0L"}
-            ],
-            "industry_growth": [
-                {"industry": "Technology", "growth_rate": "+25%", "job_openings": 450000},
-                {"industry": "Finance", "growth_rate": "+15%", "job_openings": 200000},
-                {"industry": "Healthcare", "growth_rate": "+20%", "job_openings": 180000}
-            ],
-            "location_insights": [
-                {"city": "Bangalore", "avg_salary": "₹12.5L", "job_count": 25000},
-                {"city": "Mumbai", "avg_salary": "₹11.8L", "job_count": 22000},
-                {"city": "Delhi", "avg_salary": "₹11.2L", "job_count": 20000},
-                {"city": "Pune", "avg_salary": "₹9.5L", "job_count": 15000}
-            ],
-            "emerging_roles": [
-                {"role": "AI/ML Engineer", "growth": "+65%", "avg_salary": "₹18L"},
-                {"role": "Cloud Architect", "growth": "+40%", "avg_salary": "₹22L"},
-                {"role": "Data Scientist", "growth": "+35%", "avg_salary": "₹16L"}
-            ]
-        }
+        # Fetch real market trends using Gemini AI
+        trends = await market_trends_service.get_general_market_trends()
         
         return trends
         

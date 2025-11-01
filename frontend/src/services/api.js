@@ -115,6 +115,12 @@ export const careerAPI = {
   // Get career details
   getCareerDetails: (careerId) => api.get(`/api/v1/careers/${careerId}`),
   
+  // Get career-specific market trends
+  getCareerMarketTrends: (careerId, title = null) => {
+    const params = title ? { title } : {};
+    return api.get(`/api/v1/careers/${careerId}/market-trends`, { params });
+  },
+  
   // Generate personalized career path using AI
   generatePersonalizedPath: (careerId) => api.post(`/api/v1/careers/${careerId}/personalized-path`)
 };
