@@ -40,6 +40,9 @@ const Careers = () => {
   });
   const [savedCareers, setSavedCareers] = useState(new Set());
   const [likedCareers, setLikedCareers] = useState(new Set());
+  const [generatingPersonalizedPath, setGeneratingPersonalizedPath] = useState(false);
+  const [personalizedPathData, setPersonalizedPathData] = useState(null);
+  const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
 
   useEffect(() => {
     fetchRecommendations();
@@ -212,6 +215,29 @@ const Careers = () => {
     setLikedCareers(newLiked);
   };
 
+  const handleGeneratePersonalizedPath = async (careerId, careerTitle) => {
+    try {
+      setGeneratingPersonalizedPath(true);
+      toast.loading('Generating your personalized career path with AI...', { id: 'personalized-path' });
+      
+      const response = await careerAPI.generatePersonalizedPath(careerId);
+      const data = response?.data || {};
+      
+      setPersonalizedPathData({
+        ...data,
+        careerTitle: careerTitle || data.career_title
+      });
+      setShowPersonalizedModal(true);
+      
+      toast.success('Personalized career path generated!', { id: 'personalized-path' });
+    } catch (error) {
+      console.error('Failed to generate personalized path:', error);
+      toast.error('Failed to generate personalized path. Please try again.', { id: 'personalized-path' });
+    } finally {
+      setGeneratingPersonalizedPath(false);
+    }
+  };
+
   const CareerCard = ({ career, showActions = true }) => (
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-4">
@@ -290,9 +316,18 @@ const Careers = () => {
             <ChartBarIcon className="w-4 h-4 mr-1" />
             Match: {career.match_score}%
           </div>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-            View Details
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleGeneratePersonalizedPath(career.id, career.title)}
+              disabled={generatingPersonalizedPath}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingPersonalizedPath ? 'Generating...' : 'AI Path'}
+            </button>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+              View Details
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -774,6 +809,91 @@ const Careers = () => {
         </div>
       </div>
 
+      {/* Personalized Path Modal */}
+      {showPersonalizedModal && personalizedPathData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                🎯 Your Personalized Career Path
+              </h2>
+              <button
+                onClick={() => setShowPersonalizedModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                  {personalizedPathData.careerTitle}
+                </h3>
+                <div className="flex gap-4 text-sm">
+                  <span className="text-purple-600 font-medium">
+                    Match Score: {personalizedPathData.match_score}%
+                  </span>
+                  <span className="text-blue-600">
+                    Powered by Google Gemini AI
+                  </span>
+                </div>
+              </div>
+
+              <div className="prose max-w-none">
+                {personalizedPathData.personalized_plan?.plan ? (
+                  <div className="whitespace-pre-wrap text-gray-700">
+                    {personalizedPathData.personalized_plan.plan}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {Object.entries(personalizedPathData.personalized_plan || {}).map(([key, value]) => (
+                      <div key={key} className="border-l-4 border-purple-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-2 capitalize">
+                          {key.replace(/_/g, ' ')}
+                        </h4>
+                        {typeof value === 'string' ? (
+                          <p className="text-gray-700">{value}</p>
+                        ) : Array.isArray(value) ? (
+                          <ul className="list-disc list-inside space-y-1">
+                            {value.map((item, idx) => (
+                              <li key={idx} className="text-gray-700">{item}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <pre className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                            {JSON.stringify(value, null, 2)}
+                          </pre>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(JSON.stringify(personalizedPathData, null, 2));
+                    toast.success('Copied to clipboard!');
+                  }}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
+                >
+                  Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => setShowPersonalizedModal(false)}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
     </>
   );

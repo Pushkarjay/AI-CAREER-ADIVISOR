@@ -14,6 +14,7 @@ from models.career import (
 from core.security import verify_token
 from services.firestore_service import FirestoreService
 from services.job_scraper_service import job_scraper_service
+from services.gemini_service import GeminiService
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ router = APIRouter()
 security = HTTPBearer()
 
 firestore_service = FirestoreService()
+gemini_service = GeminiService()
 
 
 class CareerSearchRequest(BaseModel):
@@ -227,6 +229,67 @@ async def get_career_details(career_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get career details"
+        )
+
+
+@router.post("/{career_id}/personalized-path")
+async def generate_personalized_career_path(career_id: str, token: str = Depends(security)):
+    """
+    Generate a personalized career development path using AI based on user profile and resume.
+    Uses Gemini AI to create customized learning paths, skill gap analysis, and action plans.
+    """
+    try:
+        payload = verify_token(token.credentials)
+        user_id = payload.get("user_id")
+        
+        # Get user profile
+        user_profile = await firestore_service.get_user_profile(user_id)
+        if not user_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User profile required for personalized path generation"
+            )
+        
+        # Get career details (in production, fetch from database)
+        # For now, using mock data similar to get_career_details
+        career_data = {
+            "id": career_id,
+            "title": "Software Developer",
+            "industry": "technology",
+            "description": "Design, develop, and maintain software applications using various programming languages and frameworks.",
+            "required_skills": ["Python", "JavaScript", "SQL", "Git"],
+            "preferred_skills": ["React", "Node.js", "AWS", "Docker"],
+        }
+        
+        # Extract resume data if available
+        resume_data = user_profile.get("resume")
+        
+        # Generate personalized path using Gemini AI
+        personalized_path = await gemini_service.generate_personalized_career_path(
+            career_data=career_data,
+            user_profile=user_profile,
+            resume_data=resume_data
+        )
+        
+        # Save the generated path to user's profile for future reference
+        try:
+            await firestore_service.save_personalized_path(
+                user_id, 
+                career_id, 
+                personalized_path
+            )
+        except Exception as save_error:
+            logger.warning(f"Could not save personalized path: {save_error}")
+        
+        return personalized_path
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate personalized career path: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate personalized path: {str(e)}"
         )
 
 

@@ -8,11 +8,13 @@ from core.security import verify_token
 from models.career import LearningRoadmap
 from data.domains_roadmap import DOMAINS_ROADMAP, ALL_DOMAIN_SLUGS
 from services.firestore_service import FirestoreService
+from services.gemini_service import GeminiService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 security = HTTPBearer()
 firestore_service = FirestoreService()
+gemini_service = GeminiService()
 
 
 @router.get("/", response_model=List[LearningRoadmap])
@@ -105,3 +107,59 @@ async def get_roadmap(domain_id: str):
     except Exception as e:
         logger.error(f"Failed to get roadmap: {e}")
         raise HTTPException(status_code=500, detail="Failed to get roadmap")
+
+
+@router.post("/{domain_id}/personalized")
+async def generate_personalized_roadmap(domain_id: str, token: str = Depends(security)):
+    """
+    Generate a personalized learning roadmap for a domain using AI.
+    Uses Gemini AI to create customized learning paths based on user profile and resume.
+    """
+    try:
+        payload = verify_token(token.credentials)
+        user_id = payload.get("user_id")
+        
+        # Get user profile
+        user_profile = await firestore_service.get_user_profile(user_id)
+        if not user_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User profile required for personalized roadmap generation"
+            )
+        
+        # Get domain data
+        domain_data = DOMAINS_ROADMAP.get(domain_id)
+        if not domain_data:
+            raise HTTPException(status_code=404, detail="Domain not found")
+        
+        # Extract resume data if available
+        resume_data = user_profile.get("resume")
+        
+        # Generate personalized roadmap using Gemini AI
+        personalized_roadmap = await gemini_service.generate_personalized_domain_roadmap(
+            domain_data=domain_data,
+            user_profile=user_profile,
+            resume_data=resume_data
+        )
+        
+        # Save the generated roadmap to user's profile for future reference
+        try:
+            await firestore_service.save_personalized_roadmap(
+                user_id,
+                domain_id,
+                personalized_roadmap
+            )
+        except Exception as save_error:
+            logger.warning(f"Could not save personalized roadmap: {save_error}")
+        
+        return personalized_roadmap
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate personalized roadmap: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate personalized roadmap: {str(e)}"
+        )
+

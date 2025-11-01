@@ -1,8 +1,10 @@
 """Real Gemini AI service using Google Generative AI."""
 
 import os
+import json
 import logging
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
@@ -22,7 +24,9 @@ class GeminiService:
         genai.configure(api_key=self.api_key)
         
         # Initialize the model
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model_name = 'gemini-1.5-flash'
+        self.model = genai.GenerativeModel(self.model_name)
+        self.temperature = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
         
         # Safety settings
         self.safety_settings = {
@@ -376,6 +380,237 @@ class GeminiService:
                 suggestions[current_category].append(line[1:].strip())
         
         return suggestions
+    
+    async def generate_personalized_career_path(
+        self, 
+        career_data: Dict[str, Any],
+        user_profile: Dict[str, Any],
+        resume_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Generate personalized career path based on career, user profile, and resume data."""
+        try:
+            # Extract user information
+            skills = user_profile.get("skills", [])
+            interests = user_profile.get("interests", [])
+            education = user_profile.get("education_level", "")
+            field_of_study = user_profile.get("field_of_study", "")
+            experience_years = user_profile.get("experience_years", 0)
+            career_goals = user_profile.get("career_goals", "")
+            
+            # Extract resume data if available
+            resume_skills = []
+            certifications = []
+            projects = []
+            internships = []
+            
+            if resume_data:
+                parsed = resume_data.get("parsed_data", {})
+                resume_skills = parsed.get("skills", [])
+                certifications = user_profile.get("certifications", [])
+                projects = user_profile.get("projects", [])
+                internships = user_profile.get("internships", [])
+            
+            # Combine skills from profile and resume
+            all_skills = list(set(skills + resume_skills))
+            
+            # Build prompt for personalized career path
+            prompt = f"""
+            Generate a highly personalized career development path for an Indian student/professional:
+            
+            CAREER TARGET:
+            Title: {career_data.get('title', 'N/A')}
+            Industry: {career_data.get('industry', 'N/A')}
+            Description: {career_data.get('description', 'N/A')}
+            Required Skills: {', '.join(career_data.get('required_skills', []))}
+            
+            USER PROFILE:
+            Current Skills: {', '.join(all_skills)}
+            Interests: {', '.join(interests)}
+            Education: {education} in {field_of_study}
+            Experience: {experience_years} years
+            Career Goals: {career_goals}
+            
+            RESUME HIGHLIGHTS:
+            Certifications: {', '.join([c.get('name', '') for c in certifications])}
+            Projects: {', '.join([p.get('name', '') for p in projects])}
+            Internships: {', '.join([i.get('company', '') for i in internships])}
+            
+            Please provide a comprehensive, personalized career development plan including:
+            
+            1. SKILL GAP ANALYSIS:
+               - Skills you already have that match this career
+               - Critical skills you need to develop
+               - Priority order for learning new skills
+            
+            2. PERSONALIZED LEARNING ROADMAP:
+               - Step-by-step learning path tailored to your background
+               - Recommended courses, platforms, and resources
+               - Timeline estimates (weeks/months for each phase)
+            
+            3. PROJECT RECOMMENDATIONS:
+               - 3-5 hands-on projects to build relevant experience
+               - How to leverage your existing projects
+            
+            4. CERTIFICATION STRATEGY:
+               - Industry-recognized certifications to pursue
+               - Order of priority based on your profile
+            
+            5. EXPERIENCE BUILDING:
+               - Internship opportunities to target
+               - Open-source contributions
+               - Freelance/part-time opportunities
+            
+            6. NETWORKING & COMMUNITY:
+               - Communities and forums to join
+               - LinkedIn strategy
+               - Mentorship opportunities
+            
+            7. JOB SEARCH STRATEGY:
+               - When you'll be ready to apply
+               - Companies that match your profile
+               - How to position yourself
+            
+            8. PERSONALIZED TIMELINE:
+               - 3-month action plan
+               - 6-month milestones
+               - 1-year career transition goals
+            
+            Format the response as structured JSON with clear sections. Be specific, actionable, and considerate of the Indian job market.
+            """
+            
+            response = await self._generate_text(prompt)
+            parsed_plan = self._parse_json_response(response["text"])
+            
+            return {
+                "personalized_plan": parsed_plan if "content" not in parsed_plan else {"plan": response["text"]},
+                "career_title": career_data.get('title', 'N/A'),
+                "match_score": self._calculate_skill_match(all_skills, career_data.get('required_skills', [])),
+                "confidence": response.get("confidence", 0.85),
+                "model": "gemini-1.5-flash",
+                "generated_at": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Personalized career path generation failed: {e}")
+            return {"error": str(e)}
+    
+    async def generate_personalized_domain_roadmap(
+        self,
+        domain_data: Dict[str, Any],
+        user_profile: Dict[str, Any],
+        resume_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Generate personalized learning roadmap for a specific domain."""
+        try:
+            # Extract user information
+            skills = user_profile.get("skills", [])
+            interests = user_profile.get("interests", [])
+            education = user_profile.get("education_level", "")
+            field_of_study = user_profile.get("field_of_study", "")
+            certifications = user_profile.get("certifications", [])
+            projects = user_profile.get("projects", [])
+            
+            # Extract domain information
+            domain_title = domain_data.get("title", "")
+            domain_description = domain_data.get("description", "")
+            prerequisites = domain_data.get("prerequisites", [])
+            learning_path = domain_data.get("learning_path", [])
+            universal_foundations = domain_data.get("universal_foundations", [])
+            
+            prompt = f"""
+            Create a highly personalized learning roadmap for mastering this domain:
+            
+            DOMAIN:
+            Title: {domain_title}
+            Description: {domain_description}
+            Prerequisites: {', '.join(prerequisites)}
+            Standard Learning Path: {', '.join(learning_path[:10])}
+            Universal Foundations: {', '.join(universal_foundations)}
+            
+            LEARNER PROFILE:
+            Current Skills: {', '.join(skills)}
+            Interests: {', '.join(interests)}
+            Education: {education} - {field_of_study}
+            Certifications: {', '.join([c.get('name', '') for c in certifications])}
+            Projects: {', '.join([p.get('name', '') for p in projects])}
+            
+            Generate a personalized roadmap including:
+            
+            1. PREREQUISITE ASSESSMENT:
+               - Which prerequisites you already know
+               - Which ones you need to learn first
+               - Estimated time for prerequisite completion
+            
+            2. CUSTOMIZED LEARNING PATH:
+               - Adjusted path based on your existing knowledge
+               - Skip topics you already know
+               - Deep-dive recommendations for weak areas
+               - Month-by-month breakdown
+            
+            3. RESOURCE RECOMMENDATIONS:
+               - Free courses (YouTube, Coursera, edX)
+               - Paid courses worth the investment
+               - Books and documentation
+               - Practice platforms
+            
+            4. HANDS-ON PROJECT PLAN:
+               - Beginner projects (weeks 1-4)
+               - Intermediate projects (months 2-3)
+               - Advanced capstone project (months 4-6)
+               - How to showcase these projects
+            
+            5. SKILL VALIDATION:
+               - Assessments and quizzes
+               - Certifications to obtain
+               - Portfolio building strategy
+            
+            6. INDIAN CONTEXT:
+               - Local meetups and communities
+               - Indian companies hiring in this domain
+               - Salary expectations at different skill levels
+               - Tier-1 vs Tier-2 city opportunities
+            
+            7. WEEK-BY-WEEK PLAN (First 4 weeks):
+               - Daily study schedule
+               - Specific topics and resources
+               - Weekly goals and checkpoints
+            
+            8. LONG-TERM MILESTONES:
+               - 3-month checkpoint
+               - 6-month intermediate level
+               - 12-month expert level
+            
+            Return as structured JSON. Be extremely specific with resource names, URLs where possible, and realistic timelines.
+            """
+            
+            response = await self._generate_text(prompt)
+            parsed_roadmap = self._parse_json_response(response["text"])
+            
+            return {
+                "personalized_roadmap": parsed_roadmap if "content" not in parsed_roadmap else {"roadmap": response["text"]},
+                "domain_title": domain_title,
+                "skill_alignment": self._calculate_skill_match(skills, prerequisites),
+                "confidence": response.get("confidence", 0.85),
+                "model": "gemini-1.5-flash",
+                "generated_at": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Personalized domain roadmap generation failed: {e}")
+            return {"error": str(e)}
+    
+    def _calculate_skill_match(self, user_skills: List[str], required_skills: List[str]) -> float:
+        """Calculate percentage match between user skills and required skills."""
+        if not required_skills:
+            return 0.0
+        
+        user_skills_lower = set(s.lower() for s in user_skills)
+        required_skills_lower = set(s.lower() for s in required_skills)
+        
+        matched = len(user_skills_lower.intersection(required_skills_lower))
+        total = len(required_skills_lower)
+        
+        return round((matched / total) * 100, 2) if total > 0 else 0.0
     
     async def health_check(self) -> bool:
         """Check if the Gemini service is healthy."""

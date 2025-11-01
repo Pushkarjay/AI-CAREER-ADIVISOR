@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { useData } from '../contexts/DataContext';
+import { roadmapAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
-const PrototypeButton = ({ label = 'View personalized path' }) => (
+const PrototypeButton = ({ label = 'View personalized path', onClick, disabled = false }) => (
   <button
-    onClick={() => toast('This feature is not available completely in the prototype')}
-    className="px-3 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 border"
+    onClick={onClick || (() => toast('This feature is not available completely in the prototype'))}
+    disabled={disabled}
+    className="px-3 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 border disabled:opacity-50 disabled:cursor-not-allowed"
   >
     {label}
   </button>
@@ -17,6 +19,9 @@ const Roadmaps = () => {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'learning'
+  const [generatingPersonalizedRoadmap, setGeneratingPersonalizedRoadmap] = useState(false);
+  const [personalizedRoadmapData, setPersonalizedRoadmapData] = useState(null);
+  const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
 
   useEffect(() => {
     if (!roadmaps.items?.length) fetchRoadmaps();
@@ -30,6 +35,29 @@ const Roadmaps = () => {
       r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q) || (r.learning_path || []).some(s => s.toLowerCase().includes(q))
     );
   }, [roadmaps.items, query]);
+
+  const handleGeneratePersonalizedRoadmap = async (domainId, domainTitle) => {
+    try {
+      setGeneratingPersonalizedRoadmap(true);
+      toast.loading('Generating your personalized learning roadmap with AI...', { id: 'personalized-roadmap' });
+      
+      const response = await roadmapAPI.generatePersonalizedRoadmap(domainId);
+      const data = response?.data || {};
+      
+      setPersonalizedRoadmapData({
+        ...data,
+        domainTitle: domainTitle || data.domain_title
+      });
+      setShowPersonalizedModal(true);
+      
+      toast.success('Personalized roadmap generated!', { id: 'personalized-roadmap' });
+    } catch (error) {
+      console.error('Failed to generate personalized roadmap:', error);
+      toast.error('Failed to generate personalized roadmap. Please try again.', { id: 'personalized-roadmap' });
+    } finally {
+      setGeneratingPersonalizedRoadmap(false);
+    }
+  };
 
   // Show loading state
   if (roadmaps.loading) {
@@ -59,7 +87,11 @@ const Roadmaps = () => {
             <p className="text-slate-600 text-sm">Universal Foundations + 70+ domains. Search and explore.</p>
           </div>
           <div className="flex gap-2">
-            <PrototypeButton label="Generate personalized path" />
+            <PrototypeButton 
+              label={generatingPersonalizedRoadmap ? "Generating..." : "Generate personalized path"} 
+              onClick={() => selected && handleGeneratePersonalizedRoadmap(selected.domain_id, selected.title)}
+              disabled={!selected || generatingPersonalizedRoadmap}
+            />
           </div>
         </div>
 
@@ -168,7 +200,16 @@ const Roadmaps = () => {
                     <p className="text-xs text-slate-500 mt-1">Estimated time: {selected.estimated_time}</p>
                   )}
                 </div>
-                <PrototypeButton label="Download roadmap (PDF)" />
+                <div className="flex gap-2">
+                  <PrototypeButton label="Download roadmap (PDF)" />
+                  <button
+                    onClick={() => handleGeneratePersonalizedRoadmap(selected.domain_id, selected.title)}
+                    disabled={generatingPersonalizedRoadmap}
+                    className="px-3 py-2 text-sm rounded-md bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {generatingPersonalizedRoadmap ? 'Generating...' : 'AI Personalized Path'}
+                  </button>
+                </div>
               </div>
               <div className="mt-4">
                 <h4 className="font-semibold mb-2">Universal Foundations</h4>
@@ -213,6 +254,105 @@ const Roadmaps = () => {
           </div>
         )}
       </div>
+
+      {/* Personalized Roadmap Modal */}
+      {showPersonalizedModal && personalizedRoadmapData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                🚀 Your Personalized Learning Roadmap
+              </h2>
+              <button
+                onClick={() => setShowPersonalizedModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                  {personalizedRoadmapData.domainTitle}
+                </h3>
+                <div className="flex gap-4 text-sm">
+                  <span className="text-purple-600 font-medium">
+                    Skill Alignment: {personalizedRoadmapData.skill_alignment}%
+                  </span>
+                  <span className="text-blue-600">
+                    Powered by Google Gemini AI
+                  </span>
+                </div>
+              </div>
+
+              <div className="prose max-w-none">
+                {personalizedRoadmapData.personalized_roadmap?.roadmap ? (
+                  <div className="whitespace-pre-wrap text-gray-700">
+                    {personalizedRoadmapData.personalized_roadmap.roadmap}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {Object.entries(personalizedRoadmapData.personalized_roadmap || {}).map(([key, value]) => (
+                      <div key={key} className="border-l-4 border-purple-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-2 capitalize">
+                          {key.replace(/_/g, ' ')}
+                        </h4>
+                        {typeof value === 'string' ? (
+                          <p className="text-gray-700">{value}</p>
+                        ) : Array.isArray(value) ? (
+                          <ul className="list-disc list-inside space-y-1">
+                            {value.map((item, idx) => (
+                              <li key={idx} className="text-gray-700">
+                                {typeof item === 'string' ? item : JSON.stringify(item)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : typeof value === 'object' ? (
+                          <div className="space-y-2">
+                            {Object.entries(value).map(([subKey, subValue]) => (
+                              <div key={subKey} className="ml-4">
+                                <strong className="text-gray-800">{subKey.replace(/_/g, ' ')}:</strong>
+                                <span className="ml-2 text-gray-700">
+                                  {typeof subValue === 'string' ? subValue : JSON.stringify(subValue)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <pre className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                            {JSON.stringify(value, null, 2)}
+                          </pre>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(JSON.stringify(personalizedRoadmapData, null, 2));
+                    toast.success('Copied to clipboard!');
+                  }}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
+                >
+                  Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => setShowPersonalizedModal(false)}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
