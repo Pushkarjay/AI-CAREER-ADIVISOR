@@ -97,8 +97,10 @@ jobs:
           echo "Node Environment: $NODE_ENV"
           # Remove .env file to prevent it from overriding environment variables
           rm -f .env
-          npm ci || npm install
-          npm run build
+          # Install dependencies
+          npm install
+          # Build with environment variables
+          npx vite build
       - name: Deploy Frontend to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
