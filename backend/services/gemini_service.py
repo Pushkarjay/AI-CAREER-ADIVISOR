@@ -16,8 +16,19 @@ class GeminiService:
     
     def __init__(self):
         """Initialize the Gemini service with API key."""
+        # Try multiple sources for API key
         self.api_key = os.getenv("GEMINI_API_KEY")
+        
         if not self.api_key:
+            # Try importing settings
+            try:
+                from core.config import settings
+                self.api_key = settings.GEMINI_API_KEY
+            except Exception as e:
+                logger.warning(f"Could not import settings: {e}")
+        
+        if not self.api_key:
+            logger.error("GEMINI_API_KEY not found in environment or settings")
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         # Configure the API
@@ -36,7 +47,7 @@ class GeminiService:
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         }
         
-        logger.info("Initialized real Gemini service with API key")
+        logger.info(f"Initialized real Gemini service with API key (model: {self.model_name})")
     
     async def generate_chat_response(self, message: str, chat_history: List[Dict[str, str]] = None,
                                    system_prompt: str = None) -> Dict[str, Any]:

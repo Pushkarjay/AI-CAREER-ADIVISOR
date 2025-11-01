@@ -4,6 +4,12 @@ FastAPI application for AI Career Advisor.
 A multi-agent system providing personalized career guidance for students in India.
 """
 
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file FIRST before any other imports
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -12,7 +18,6 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
 from contextlib import asynccontextmanager
-import os
 
 from core.config import settings
 from core.database import initialize_connections
