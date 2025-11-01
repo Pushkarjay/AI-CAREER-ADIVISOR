@@ -1248,13 +1248,48 @@ const Careers = () => {
                 <p className="text-gray-700">{selectedCareerDetails.description}</p>
               </div>
 
-              {selectedCareerDetails.salary_range_min && (
+              {/* Industry and Work Type */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedCareerDetails.industry && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Industry</h3>
+                    <p className="text-gray-700">{selectedCareerDetails.industry}</p>
+                  </div>
+                )}
+                {selectedCareerDetails.work_type && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Work Type</h3>
+                    <p className="text-gray-700">{selectedCareerDetails.work_type}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Salary Range */}
+              {(selectedCareerDetails.salary_range || selectedCareerDetails.avg_salary) && (
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Salary Range</h3>
                   <p className="text-gray-700">
-                    ₹{Math.round(selectedCareerDetails.salary_range_min/100000)} - 
-                    ₹{Math.round(selectedCareerDetails.salary_range_max/100000)} LPA
+                    {selectedCareerDetails.salary_range || 
+                     `₹${Math.round(selectedCareerDetails.avg_salary/100000)} LPA (Average)`}
                   </p>
+                </div>
+              )}
+
+              {/* Growth Rate and Job Openings */}
+              {(selectedCareerDetails.growth_rate || selectedCareerDetails.job_openings) && (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedCareerDetails.growth_rate && (
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Growth Rate</h3>
+                      <p className="text-green-600 font-semibold">{selectedCareerDetails.growth_rate}</p>
+                    </div>
+                  )}
+                  {selectedCareerDetails.job_openings && (
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Job Openings</h3>
+                      <p className="text-blue-600 font-semibold">{selectedCareerDetails.job_openings}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1271,14 +1306,32 @@ const Careers = () => {
                 </div>
               )}
 
-              {selectedCareerDetails.preferred_skills && (
+              {/* Suggested Courses */}
+              {selectedCareerDetails.suggested_courses && selectedCareerDetails.suggested_courses.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Preferred Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCareerDetails.preferred_skills.map((skill, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                        {skill}
-                      </span>
+                  <h3 className="font-semibold text-lg mb-2">Suggested Courses</h3>
+                  <div className="space-y-3">
+                    {selectedCareerDetails.suggested_courses.map((course, idx) => (
+                      <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{course.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {course.provider} • {course.duration}
+                            </p>
+                          </div>
+                          {course.url && (
+                            <a
+                              href={course.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              View Course ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1310,18 +1363,10 @@ const Careers = () => {
                 </div>
               )}
 
-              {selectedCareerDetails.growth_potential && (
+              {selectedCareerDetails.experience_level && (
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Growth Potential</h3>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-green-500 h-3 rounded-full"
-                        style={{ width: `${selectedCareerDetails.growth_potential * 10}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-gray-700 font-medium">{selectedCareerDetails.growth_potential}/10</span>
-                  </div>
+                  <h3 className="font-semibold text-lg mb-2">Experience Level</h3>
+                  <p className="text-gray-700">{selectedCareerDetails.experience_level}</p>
                 </div>
               )}
 

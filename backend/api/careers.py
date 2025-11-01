@@ -188,52 +188,54 @@ async def get_career_trends():
 async def get_career_details(career_id: str):
     """Get detailed information about a specific career."""
     try:
-        # Mock career details - in production would query database
-        career_details = {
-            "id": career_id,
-            "title": "Software Developer",
-            "industry": "technology",
-            "description": "Design, develop, and maintain software applications using various programming languages and frameworks.",
-            "required_skills": ["Python", "JavaScript", "SQL", "Git"],
-            "preferred_skills": ["React", "Node.js", "AWS", "Docker"],
-            "education_requirements": ["Bachelor's degree in Computer Science or related field"],
-            "experience_level": "entry",
-            "salary_range_min": 400000,
-            "salary_range_max": 800000,
-            "location_flexibility": True,
-            "growth_potential": 8.5,
-            "demand_score": 9.2,
-            "typical_responsibilities": [
-                "Write clean, maintainable code",
-                "Collaborate with cross-functional teams",
-                "Debug and troubleshoot applications",
-                "Participate in code reviews",
-                "Stay updated with technology trends"
-            ],
-            "career_progression": [
-                {"level": "Junior Developer", "years": "0-2", "salary_range": "₹4L-6L"},
-                {"level": "Mid-level Developer", "years": "2-5", "salary_range": "₹6L-12L"},
-                {"level": "Senior Developer", "years": "5-8", "salary_range": "₹12L-20L"},
-                {"level": "Tech Lead", "years": "8+", "salary_range": "₹20L+"}
-            ],
-            "related_careers": [
-                "Full Stack Developer",
-                "DevOps Engineer",
-                "Data Engineer",
-                "Mobile App Developer"
-            ],
-            # Roadmap integration fields (prototype)
-            "learning_roadmap_id": "backend-dev",
-            "career_path_stages": [
-                "Junior Developer",
-                "Mid-level Developer",
-                "Senior Developer",
-                "Tech Lead"
-            ]
-        }
+        # Try to fetch from Firestore careers collection
+        careers_ref = firestore_service.db.collection('careers').document(career_id)
+        career_doc = careers_ref.get()
         
-        return career_details
+        if career_doc.exists:
+            career_data = career_doc.to_dict()
+            
+            # Format the data for frontend consumption
+            career_details = {
+                "id": career_id,
+                "title": career_data.get("title", "Unknown Career"),
+                "industry": career_data.get("industry", "General"),
+                "description": career_data.get("description", ""),
+                "required_skills": career_data.get("requiredSkills", []),
+                "suggested_courses": career_data.get("suggestedCourses", []),
+                "experience_level": career_data.get("experienceLevel", "Entry Level"),
+                "avg_salary": career_data.get("avgSalary", 0),
+                "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L - ₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L",
+                "work_type": career_data.get("workType", "Office"),
+                "growth_rate": career_data.get("growthRate", "N/A"),
+                "job_openings": career_data.get("jobOpenings", "N/A"),
+                "domain_id": career_data.get("domain_id", ""),
+                "skills_weightage": career_data.get("skills_weightage", {}),
+                "typical_responsibilities": career_data.get("responsibilities", [
+                    "Apply domain knowledge and skills",
+                    "Collaborate with team members",
+                    "Deliver quality work on time",
+                    "Continuously learn and improve"
+                ]),
+                "career_progression": [
+                    {"level": "Entry Level", "years": "0-2", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.5 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L"},
+                    {"level": "Mid Level", "years": "2-5", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.8 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.2 / 100000:.1f}L"},
+                    {"level": "Senior Level", "years": "5-8", "salary_range": f"₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.8 / 100000:.1f}L"},
+                    {"level": "Lead/Manager", "years": "8+", "salary_range": f"₹{career_data.get('avgSalary', 0) * 2 / 100000:.1f}L+"}
+                ],
+                "learning_roadmap_id": career_data.get("domain_id", ""),
+            }
+            
+            return career_details
+        else:
+            # Fallback: Return basic structure if career not found in database
+            raise HTTPException(
+                status_code=404,
+                detail=f"Career with ID '{career_id}' not found in database"
+            )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get career details: {e}")
         raise HTTPException(
