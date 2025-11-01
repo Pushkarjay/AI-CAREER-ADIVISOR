@@ -34,8 +34,8 @@ class GeminiService:
         # Configure the API
         genai.configure(api_key=self.api_key)
         
-        # Initialize the model
-        self.model_name = 'gemini-1.5-flash'
+        # Initialize the model - using gemini-2.0-flash (stable and fast)
+        self.model_name = 'gemini-2.0-flash'
         self.model = genai.GenerativeModel(self.model_name)
         self.temperature = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
         
@@ -538,7 +538,7 @@ class GeminiService:
                 "career_title": career_data.get('title', 'N/A'),
                 "match_score": self._calculate_skill_match(all_skills, career_data.get('required_skills', [])),
                 "confidence": response.get("confidence", 0.85),
-                "model": "gemini-1.5-flash",
+                "model": self.model_name,
                 "generated_at": datetime.now().isoformat()
             }
             
@@ -760,7 +760,7 @@ class GeminiService:
                 "domain_title": domain_title,
                 "skill_alignment": self._calculate_skill_match(skills, prerequisites),
                 "confidence": response.get("confidence", 0.85),
-                "model": "gemini-1.5-flash",
+                "model": self.model_name,
                 "generated_at": datetime.now().isoformat()
             }
             
