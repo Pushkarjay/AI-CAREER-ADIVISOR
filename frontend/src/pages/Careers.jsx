@@ -43,6 +43,8 @@ const Careers = () => {
   const [generatingPersonalizedPath, setGeneratingPersonalizedPath] = useState(false);
   const [personalizedPathData, setPersonalizedPathData] = useState(null);
   const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
+  const [selectedCareerDetails, setSelectedCareerDetails] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     fetchRecommendations();
@@ -238,6 +240,35 @@ const Careers = () => {
     }
   };
 
+  const handleViewDetails = async (careerId, careerTitle) => {
+    try {
+      // Try to fetch career details from API
+      const response = await careerAPI.getCareerDetails(careerId);
+      const details = response?.data || {};
+      
+      setSelectedCareerDetails({
+        id: careerId,
+        title: careerTitle,
+        ...details
+      });
+      setShowDetailsModal(true);
+    } catch (error) {
+      console.error('Failed to fetch career details:', error);
+      // Fallback to mock data
+      setSelectedCareerDetails({
+        id: careerId,
+        title: careerTitle,
+        description: 'Detailed career information',
+        salary_range: '5-15 LPA',
+        growth_potential: 8.5,
+        required_skills: ['Skill 1', 'Skill 2', 'Skill 3'],
+        responsibilities: ['Responsibility 1', 'Responsibility 2'],
+        career_progression: ['Junior → Mid → Senior → Lead']
+      });
+      setShowDetailsModal(true);
+    }
+  };
+
   const CareerCard = ({ career, showActions = true }) => (
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-4">
@@ -324,7 +355,10 @@ const Careers = () => {
             >
               {generatingPersonalizedPath ? 'Generating...' : 'AI Path'}
             </button>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+            <button 
+              onClick={() => handleViewDetails(career.id, career.title)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
               View Details
             </button>
           </div>
@@ -848,27 +882,128 @@ const Careers = () => {
                     {personalizedPathData.personalized_plan.plan}
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {Object.entries(personalizedPathData.personalized_plan || {}).map(([key, value]) => (
-                      <div key={key} className="border-l-4 border-purple-500 pl-4">
-                        <h4 className="font-semibold text-gray-900 mb-2 capitalize">
-                          {key.replace(/_/g, ' ')}
-                        </h4>
-                        {typeof value === 'string' ? (
-                          <p className="text-gray-700">{value}</p>
-                        ) : Array.isArray(value) ? (
-                          <ul className="list-disc list-inside space-y-1">
-                            {value.map((item, idx) => (
-                              <li key={idx} className="text-gray-700">{item}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <pre className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                            {JSON.stringify(value, null, 2)}
-                          </pre>
-                        )}
-                      </div>
-                    ))}
+                  <div className="space-y-6">
+                    {Object.entries(personalizedPathData.personalized_plan || {}).map(([key, value]) => {
+                      // Special rendering for different section types
+                      if (key === 'learning_resources' && Array.isArray(value)) {
+                        return (
+                          <div key={key} className="border-l-4 border-purple-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
+                              📚 {key.replace(/_/g, ' ')}
+                            </h4>
+                            <div className="space-y-4">
+                              {value.map((resource, idx) => (
+                                <div key={idx} className="bg-blue-50 p-4 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h5 className="font-semibold text-blue-900">{resource.skill}</h5>
+                                    <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                                      Priority: {resource.priority}
+                                    </span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {resource.resources?.map((r, ridx) => (
+                                      <div key={ridx} className="bg-white p-3 rounded border">
+                                        <div className="flex justify-between items-start">
+                                          <div className="flex-1">
+                                            <a 
+                                              href={r.url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-blue-600 hover:underline font-medium"
+                                            >
+                                              {r.title} ↗
+                                            </a>
+                                            <div className="text-sm text-gray-600 mt-1">
+                                              <span className="font-medium">{r.platform}</span> • 
+                                              {r.duration} • {r.cost}
+                                            </div>
+                                            <p className="text-sm text-gray-700 mt-1">{r.why}</p>
+                                          </div>
+                                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded ml-2">
+                                            {r.type}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      if (key === 'hands_on_projects' && Array.isArray(value)) {
+                        return (
+                          <div key={key} className="border-l-4 border-green-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
+                              🚀 {key.replace(/_/g, ' ')}
+                            </h4>
+                            <div className="grid gap-4">
+                              {value.map((project, idx) => (
+                                <div key={idx} className="bg-green-50 p-4 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h5 className="font-semibold text-green-900">{project.title}</h5>
+                                    <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">
+                                      {project.difficulty}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 mb-2">{project.description}</p>
+                                  <div className="flex flex-wrap gap-2 mb-2">
+                                    {project.skills_practiced?.map((skill, sidx) => (
+                                      <span key={sidx} className="px-2 py-1 bg-white text-green-700 text-xs rounded">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">Duration: {project.duration}</p>
+                                  {project.tutorial_links && project.tutorial_links.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="text-sm font-medium text-gray-700 mb-1">Tutorial Links:</p>
+                                      {project.tutorial_links.map((link, lidx) => (
+                                        <a 
+                                          key={lidx}
+                                          href={link} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline text-sm block"
+                                        >
+                                          {link} ↗
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Default rendering for other sections
+                      return (
+                        <div key={key} className="border-l-4 border-purple-500 pl-4">
+                          <h4 className="font-semibold text-gray-900 mb-2 capitalize text-lg">
+                            {key.replace(/_/g, ' ')}
+                          </h4>
+                          {typeof value === 'string' ? (
+                            <p className="text-gray-700">{value}</p>
+                          ) : Array.isArray(value) ? (
+                            <ul className="list-disc list-inside space-y-1">
+                              {value.map((item, idx) => (
+                                <li key={idx} className="text-gray-700">
+                                  {typeof item === 'string' ? item : JSON.stringify(item)}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <pre className="text-sm text-gray-600 bg-gray-50 p-2 rounded overflow-x-auto">
+                              {JSON.stringify(value, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -886,6 +1021,129 @@ const Careers = () => {
                 <button
                   onClick={() => setShowPersonalizedModal(false)}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Career Details Modal */}
+      {showDetailsModal && selectedCareerDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedCareerDetails.title}
+              </h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Description</h3>
+                <p className="text-gray-700">{selectedCareerDetails.description}</p>
+              </div>
+
+              {selectedCareerDetails.salary_range_min && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Salary Range</h3>
+                  <p className="text-gray-700">
+                    ₹{Math.round(selectedCareerDetails.salary_range_min/100000)} - 
+                    ₹{Math.round(selectedCareerDetails.salary_range_max/100000)} LPA
+                  </p>
+                </div>
+              )}
+
+              {selectedCareerDetails.required_skills && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Required Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCareerDetails.required_skills.map((skill, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedCareerDetails.preferred_skills && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Preferred Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCareerDetails.preferred_skills.map((skill, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedCareerDetails.typical_responsibilities && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Key Responsibilities</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {selectedCareerDetails.typical_responsibilities.map((resp, idx) => (
+                      <li key={idx}>{resp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {selectedCareerDetails.career_progression && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Career Progression</h3>
+                  <div className="space-y-2">
+                    {selectedCareerDetails.career_progression.map((stage, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                        <span className="font-medium text-blue-600">{stage.level || stage}</span>
+                        {stage.years && <span className="text-gray-600">({stage.years})</span>}
+                        {stage.salary_range && <span className="text-green-600 ml-auto">{stage.salary_range}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedCareerDetails.growth_potential && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Growth Potential</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-green-500 h-3 rounded-full"
+                        style={{ width: `${selectedCareerDetails.growth_potential * 10}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-gray-700 font-medium">{selectedCareerDetails.growth_potential}/10</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    handleGeneratePersonalizedPath(selectedCareerDetails.id, selectedCareerDetails.title);
+                  }}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  Generate AI Learning Path
+                </button>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
                 >
                   Close
                 </button>

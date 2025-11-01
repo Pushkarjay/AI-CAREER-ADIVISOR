@@ -426,7 +426,7 @@ class GeminiService:
             
             # Build prompt for personalized career path
             prompt = f"""
-            Generate a highly personalized career development path for an Indian student/professional:
+            Generate a highly personalized career development path with REAL, ACTIONABLE resources for an Indian student/professional.
             
             CAREER TARGET:
             Title: {career_data.get('title', 'N/A')}
@@ -446,47 +446,88 @@ class GeminiService:
             Projects: {', '.join([p.get('name', '') for p in projects])}
             Internships: {', '.join([i.get('company', '') for i in internships])}
             
-            Please provide a comprehensive, personalized career development plan including:
+            IMPORTANT: Provide SPECIFIC resources with REAL URLs and links. Focus on:
+            - Free resources (YouTube channels, online courses, documentation)
+            - Indian-accessible platforms (Coursera, Udemy, edX, FreeCodeCamp, etc.)
+            - Official documentation and tutorials
+            - Popular GitHub repositories
+            - Community forums and Discord servers
+            
+            Generate a comprehensive plan with these sections:
             
             1. SKILL GAP ANALYSIS:
-               - Skills you already have that match this career
-               - Critical skills you need to develop
-               - Priority order for learning new skills
+               - List skills they have: {', '.join(all_skills[:3])}
+               - Critical missing skills needed
+               - Priority order (1-5) for each skill
             
-            2. PERSONALIZED LEARNING ROADMAP:
-               - Step-by-step learning path tailored to your background
-               - Recommended courses, platforms, and resources
-               - Timeline estimates (weeks/months for each phase)
+            2. LEARNING RESOURCES (PRIORITIZED):
+               For EACH skill, provide 2-3 resources in this format:
+               {{
+                 "skill": "Skill Name",
+                 "priority": 1-5,
+                 "resources": [
+                   {{
+                     "title": "Resource Name",
+                     "type": "video|course|documentation|tutorial",
+                     "url": "actual URL",
+                     "platform": "YouTube|Coursera|etc",
+                     "duration": "X hours/weeks",
+                     "cost": "Free|Paid",
+                     "why": "Why this resource is best"
+                   }}
+                 ]
+               }}
             
-            3. PROJECT RECOMMENDATIONS:
-               - 3-5 hands-on projects to build relevant experience
-               - How to leverage your existing projects
+            3. HANDS-ON PROJECTS (3-5 projects):
+               {{
+                 "title": "Project Name",
+                 "description": "What to build",
+                 "skills_practiced": ["skill1", "skill2"],
+                 "difficulty": "Beginner|Intermediate|Advanced",
+                 "duration": "X weeks",
+                 "tutorial_links": ["URL1", "URL2"],
+                 "github_examples": ["example repo URL"]
+               }}
             
-            4. CERTIFICATION STRATEGY:
-               - Industry-recognized certifications to pursue
-               - Order of priority based on your profile
+            4. CERTIFICATIONS:
+               {{
+                 "name": "Certification Name",
+                 "provider": "Company/Platform",
+                 "priority": 1-5,
+                 "cost": "$X or Free",
+                 "preparation_time": "X weeks",
+                 "url": "registration/info URL",
+                 "why_valuable": "Why get this cert"
+               }}
             
-            5. EXPERIENCE BUILDING:
-               - Internship opportunities to target
-               - Open-source contributions
-               - Freelance/part-time opportunities
+            5. PRACTICE PLATFORMS:
+               {{
+                 "platform": "Name",
+                 "url": "URL",
+                 "focus": "What to practice",
+                 "free": true/false
+               }}
             
-            6. NETWORKING & COMMUNITY:
-               - Communities and forums to join
-               - LinkedIn strategy
-               - Mentorship opportunities
+            6. COMMUNITIES TO JOIN:
+               {{
+                 "name": "Community Name",
+                 "platform": "Discord|Reddit|LinkedIn",
+                 "url": "Join link",
+                 "benefit": "What you'll gain"
+               }}
             
-            7. JOB SEARCH STRATEGY:
-               - When you'll be ready to apply
-               - Companies that match your profile
-               - How to position yourself
+            7. WEEK-BY-WEEK PLAN (First 4 weeks):
+               Week 1: [Daily tasks with specific resource links]
+               Week 2: [Daily tasks with specific resource links]
+               Week 3: [Daily tasks with specific resource links]
+               Week 4: [Daily tasks with specific resource links]
             
-            8. PERSONALIZED TIMELINE:
-               - 3-month action plan
-               - 6-month milestones
-               - 1-year career transition goals
+            8. TIMELINE MILESTONES:
+               - Month 1: Complete [specific courses/projects]
+               - Month 3: Build [specific portfolio projects]
+               - Month 6: Apply for [types of positions]
             
-            Format the response as structured JSON with clear sections. Be specific, actionable, and considerate of the Indian job market.
+            Return ONLY valid JSON. Be extremely specific with URLs, course names, and actionable steps tailored for India.
             """
             
             response = await self._generate_text(prompt)
@@ -529,7 +570,7 @@ class GeminiService:
             universal_foundations = domain_data.get("universal_foundations", [])
             
             prompt = f"""
-            Create a highly personalized learning roadmap for mastering this domain:
+            Create a highly personalized learning roadmap with REAL, SPECIFIC resources and URLs for mastering this domain:
             
             DOMAIN:
             Title: {domain_title}
@@ -545,53 +586,170 @@ class GeminiService:
             Certifications: {', '.join([c.get('name', '') for c in certifications])}
             Projects: {', '.join([p.get('name', '') for p in projects])}
             
-            Generate a personalized roadmap including:
+            CRITICAL: Provide ACTUAL URLs and REAL resources. Use popular, accessible platforms.
+            
+            Generate a personalized roadmap with these sections:
             
             1. PREREQUISITE ASSESSMENT:
-               - Which prerequisites you already know
-               - Which ones you need to learn first
-               - Estimated time for prerequisite completion
+               {{
+                 "already_know": ["Skills they have"],
+                 "need_to_learn": [
+                   {{
+                     "skill": "Prerequisite name",
+                     "why_needed": "Explanation",
+                     "learn_from": [
+                       {{
+                         "title": "Resource name",
+                         "url": "Actual URL",
+                         "type": "video|course|doc",
+                         "duration": "X hours"
+                       }}
+                     ]
+                   }}
+                 ],
+                 "estimated_time": "X weeks"
+               }}
             
-            2. CUSTOMIZED LEARNING PATH:
-               - Adjusted path based on your existing knowledge
-               - Skip topics you already know
-               - Deep-dive recommendations for weak areas
-               - Month-by-month breakdown
+            2. CUSTOMIZED LEARNING PATH (Month-by-Month):
+               {{
+                 "month_1": {{
+                   "focus": "What to learn",
+                   "topics": ["topic1", "topic2"],
+                   "resources": [
+                     {{
+                       "title": "Course/Tutorial name",
+                       "url": "Direct URL",
+                       "platform": "YouTube|Coursera|Udemy|etc",
+                       "duration": "X hours",
+                       "free": true|false,
+                       "priority": 1-5
+                     }}
+                   ],
+                   "practice": [
+                     {{
+                       "what": "Practice exercise",
+                       "where": "Platform name",
+                       "url": "Practice URL"
+                     }}
+                   ]
+                 }},
+                 "month_2": {{ ... }},
+                 "month_3": {{ ... }}
+               }}
             
-            3. RESOURCE RECOMMENDATIONS:
-               - Free courses (YouTube, Coursera, edX)
-               - Paid courses worth the investment
-               - Books and documentation
-               - Practice platforms
+            3. RESOURCE RECOMMENDATIONS (Prioritized):
+               {{
+                 "free_courses": [
+                   {{
+                     "title": "Course Name",
+                     "provider": "Provider",
+                     "url": "Course URL",
+                     "duration": "X hours",
+                     "level": "Beginner|Intermediate|Advanced",
+                     "rating": "X/5",
+                     "why_recommended": "Specific reason"
+                   }}
+                 ],
+                 "youtube_channels": [
+                   {{
+                     "channel": "Channel Name",
+                     "url": "Channel URL",
+                     "focus": "What they teach",
+                     "best_for": "Who should watch"
+                   }}
+                 ],
+                 "documentation": [
+                   {{
+                     "name": "Doc name",
+                     "url": "Doc URL",
+                     "when_to_use": "When to reference"
+                   }}
+                 ],
+                 "books": [
+                   {{
+                     "title": "Book title",
+                     "free_pdf": "URL if available",
+                     "buy_link": "Amazon/Flipkart URL",
+                     "why_read": "Value proposition"
+                   }}
+                 ]
+               }}
             
             4. HANDS-ON PROJECT PLAN:
-               - Beginner projects (weeks 1-4)
-               - Intermediate projects (months 2-3)
-               - Advanced capstone project (months 4-6)
-               - How to showcase these projects
+               {{
+                 "beginner_projects": [
+                   {{
+                     "title": "Project name",
+                     "description": "What to build",
+                     "skills": ["skill1", "skill2"],
+                     "tutorial": "Step-by-step guide URL",
+                     "github_example": "Example repo URL",
+                     "duration": "X days"
+                   }}
+                 ],
+                 "intermediate_projects": [...],
+                 "capstone_project": {{
+                   "title": "Main portfolio project",
+                   "description": "Detailed description",
+                   "features": ["feature1", "feature2"],
+                   "resources": ["Guide URLs"],
+                   "duration": "X weeks"
+                 }}
+               }}
             
-            5. SKILL VALIDATION:
-               - Assessments and quizzes
-               - Certifications to obtain
-               - Portfolio building strategy
+            5. PRACTICE PLATFORMS:
+               {{
+                 "coding": [
+                   {{"name": "Platform", "url": "URL", "focus": "What to practice", "free": true}}
+                 ],
+                 "interactive_learning": [...],
+                 "challenges": [...]
+               }}
             
-            6. INDIAN CONTEXT:
-               - Local meetups and communities
-               - Indian companies hiring in this domain
-               - Salary expectations at different skill levels
-               - Tier-1 vs Tier-2 city opportunities
+            6. CERTIFICATIONS TO OBTAIN:
+               {{
+                 "name": "Cert name",
+                 "provider": "Provider",
+                 "url": "Registration URL",
+                 "cost": "$X or Free",
+                 "prep_time": "X weeks",
+                 "priority": 1-5,
+                 "value": "Career value"
+               }}
             
-            7. WEEK-BY-WEEK PLAN (First 4 weeks):
-               - Daily study schedule
-               - Specific topics and resources
-               - Weekly goals and checkpoints
+            7. INDIAN CONTEXT:
+               {{
+                 "local_communities": [
+                   {{"name": "Community", "platform": "Meetup/Discord", "url": "Join URL"}}
+                 ],
+                 "hiring_companies": ["Company1", "Company2"],
+                 "salary_range": {{"entry": "X LPA", "mid": "X LPA", "senior": "X LPA"}},
+                 "job_portals": [
+                   {{"name": "Portal", "url": "URL", "focus": "What jobs"}}
+                 ]
+               }}
             
-            8. LONG-TERM MILESTONES:
-               - 3-month checkpoint
-               - 6-month intermediate level
-               - 12-month expert level
+            8. WEEK-BY-WEEK PLAN (First Month):
+               {{
+                 "week_1": {{
+                   "goal": "Weekly goal",
+                   "daily_schedule": {{
+                     "hours_per_day": 2-4,
+                     "tasks": [
+                       {{"day": 1, "task": "Task", "resource": "URL", "duration": "X hours"}}
+                     ]
+                   }}
+                 }}
+               }}
             
-            Return as structured JSON. Be extremely specific with resource names, URLs where possible, and realistic timelines.
+            9. MILESTONES:
+               {{
+                 "3_months": {{"complete": ["What to finish"], "skills_gained": ["Skills"]}},
+                 "6_months": {{"complete": ["What to finish"], "ready_for": ["Job types"]}},
+                 "12_months": {{"complete": ["What to finish"], "expertise_level": "Level"}}
+               }}
+            
+            Return ONLY valid JSON with ACTUAL URLs and REAL resource names. Focus on free/affordable options for Indian learners.
             """
             
             response = await self._generate_text(prompt)
