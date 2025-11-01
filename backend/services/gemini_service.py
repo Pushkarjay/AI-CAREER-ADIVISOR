@@ -192,13 +192,14 @@ class GeminiService:
                 "temperature": self.temperature,
                 "top_p": 0.95,
                 "top_k": 40,
-                "max_output_tokens": 2048,
+                "max_output_tokens": 8192,  # Increased from 2048 for longer responses
             }
             
             # Generate response
             response = self.model.generate_content(
                 prompt,
-                generation_config=generation_config
+                generation_config=generation_config,
+                safety_settings=self.safety_settings
             )
             
             # Extract text and metadata
@@ -301,19 +302,41 @@ class GeminiService:
         return insights
     
     def _parse_json_response(self, response_text: str) -> Dict[str, Any]:
-        """Parse JSON response from text."""
+        """Parse JSON response from text, handling markdown code blocks."""
         try:
-            # Extract JSON from response
+            # Remove markdown code blocks if present
+            if "```json" in response_text:
+                # Extract JSON from markdown code block
+                start = response_text.find("```json") + 7
+                end = response_text.rfind("```")
+                if end > start:
+                    response_text = response_text[start:end].strip()
+            elif "```" in response_text:
+                # Handle generic code blocks
+                start = response_text.find("```") + 3
+                end = response_text.rfind("```")
+                if end > start:
+                    response_text = response_text[start:end].strip()
+            
+            # Try to parse the JSON
+            return json.loads(response_text)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse JSON: {e}. Attempting fallback parsing.")
+            # Try to extract JSON from response
             if "{" in response_text and "}" in response_text:
-                start = response_text.find("{")
-                end = response_text.rfind("}") + 1
-                json_text = response_text[start:end]
-                return json.loads(json_text)
-        except:
-            pass
-        
-        # Return structured fallback
-        return {"content": response_text}
+                try:
+                    start = response_text.find("{")
+                    end = response_text.rfind("}") + 1
+                    json_text = response_text[start:end]
+                    return json.loads(json_text)
+                except:
+                    pass
+            
+            # Last resort: return as plain text
+            return {"content": response_text}
+        except Exception as e:
+            logger.error(f"Unexpected error parsing JSON: {e}")
+            return {"content": response_text}
     
     def _parse_insights_response(self, response_text: str) -> Dict[str, Any]:
         """Parse insights response into structured format."""
@@ -426,108 +449,100 @@ class GeminiService:
             
             # Build prompt for personalized career path
             prompt = f"""
-            Generate a highly personalized career development path with REAL, ACTIONABLE resources for an Indian student/professional.
+            Create a comprehensive personalized career development plan for an Indian student/professional.
             
-            CAREER TARGET:
-            Title: {career_data.get('title', 'N/A')}
-            Industry: {career_data.get('industry', 'N/A')}
-            Description: {career_data.get('description', 'N/A')}
-            Required Skills: {', '.join(career_data.get('required_skills', []))}
+            TARGET CAREER: {career_data.get('title', 'N/A')} ({career_data.get('industry', 'N/A')})
+            REQUIRED SKILLS: {', '.join(career_data.get('required_skills', []))}
             
             USER PROFILE:
-            Current Skills: {', '.join(all_skills)}
-            Interests: {', '.join(interests)}
-            Education: {education} in {field_of_study}
-            Experience: {experience_years} years
-            Career Goals: {career_goals}
+            - Current Skills: {', '.join(all_skills[:15])}
+            - Interests: {', '.join(interests)}
+            - Education: {education} in {field_of_study}
+            - Experience: {experience_years} years
+            - Goals: {career_goals}
+            - Resume: {len(certifications)} certs, {len(projects)} projects, {len(internships)} internships
             
-            RESUME HIGHLIGHTS:
-            Certifications: {', '.join([c.get('name', '') for c in certifications])}
-            Projects: {', '.join([p.get('name', '') for p in projects])}
-            Internships: {', '.join([i.get('company', '') for i in internships])}
+            CRITICAL: Return ONLY valid JSON (no markdown, no ```json blocks, no explanations).
             
-            IMPORTANT: Provide SPECIFIC resources with REAL URLs and links. Focus on:
-            - Free resources (YouTube channels, online courses, documentation)
-            - Indian-accessible platforms (Coursera, Udemy, edX, FreeCodeCamp, etc.)
-            - Official documentation and tutorials
-            - Popular GitHub repositories
-            - Community forums and Discord servers
+            Provide REAL URLs from YouTube, Coursera, Udemy, freeCodeCamp, GitHub, official docs, etc.
+            Focus on FREE or affordable resources accessible in India.
             
-            Generate a comprehensive plan with these sections:
+            Required JSON structure:
+            {{
+              "skill_gap_analysis": {{
+                "skills_you_have": ["skill1", "skill2"],
+                "critical_missing_skills": ["skill3", "skill4"],
+                "priority_order": {{"Python": 5, "SQL": 4}}
+              }},
+              "learning_roadmap": [
+                {{
+                  "skill": "Skill Name",
+                  "priority": 1-5,
+                  "phase": "Month 1-2",
+                  "resources": [
+                    {{
+                      "title": "Course/Tutorial Name",
+                      "url": "https://actual-url.com",
+                      "platform": "YouTube/Coursera/etc",
+                      "duration": "4 weeks",
+                      "cost": "Free",
+                      "why": "Best for beginners"
+                    }}
+                  ]
+                }}
+              ],
+              "hands_on_projects": [
+                {{
+                  "title": "Project Name",
+                  "description": "Build X to learn Y",
+                  "skills_practiced": ["skill1", "skill2"],
+                  "difficulty": "Beginner",
+                  "duration": "2 weeks",
+                  "tutorial_url": "https://...",
+                  "github_examples": ["https://github.com/..."]
+                }}
+              ],
+              "certifications": [
+                {{
+                  "name": "Certification Name",
+                  "provider": "Google/AWS/etc",
+                  "priority": 1-5,
+                  "cost": "Free or $X",
+                  "prep_time": "4 weeks",
+                  "url": "https://...",
+                  "why_valuable": "Industry recognized"
+                }}
+              ],
+              "practice_platforms": [
+                {{"name": "LeetCode", "url": "https://leetcode.com", "focus": "DSA practice", "free": true}}
+              ],
+              "experience_building": {{
+                "internships": ["Target early-stage startups", "Apply to X, Y companies"],
+                "open_source": ["Contribute to Python projects", "Join hacktoberfest"],
+                "freelance": ["Start on Upwork.com", "Build portfolio on Fiverr"]
+              }},
+              "networking": {{
+                "communities": [
+                  {{"name": "Community Name", "platform": "Discord/Reddit", "url": "https://...", "benefit": "Learn from peers"}}
+                ],
+                "linkedin_strategy": "Connect with 5 professionals weekly in target industry",
+                "mentorship": "Find mentors on Topmate.io or ADPList.org"
+              }},
+              "job_search_strategy": {{
+                "ready_in": "6 months",
+                "target_companies": ["Company1", "Company2", "Startups in X domain"],
+                "positioning": "Junior X with Y skills and Z projects",
+                "application_tips": ["Tailor resume", "Build GitHub portfolio"]
+              }},
+              "timeline": {{
+                "month_1_2": {{"focus": "Learn X, Y", "deliverables": ["Complete course A", "Build project B"]}},
+                "month_3_4": {{"focus": "Build projects", "deliverables": ["3 portfolio projects"]}},
+                "month_5_6": {{"focus": "Certifications + job prep", "deliverables": ["Get cert", "Apply to jobs"]}},
+                "month_12": {{"goal": "Land first role as {career_data.get('title', 'N/A')}"}}
+              }}
+            }}
             
-            1. SKILL GAP ANALYSIS:
-               - List skills they have: {', '.join(all_skills[:3])}
-               - Critical missing skills needed
-               - Priority order (1-5) for each skill
-            
-            2. LEARNING RESOURCES (PRIORITIZED):
-               For EACH skill, provide 2-3 resources in this format:
-               {{
-                 "skill": "Skill Name",
-                 "priority": 1-5,
-                 "resources": [
-                   {{
-                     "title": "Resource Name",
-                     "type": "video|course|documentation|tutorial",
-                     "url": "actual URL",
-                     "platform": "YouTube|Coursera|etc",
-                     "duration": "X hours/weeks",
-                     "cost": "Free|Paid",
-                     "why": "Why this resource is best"
-                   }}
-                 ]
-               }}
-            
-            3. HANDS-ON PROJECTS (3-5 projects):
-               {{
-                 "title": "Project Name",
-                 "description": "What to build",
-                 "skills_practiced": ["skill1", "skill2"],
-                 "difficulty": "Beginner|Intermediate|Advanced",
-                 "duration": "X weeks",
-                 "tutorial_links": ["URL1", "URL2"],
-                 "github_examples": ["example repo URL"]
-               }}
-            
-            4. CERTIFICATIONS:
-               {{
-                 "name": "Certification Name",
-                 "provider": "Company/Platform",
-                 "priority": 1-5,
-                 "cost": "$X or Free",
-                 "preparation_time": "X weeks",
-                 "url": "registration/info URL",
-                 "why_valuable": "Why get this cert"
-               }}
-            
-            5. PRACTICE PLATFORMS:
-               {{
-                 "platform": "Name",
-                 "url": "URL",
-                 "focus": "What to practice",
-                 "free": true/false
-               }}
-            
-            6. COMMUNITIES TO JOIN:
-               {{
-                 "name": "Community Name",
-                 "platform": "Discord|Reddit|LinkedIn",
-                 "url": "Join link",
-                 "benefit": "What you'll gain"
-               }}
-            
-            7. WEEK-BY-WEEK PLAN (First 4 weeks):
-               Week 1: [Daily tasks with specific resource links]
-               Week 2: [Daily tasks with specific resource links]
-               Week 3: [Daily tasks with specific resource links]
-               Week 4: [Daily tasks with specific resource links]
-            
-            8. TIMELINE MILESTONES:
-               - Month 1: Complete [specific courses/projects]
-               - Month 3: Build [specific portfolio projects]
-               - Month 6: Apply for [types of positions]
-            
-            Return ONLY valid JSON. Be extremely specific with URLs, course names, and actionable steps tailored for India.
+            RETURN ONLY THE JSON - NO EXTRA TEXT.
             """
             
             response = await self._generate_text(prompt)

@@ -884,18 +884,58 @@ const Careers = () => {
                 ) : (
                   <div className="space-y-6">
                     {Object.entries(personalizedPathData.personalized_plan || {}).map(([key, value]) => {
-                      // Special rendering for different section types
-                      if (key === 'learning_resources' && Array.isArray(value)) {
+                      // Skill Gap Analysis
+                      if (key === 'skill_gap_analysis') {
+                        return (
+                          <div key={key} className="border-l-4 border-blue-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                              🎯 Skill Gap Analysis
+                            </h4>
+                            <div className="space-y-3">
+                              {value.skills_you_have && (
+                                <div className="bg-green-50 p-3 rounded">
+                                  <p className="font-medium text-green-900 mb-2">✅ Skills You Have:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {value.skills_you_have.map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-1 bg-green-600 text-white text-xs rounded">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {value.critical_missing_skills && (
+                                <div className="bg-orange-50 p-3 rounded">
+                                  <p className="font-medium text-orange-900 mb-2">🎓 Skills to Develop:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {value.critical_missing_skills.map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-1 bg-orange-600 text-white text-xs rounded">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Learning Roadmap
+                      if (key === 'learning_roadmap' && Array.isArray(value)) {
                         return (
                           <div key={key} className="border-l-4 border-purple-500 pl-4">
                             <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
-                              📚 {key.replace(/_/g, ' ')}
+                              📚 Learning Roadmap
                             </h4>
                             <div className="space-y-4">
                               {value.map((resource, idx) => (
                                 <div key={idx} className="bg-blue-50 p-4 rounded-lg">
                                   <div className="flex justify-between items-start mb-2">
-                                    <h5 className="font-semibold text-blue-900">{resource.skill}</h5>
+                                    <div>
+                                      <h5 className="font-semibold text-blue-900">{resource.skill}</h5>
+                                      {resource.phase && <p className="text-xs text-blue-600">{resource.phase}</p>}
+                                    </div>
                                     <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
                                       Priority: {resource.priority}
                                     </span>
@@ -903,26 +943,19 @@ const Careers = () => {
                                   <div className="space-y-2">
                                     {resource.resources?.map((r, ridx) => (
                                       <div key={ridx} className="bg-white p-3 rounded border">
-                                        <div className="flex justify-between items-start">
-                                          <div className="flex-1">
-                                            <a 
-                                              href={r.url} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer"
-                                              className="text-blue-600 hover:underline font-medium"
-                                            >
-                                              {r.title} ↗
-                                            </a>
-                                            <div className="text-sm text-gray-600 mt-1">
-                                              <span className="font-medium">{r.platform}</span> • 
-                                              {r.duration} • {r.cost}
-                                            </div>
-                                            <p className="text-sm text-gray-700 mt-1">{r.why}</p>
-                                          </div>
-                                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded ml-2">
-                                            {r.type}
-                                          </span>
+                                        <a 
+                                          href={r.url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline font-medium block mb-1"
+                                        >
+                                          {r.title} ↗
+                                        </a>
+                                        <div className="text-sm text-gray-600">
+                                          <span className="font-medium">{r.platform}</span> • 
+                                          {r.duration} • {r.cost}
                                         </div>
+                                        <p className="text-sm text-gray-700 mt-1">{r.why}</p>
                                       </div>
                                     ))}
                                   </div>
@@ -933,11 +966,12 @@ const Careers = () => {
                         );
                       }
                       
+                      // Hands-on Projects
                       if (key === 'hands_on_projects' && Array.isArray(value)) {
                         return (
                           <div key={key} className="border-l-4 border-green-500 pl-4">
                             <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
-                              🚀 {key.replace(/_/g, ' ')}
+                              🚀 Hands-On Projects
                             </h4>
                             <div className="grid gap-4">
                               {value.map((project, idx) => (
@@ -945,7 +979,7 @@ const Careers = () => {
                                   <div className="flex justify-between items-start mb-2">
                                     <h5 className="font-semibold text-green-900">{project.title}</h5>
                                     <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">
-                                      {project.difficulty}
+                                      {project.difficulty} • {project.duration}
                                     </span>
                                   </div>
                                   <p className="text-gray-700 mb-2">{project.description}</p>
@@ -956,11 +990,19 @@ const Careers = () => {
                                       </span>
                                     ))}
                                   </div>
-                                  <p className="text-sm text-gray-600 mb-2">Duration: {project.duration}</p>
-                                  {project.tutorial_links && project.tutorial_links.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="text-sm font-medium text-gray-700 mb-1">Tutorial Links:</p>
-                                      {project.tutorial_links.map((link, lidx) => (
+                                  {(project.tutorial_url || project.github_examples) && (
+                                    <div className="mt-2 space-y-1">
+                                      {project.tutorial_url && (
+                                        <a 
+                                          href={project.tutorial_url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline text-sm block"
+                                        >
+                                          📖 Tutorial ↗
+                                        </a>
+                                      )}
+                                      {project.github_examples?.map((link, lidx) => (
                                         <a 
                                           key={lidx}
                                           href={link} 
@@ -968,7 +1010,7 @@ const Careers = () => {
                                           rel="noopener noreferrer"
                                           className="text-blue-600 hover:underline text-sm block"
                                         >
-                                          {link} ↗
+                                          💻 GitHub Example {lidx + 1} ↗
                                         </a>
                                       ))}
                                     </div>
@@ -980,9 +1022,136 @@ const Careers = () => {
                         );
                       }
                       
+                      // Certifications
+                      if (key === 'certifications' && Array.isArray(value)) {
+                        return (
+                          <div key={key} className="border-l-4 border-yellow-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                              🏆 Certifications
+                            </h4>
+                            <div className="space-y-3">
+                              {value.map((cert, idx) => (
+                                <div key={idx} className="bg-yellow-50 p-4 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      <h5 className="font-semibold text-yellow-900">{cert.name}</h5>
+                                      <p className="text-sm text-gray-600">{cert.provider}</p>
+                                    </div>
+                                    <span className="px-2 py-1 bg-yellow-600 text-white text-xs rounded">
+                                      Priority: {cert.priority}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-gray-700 space-y-1">
+                                    <p>💰 Cost: {cert.cost}</p>
+                                    <p>⏱️ Prep Time: {cert.prep_time}</p>
+                                    <p className="text-gray-600 italic">{cert.why_valuable || cert.value}</p>
+                                  </div>
+                                  {cert.url && (
+                                    <a 
+                                      href={cert.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+                                    >
+                                      View Certification ↗
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Networking
+                      if (key === 'networking') {
+                        return (
+                          <div key={key} className="border-l-4 border-indigo-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                              🤝 Networking & Community
+                            </h4>
+                            <div className="space-y-3">
+                              {value.communities && (
+                                <div className="bg-indigo-50 p-3 rounded">
+                                  <p className="font-medium text-indigo-900 mb-2">Communities to Join:</p>
+                                  {value.communities.map((comm, idx) => (
+                                    <div key={idx} className="bg-white p-2 rounded mb-2">
+                                      <a 
+                                        href={comm.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline font-medium"
+                                      >
+                                        {comm.name} ({comm.platform}) ↗
+                                      </a>
+                                      <p className="text-sm text-gray-600">{comm.benefit}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {value.linkedin_strategy && (
+                                <div className="bg-blue-50 p-3 rounded">
+                                  <p className="font-medium text-blue-900">LinkedIn Strategy:</p>
+                                  <p className="text-sm text-gray-700">{value.linkedin_strategy}</p>
+                                </div>
+                              )}
+                              {value.mentorship && (
+                                <div className="bg-purple-50 p-3 rounded">
+                                  <p className="font-medium text-purple-900">Mentorship:</p>
+                                  <p className="text-sm text-gray-700">{value.mentorship}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Timeline
+                      if (key === 'timeline') {
+                        return (
+                          <div key={key} className="border-l-4 border-pink-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                              📅 Timeline & Milestones
+                            </h4>
+                            <div className="space-y-3">
+                              {Object.entries(value).map(([period, details]) => (
+                                <div key={period} className="bg-pink-50 p-3 rounded">
+                                  <h5 className="font-medium text-pink-900 capitalize mb-1">
+                                    {period.replace(/_/g, ' ')}
+                                  </h5>
+                                  {typeof details === 'object' ? (
+                                    <div className="text-sm text-gray-700 space-y-1">
+                                      {details.focus && <p>🎯 Focus: {details.focus}</p>}
+                                      {details.milestone && <p>🏁 Milestone: {details.milestone}</p>}
+                                      {details.goal && <p>🎯 Goal: {details.goal}</p>}
+                                      {details.deliverables && (
+                                        <ul className="list-disc list-inside ml-2">
+                                          {details.deliverables.map((d, idx) => (
+                                            <li key={idx}>{d}</li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                      {details.tasks && (
+                                        <ul className="list-disc list-inside ml-2">
+                                          {details.tasks.map((t, idx) => (
+                                            <li key={idx}>{t}</li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-700">{details}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
                       // Default rendering for other sections
                       return (
-                        <div key={key} className="border-l-4 border-purple-500 pl-4">
+                        <div key={key} className="border-l-4 border-gray-400 pl-4">
                           <h4 className="font-semibold text-gray-900 mb-2 capitalize text-lg">
                             {key.replace(/_/g, ' ')}
                           </h4>
@@ -992,14 +1161,35 @@ const Careers = () => {
                             <ul className="list-disc list-inside space-y-1">
                               {value.map((item, idx) => (
                                 <li key={idx} className="text-gray-700">
-                                  {typeof item === 'string' ? item : JSON.stringify(item)}
+                                  {typeof item === 'string' ? item : (
+                                    item.url ? (
+                                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                        {item.name || item.title} ↗
+                                      </a>
+                                    ) : JSON.stringify(item)
+                                  )}
                                 </li>
                               ))}
                             </ul>
+                          ) : typeof value === 'object' ? (
+                            <div className="bg-gray-50 p-3 rounded space-y-2">
+                              {Object.entries(value).map(([k, v]) => (
+                                <div key={k}>
+                                  <span className="font-medium text-gray-700 capitalize">{k.replace(/_/g, ' ')}: </span>
+                                  {Array.isArray(v) ? (
+                                    <ul className="list-disc list-inside ml-4">
+                                      {v.map((item, idx) => (
+                                        <li key={idx} className="text-gray-600 text-sm">{item}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <span className="text-gray-600">{String(v)}</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           ) : (
-                            <pre className="text-sm text-gray-600 bg-gray-50 p-2 rounded overflow-x-auto">
-                              {JSON.stringify(value, null, 2)}
-                            </pre>
+                            <p className="text-gray-700">{String(value)}</p>
                           )}
                         </div>
                       );
