@@ -14,7 +14,6 @@ from models.career import (
 from core.security import verify_token
 from services.firestore_service import FirestoreService
 from services.job_scraper_service import job_scraper_service
-from services.gemini_service import GeminiService
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,17 @@ router = APIRouter()
 security = HTTPBearer()
 
 firestore_service = FirestoreService()
-gemini_service = GeminiService()
+
+# Lazy initialization of Gemini service
+_gemini_service = None
+
+def get_gemini_service():
+    """Get or create Gemini service instance."""
+    global _gemini_service
+    if _gemini_service is None:
+        from services.gemini_service import GeminiService
+        _gemini_service = GeminiService()
+    return _gemini_service
 
 
 class CareerSearchRequest(BaseModel):
@@ -265,6 +274,7 @@ async def generate_personalized_career_path(career_id: str, token: str = Depends
         resume_data = user_profile.get("resume")
         
         # Generate personalized path using Gemini AI
+        gemini_service = get_gemini_service()
         personalized_path = await gemini_service.generate_personalized_career_path(
             career_data=career_data,
             user_profile=user_profile,

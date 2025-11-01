@@ -8,13 +8,22 @@ from core.security import verify_token
 from models.career import LearningRoadmap
 from data.domains_roadmap import DOMAINS_ROADMAP, ALL_DOMAIN_SLUGS
 from services.firestore_service import FirestoreService
-from services.gemini_service import GeminiService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 security = HTTPBearer()
 firestore_service = FirestoreService()
-gemini_service = GeminiService()
+
+# Lazy initialization of Gemini service
+_gemini_service = None
+
+def get_gemini_service():
+    """Get or create Gemini service instance."""
+    global _gemini_service
+    if _gemini_service is None:
+        from services.gemini_service import GeminiService
+        _gemini_service = GeminiService()
+    return _gemini_service
 
 
 @router.get("/", response_model=List[LearningRoadmap])
@@ -136,6 +145,7 @@ async def generate_personalized_roadmap(domain_id: str, token: str = Depends(sec
         resume_data = user_profile.get("resume")
         
         # Generate personalized roadmap using Gemini AI
+        gemini_service = get_gemini_service()
         personalized_roadmap = await gemini_service.generate_personalized_domain_roadmap(
             domain_data=domain_data,
             user_profile=user_profile,
