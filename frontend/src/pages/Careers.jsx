@@ -660,8 +660,8 @@ const Careers = () => {
                       Found {realJobs.length} real job listings from Indeed, LinkedIn, ZipRecruiter, and Google Jobs
                     </div>
                     <div className="grid grid-cols-1 gap-6">
-                      {realJobs.map((job) => (
-                        <RealJobCard key={job.id} job={job} />
+                      {realJobs.map((job, index) => (
+                        <RealJobCard key={`${job.id}-${index}`} job={job} />
                       ))}
                     </div>
                   </div>
