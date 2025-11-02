@@ -226,21 +226,21 @@ const Careers = () => {
   const handleGeneratePersonalizedPath = async (careerId, careerTitle) => {
     try {
       setGeneratingPersonalizedPath(true);
-      toast.loading('Generating your personalized AI career path...');
+      toast.loading('Generating your personalized career path with AI...', { id: 'personalized-path' });
       
       const response = await careerAPI.generatePersonalizedPath(careerId);
+      const data = response?.data || {};
       
-      toast.dismiss();
       setPersonalizedPathData({
-        ...response.data,
-        careerTitle: careerTitle
+        ...data,
+        careerTitle: careerTitle || data.career_title
       });
       setShowPersonalizedModal(true);
-      toast.success('Personalized path generated!');
+      
+      toast.success('Personalized career path generated!', { id: 'personalized-path' });
     } catch (error) {
-      toast.dismiss();
       console.error('Failed to generate personalized path:', error);
-      toast.error('Failed to generate personalized path. Please try again.');
+      toast.error('Failed to generate personalized path. Please try again.', { id: 'personalized-path' });
     } finally {
       setGeneratingPersonalizedPath(false);
     }
@@ -348,16 +348,17 @@ const Careers = () => {
           </div>
           <div className="flex gap-2">
             <button 
+              onClick={() => handleGeneratePersonalizedPath(career.id, career.title)}
+              disabled={generatingPersonalizedPath}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingPersonalizedPath ? 'Generating...' : 'AI Path'}
+            </button>
+            <button 
               onClick={() => handleViewDetails(career.id, career.title)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
             >
               View Details
-            </button>
-            <button 
-              onClick={() => handleGeneratePersonalizedPath(career.id, career.title)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              AI Path
             </button>
           </div>
         </div>
@@ -996,6 +997,15 @@ const Careers = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    handleGeneratePersonalizedPath(selectedCareerDetails.id, selectedCareerDetails.title);
+                  }}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  Generate AI Learning Path
+                </button>
                 <button
                   onClick={() => setShowDetailsModal(false)}
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
