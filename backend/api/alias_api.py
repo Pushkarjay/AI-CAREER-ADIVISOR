@@ -384,44 +384,81 @@ async def get_careers(token: str = Depends(security)):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     try:
-        # Try to get domains from database first
-        domains_from_db = await firestore_service.get_all_domains(limit=100)
+        # Get careers from the careers collection
+        db = firestore_service._get_db()
+        if db is None:
+            raise Exception("Database not initialized")
+        
+        careers_ref = db.collection('careers')
+        careers_docs = careers_ref.stream()
         
         careers = []
+        for doc in careers_docs:
+            career_data = doc.to_dict()
+            careers.append({
+                "id": doc.id,  # Use document ID as career ID
+                "title": career_data.get("title", "Unknown Career"),
+                "description": career_data.get("description", "Career path description"),
+                "avgSalary": career_data.get("avgSalary", 900000),
+                "requiredSkills": career_data.get("requiredSkills", ["Communication", "Problem Solving"]),
+                "difficulty": career_data.get("experienceLevel", "intermediate"),
+                "industry": career_data.get("industry", "General"),
+                "workType": career_data.get("workType", "Office"),
+                "growthRate": career_data.get("growthRate", "N/A"),
+                "jobOpenings": career_data.get("jobOpenings", "N/A"),
+                "domain_id": career_data.get("domain_id", ""),
+            })
         
-        if domains_from_db:
-            # Use domains from database
-            for domain in domains_from_db:
-                careers.append({
-                    "id": domain.get("domain_id", "unknown"),
-                    "title": domain.get("title", "Unknown Career"),
-                    "description": domain.get("description", "Career path description"),
-                    "avgSalary": 900000,
-                    "requiredSkills": domain.get("prerequisites", []) or domain.get("learning_path", [])[:5] or ["Communication", "Problem Solving"],
-                    "difficulty": domain.get("difficulty", "intermediate"),
-                    "estimated_completion": domain.get("estimated_completion", "6-12 months"),
-                    "related_domains": domain.get("related_domains", [])
-                })
-        else:
-            # Fallback to hardcoded data if database is empty
-            for slug in ALL_DOMAIN_SLUGS:
-                data = DOMAINS_ROADMAP.get(slug, {})
-                careers.append({
-                    "id": slug,
-                    "title": data.get("title", slug.replace('-', ' ').title()),
-                    "description": data.get("description", f"Career path for {slug.replace('-', ' ')}"),
-                    "avgSalary": 900000,
-                    "requiredSkills": data.get("prerequisites", []) or data.get("learning_path", [])[:5] or ["Communication", "Problem Solving"],
-                    "difficulty": data.get("difficulty", "intermediate"),
-                    "estimated_completion": data.get("estimated_completion", "6-12 months"),
-                    "related_domains": data.get("related_domains", [])
-                })
+        # If no careers found in database, return fallback
+        if not careers:
+            logger.warning("No careers found in database, using fallback data")
+            careers = [
+                {
+                    "id": "data-science",
+                    "title": "Data Scientist",
+                    "description": "Analyze and interpret complex data to help companies make decisions",
+                    "avgSalary": 1200000,
+                    "requiredSkills": ["Python", "Machine Learning", "Statistics", "SQL"],
+                    "difficulty": "intermediate",
+                    "industry": "Technology",
+                    "workType": "Hybrid",
+                    "growthRate": "35%",
+                    "jobOpenings": "High",
+                    "domain_id": "data-science",
+                },
+                {
+                    "id": "full-stack-developer",
+                    "title": "Full Stack Developer",
+                    "description": "Build complete web applications from frontend to backend",
+                    "avgSalary": 1000000,
+                    "requiredSkills": ["JavaScript", "React", "Node.js", "Databases"],
+                    "difficulty": "intermediate",
+                    "industry": "Technology",
+                    "workType": "Hybrid",
+                    "growthRate": "30%",
+                    "jobOpenings": "Very High",
+                    "domain_id": "full-stack-development",
+                },
+                {
+                    "id": "cybersecurity-specialist",
+                    "title": "Cybersecurity Specialist",
+                    "description": "Protect organizations from cyber threats and attacks",
+                    "avgSalary": 1100000,
+                    "requiredSkills": ["Network Security", "Ethical Hacking", "Risk Assessment"],
+                    "difficulty": "advanced",
+                    "industry": "Technology",
+                    "workType": "Office",
+                    "growthRate": "28%",
+                    "jobOpenings": "High",
+                    "domain_id": "cybersecurity",
+                },
+            ]
 
         return {"careers": careers}
         
     except Exception as e:
         logger.error(f"Error fetching careers: {e}")
-        # Fallback to hardcoded data in case of any error
+        # Fallback to minimal data in case of any error
         careers = []
         for slug in ALL_DOMAIN_SLUGS:
             data = DOMAINS_ROADMAP.get(slug, {})
