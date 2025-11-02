@@ -26,7 +26,7 @@ const Careers = () => {
   const [trends, setTrends] = useState([]);
   const [realJobs, setRealJobs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('jobs');
+  const [activeTab, setActiveTab] = useState('search');
   const [filters, setFilters] = useState({
     experience: '',
     location: '',
@@ -87,6 +87,10 @@ const Careers = () => {
         .sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
 
       setRecommendations(mapped);
+      // Auto-switch to Recommendations if we have results and currently on Search with nothing
+      if (mapped.length > 0 && activeTab !== 'recommendations') {
+        setActiveTab('recommendations');
+      }
     } catch (error) {
       console.error('Failed to fetch recommendations:', error);
       setRecommendations([]);
