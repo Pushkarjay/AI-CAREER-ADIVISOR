@@ -177,7 +177,14 @@ async def get_career_details(career_id: str):
     """Get detailed information about a specific career."""
     try:
         # Try to fetch from Firestore careers collection
-        careers_ref = firestore_service.db.collection('careers').document(career_id)
+        db = firestore_service._get_db()
+        if db is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Database not initialized"
+            )
+        
+        careers_ref = db.collection('careers').document(career_id)
         career_doc = careers_ref.get()
         
         if career_doc.exists:
@@ -229,6 +236,181 @@ async def get_career_details(career_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get career details"
+        )
+
+
+@router.post("/{career_id}/personalized-path")
+async def generate_personalized_path(career_id: str, token: str = Depends(security)):
+    """Generate a personalized learning path for a specific career using AI."""
+    try:
+        payload = verify_token(token.credentials)
+        user_id = payload.get("user_id")
+        
+        # Get user profile
+        user_profile = await firestore_service.get_user_profile(user_id)
+        if not user_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User profile required for personalized path generation"
+            )
+        
+        # Get career details
+        db = firestore_service._get_db()
+        if db is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Database not initialized"
+            )
+        
+        career_ref = db.collection('careers').document(career_id)
+        career_doc = career_ref.get()
+        
+        if not career_doc.exists:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Career with ID '{career_id}' not found"
+            )
+        
+        career_data = career_doc.to_dict()
+        
+        # Use Gemini to generate personalized path
+        from services.gemini_service import GeminiService
+        gemini = GeminiService()
+        
+        user_skills = user_profile.get("skills", [])
+        user_interests = user_profile.get("interests", [])
+        career_skills = career_data.get("requiredSkills", [])
+        career_title = career_data.get("title", "Unknown Career")
+        
+        # Build prompt for Gemini
+        prompt = f"""Generate a comprehensive personalized learning path for a user pursuing a career as {career_title}.
+
+User Profile:
+- Current Skills: {', '.join(user_skills) if user_skills else 'None specified'}
+- Interests: {', '.join(user_interests) if user_interests else 'None specified'}
+
+Career Requirements:
+- Required Skills: {', '.join(career_skills)}
+- Industry: {career_data.get('industry', 'General')}
+- Experience Level: {career_data.get('experienceLevel', 'Entry Level')}
+
+Please provide a JSON response with the following structure:
+{{
+    "overview": "Brief overview of the learning path",
+    "current_level": "Assessment of user's current skill level",
+    "skill_gaps": [
+        {{
+            "skill": "Skill name",
+            "current_level": "beginner/intermediate/advanced",
+            "target_level": "intermediate/advanced/expert",
+            "priority": "high/medium/low",
+            "reason": "Why this skill is important"
+        }}
+    ],
+    "learning_roadmap": [
+        {{
+            "phase": "Phase name (e.g., Foundation, Intermediate, Advanced)",
+            "duration": "Estimated time",
+            "focus_areas": ["Area 1", "Area 2"],
+            "resources": [
+                {{
+                    "type": "course/tutorial/documentation/practice",
+                    "title": "Resource title",
+                    "description": "Brief description",
+                    "url": "https://example.com (use real URLs when possible)",
+                    "difficulty": "beginner/intermediate/advanced",
+                    "estimated_hours": 10
+                }}
+            ]
+        }}
+    ],
+    "projects": [
+        {{
+            "title": "Project name",
+            "description": "Project description",
+            "skills_practiced": ["Skill 1", "Skill 2"],
+            "difficulty": "beginner/intermediate/advanced",
+            "estimated_hours": 20
+        }}
+    ],
+    "certifications": [
+        {{
+            "name": "Certification name",
+            "provider": "Provider name",
+            "relevance": "Why this certification is relevant",
+            "difficulty": "beginner/intermediate/advanced",
+            "estimated_cost": "$XXX",
+            "url": "https://example.com (use real URLs when possible)"
+        }}
+    ],
+    "timeline": {{
+        "total_duration": "X months",
+        "beginner_path": "3-6 months",
+        "intermediate_path": "6-12 months",
+        "advanced_path": "12+ months"
+    }},
+    "success_metrics": [
+        "Metric 1",
+        "Metric 2"
+    ],
+    "next_steps": [
+        "Step 1",
+        "Step 2"
+    ]
+}}
+
+Provide real, actionable recommendations with actual course links (Coursera, Udemy, freeCodeCamp, etc.) where applicable."""
+
+        response = await gemini.generate_response(prompt)
+        
+        # Parse JSON response
+        import json
+        import re
+        
+        # Extract JSON from markdown code blocks if present
+        json_match = re.search(r'```(?:json)?\s*(\{.*\})\s*```', response, re.DOTALL)
+        if json_match:
+            response = json_match.group(1)
+        
+        try:
+            personalized_path = json.loads(response)
+        except json.JSONDecodeError:
+            # If not valid JSON, create a structured response from the text
+            personalized_path = {
+                "overview": response[:500] + "...",
+                "current_level": "Assessment pending",
+                "skill_gaps": [],
+                "learning_roadmap": [],
+                "projects": [],
+                "certifications": [],
+                "timeline": {
+                    "total_duration": "6-12 months",
+                    "beginner_path": "3-6 months",
+                    "intermediate_path": "6-12 months",
+                    "advanced_path": "12+ months"
+                },
+                "success_metrics": [],
+                "next_steps": [],
+                "raw_response": response
+            }
+        
+        logger.info(f"Generated personalized path for user {user_id} and career {career_id}")
+        
+        return {
+            "career_id": career_id,
+            "career_title": career_title,
+            "user_id": user_id,
+            "generated_at": datetime.utcnow().isoformat(),
+            **personalized_path
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate personalized path: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate personalized path: {str(e)}"
         )
 
 
