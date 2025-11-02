@@ -42,6 +42,9 @@ const Careers = () => {
   const [likedCareers, setLikedCareers] = useState(new Set());
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedCareerDetails, setSelectedCareerDetails] = useState(null);
+  const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
+  const [personalizedPathData, setPersonalizedPathData] = useState(null);
+  const [generatingPersonalizedPath, setGeneratingPersonalizedPath] = useState(false);
 
   useEffect(() => {
     fetchRecommendations();
@@ -220,6 +223,29 @@ const Careers = () => {
     }
   };
 
+  const handleGeneratePersonalizedPath = async (careerId, careerTitle) => {
+    try {
+      setGeneratingPersonalizedPath(true);
+      toast.loading('Generating your personalized AI career path...');
+      
+      const response = await careerAPI.generatePersonalizedPath(careerId);
+      
+      toast.dismiss();
+      setPersonalizedPathData({
+        ...response.data,
+        careerTitle: careerTitle
+      });
+      setShowPersonalizedModal(true);
+      toast.success('Personalized path generated!');
+    } catch (error) {
+      toast.dismiss();
+      console.error('Failed to generate personalized path:', error);
+      toast.error('Failed to generate personalized path. Please try again.');
+    } finally {
+      setGeneratingPersonalizedPath(false);
+    }
+  };
+
   const toggleSaved = (careerId) => {
     const newSaved = new Set(savedCareers);
     if (newSaved.has(careerId)) {
@@ -320,12 +346,20 @@ const Careers = () => {
             <ChartBarIcon className="w-4 h-4 mr-1" />
             Match: {career.match_score}%
           </div>
-          <button 
-            onClick={() => handleViewDetails(career.id, career.title)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-          >
-            View Details
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleViewDetails(career.id, career.title)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              View Details
+            </button>
+            <button 
+              onClick={() => handleGeneratePersonalizedPath(career.id, career.title)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              AI Path
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -965,6 +999,256 @@ const Careers = () => {
                 <button
                   onClick={() => setShowDetailsModal(false)}
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Personalized AI Path Modal */}
+      {showPersonalizedModal && personalizedPathData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                🎯 Your Personalized Career Path
+              </h2>
+              <button
+                onClick={() => setShowPersonalizedModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                  {personalizedPathData.careerTitle}
+                </h3>
+                <div className="flex gap-4 text-sm">
+                  <span className="text-purple-600 font-medium">
+                    Match Score: {personalizedPathData.match_score}%
+                  </span>
+                  <span className="text-blue-600">
+                    Powered by Google Gemini AI
+                  </span>
+                </div>
+              </div>
+
+              <div className="prose max-w-none">
+                {personalizedPathData.personalized_plan?.plan ? (
+                  <div className="whitespace-pre-wrap text-gray-700">
+                    {personalizedPathData.personalized_plan.plan}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {Object.entries(personalizedPathData.personalized_plan || {}).map(([key, value]) => {
+                      // Skill Gap Analysis
+                      if (key === 'skill_gap_analysis') {
+                        return (
+                          <div key={key} className="border-l-4 border-blue-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                              🎯 Skill Gap Analysis
+                            </h4>
+                            <div className="space-y-3">
+                              {value.skills_you_have && (
+                                <div className="bg-green-50 p-3 rounded">
+                                  <p className="font-medium text-green-900 mb-2">✅ Skills You Have:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {value.skills_you_have.map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-1 bg-green-600 text-white text-xs rounded">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {value.critical_missing_skills && (
+                                <div className="bg-orange-50 p-3 rounded">
+                                  <p className="font-medium text-orange-900 mb-2">🎓 Skills to Develop:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {value.critical_missing_skills.map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-1 bg-orange-600 text-white text-xs rounded">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Learning Roadmap
+                      if (key === 'learning_roadmap' && Array.isArray(value)) {
+                        return (
+                          <div key={key} className="border-l-4 border-purple-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
+                              📚 Learning Roadmap
+                            </h4>
+                            <div className="space-y-4">
+                              {value.map((resource, idx) => (
+                                <div key={idx} className="bg-blue-50 p-4 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      <h5 className="font-semibold text-blue-900">{resource.skill}</h5>
+                                      {resource.phase && <p className="text-xs text-blue-600">{resource.phase}</p>}
+                                    </div>
+                                    <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                                      Priority: {resource.priority}
+                                    </span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {resource.resources?.map((r, ridx) => (
+                                      <div key={ridx} className="bg-white p-3 rounded border">
+                                        <a 
+                                          href={r.url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline font-medium block mb-1"
+                                        >
+                                          {r.title} ↗
+                                        </a>
+                                        <div className="text-sm text-gray-600">
+                                          <span className="font-medium">{r.platform}</span> • 
+                                          {r.duration} • {r.cost}
+                                        </div>
+                                        <p className="text-sm text-gray-700 mt-1">{r.why}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Hands-on Projects
+                      if (key === 'hands_on_projects' && Array.isArray(value)) {
+                        return (
+                          <div key={key} className="border-l-4 border-green-500 pl-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
+                              🚀 Hands-On Projects
+                            </h4>
+                            <div className="grid gap-4">
+                              {value.map((project, idx) => (
+                                <div key={idx} className="bg-green-50 p-4 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h5 className="font-semibold text-green-900">{project.title}</h5>
+                                    <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">
+                                      {project.difficulty} • {project.duration}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 mb-2">{project.description}</p>
+                                  <div className="flex flex-wrap gap-2 mb-2">
+                                    {project.skills_practiced?.map((skill, sidx) => (
+                                      <span key={sidx} className="px-2 py-1 bg-white text-green-700 text-xs rounded">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  {(project.tutorial_url || project.github_examples) && (
+                                    <div className="mt-2 space-y-1">
+                                      {project.tutorial_url && (
+                                        <a 
+                                          href={project.tutorial_url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline text-sm block"
+                                        >
+                                          📖 Tutorial ↗
+                                        </a>
+                                      )}
+                                      {project.github_examples?.map((link, lidx) => (
+                                        <a 
+                                          key={lidx}
+                                          href={link} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline text-sm block"
+                                        >
+                                          💻 GitHub Example {lidx + 1} ↗
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Default rendering for other sections
+                      return (
+                        <div key={key} className="border-l-4 border-gray-400 pl-4">
+                          <h4 className="font-semibold text-gray-900 mb-2 capitalize text-lg">
+                            {key.replace(/_/g, ' ')}
+                          </h4>
+                          {typeof value === 'string' ? (
+                            <p className="text-gray-700">{value}</p>
+                          ) : Array.isArray(value) ? (
+                            <ul className="list-disc list-inside space-y-1">
+                              {value.map((item, idx) => (
+                                <li key={idx} className="text-gray-700">
+                                  {typeof item === 'string' ? item : (
+                                    item.url ? (
+                                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                        {item.name || item.title} ↗
+                                      </a>
+                                    ) : JSON.stringify(item)
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : typeof value === 'object' ? (
+                            <div className="bg-gray-50 p-3 rounded space-y-2">
+                              {Object.entries(value).map(([k, v]) => (
+                                <div key={k}>
+                                  <span className="font-medium text-gray-700 capitalize">{k.replace(/_/g, ' ')}: </span>
+                                  {Array.isArray(v) ? (
+                                    <ul className="list-disc list-inside ml-4">
+                                      {v.map((item, idx) => (
+                                        <li key={idx} className="text-gray-600 text-sm">{item}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <span className="text-gray-600">{String(v)}</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-700">{String(value)}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(JSON.stringify(personalizedPathData, null, 2));
+                    toast.success('Copied to clipboard!');
+                  }}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
+                >
+                  Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => setShowPersonalizedModal(false)}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium"
                 >
                   Close
                 </button>
