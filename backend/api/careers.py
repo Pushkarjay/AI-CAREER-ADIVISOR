@@ -406,7 +406,7 @@ Please provide a JSON response with the following structure:
 
 Provide real, actionable recommendations with actual course links (Coursera, Udemy, freeCodeCamp, etc.) where applicable."""
 
-        response = await gemini.generate_response(prompt)
+        response = await gemini._generate_text(prompt)
         
         # Parse JSON response
         import json
