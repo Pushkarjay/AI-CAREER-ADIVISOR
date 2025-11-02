@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 from typing import List, Dict, Any
 import logging
+import re
 
 from core.security import verify_token
 from models.career import LearningRoadmap
@@ -24,6 +25,25 @@ def get_gemini_service():
         from services.gemini_service import GeminiService
         _gemini_service = GeminiService()
     return _gemini_service
+
+
+# Pre-compute and cache domain tokens for faster recommendation matching
+_domain_tokens_cache: Dict[str, set] = {}
+
+def _tokenize(values: List[str]) -> set:
+    """Tokenize a list of strings into lowercase alphanumeric tokens."""
+    text = " \n ".join([v for v in values if isinstance(v, str)])
+    return {tok for tok in re.split(r"[^a-z0-9+.#]+", text.lower()) if tok}
+
+def _get_domain_tokens(domain_id: str, domain_data: Dict[str, Any]) -> set:
+    """Get cached tokens for a domain, computing if necessary."""
+    if domain_id not in _domain_tokens_cache:
+        _domain_tokens_cache[domain_id] = _tokenize(
+            [domain_data.get("title", "")] + 
+            domain_data.get("prerequisites", []) + 
+            domain_data.get("learning_path", [])
+        )
+    return _domain_tokens_cache[domain_id]
 
 
 @router.get("/", response_model=List[LearningRoadmap])
@@ -48,10 +68,9 @@ async def list_roadmaps():
 @router.get("/recommendations")
 async def recommended_roadmaps(token: str = Depends(security)):
     """
-    Return ALL domains ranked by user's matched skill percentage (0-100).
-    Always includes every domain (even 0% matches) sorted descending.
+    Return top-ranked domains by user's matched skill percentage (0-100).
+    Optimized to return only the most relevant recommendations.
     """
-    import re
     try:
         payload = verify_token(token.credentials)
         user_id = payload.get("user_id")
@@ -60,35 +79,49 @@ async def recommended_roadmaps(token: str = Depends(security)):
         interests = set(map(str.lower, (profile or {}).get("interests", [])))
         user_tokens = {t for t in (skills | interests) if t}
 
-        def tokenize(values: List[str]) -> set:
-            text = " \n ".join([v for v in values if isinstance(v, str)])
-            return {tok for tok in re.split(r"[^a-z0-9+.#]+", text.lower()) if tok}
-
         ranked: List[Dict[str, Any]] = []
-        for v in DOMAINS_ROADMAP.values():
-            domain_tokens = tokenize([v.get("title", "")] + v.get("prerequisites", []) + v.get("learning_path", []))
+        
+        # Process all domains but use cached tokens
+        for domain_id, domain_data in DOMAINS_ROADMAP.items():
+            # Use cached domain tokens to avoid recomputing every time
+            domain_tokens = _get_domain_tokens(domain_id, domain_data)
+            
             matches = len(domain_tokens & user_tokens)
             # Normalize by domain token size to represent how much of the roadmap aligns
             denom = max(1, len(domain_tokens))
             score = round(100.0 * matches / denom, 2)
+            
             item = {
-                "domain_id": v["domain_id"],
-                "title": v["title"],
-                "description": v.get("description", ""),
-                "difficulty_level": v.get("difficulty", "mixed"),
-                "learning_path": v.get("learning_path", []),
-                "prerequisites": v.get("prerequisites", []),
-                "estimated_time": v.get("estimated_completion"),
-                "related_domains": v.get("related_domains", []),
-                "universal_foundations": v.get("universal_foundations", []),
+                "domain_id": domain_data["domain_id"],
+                "title": domain_data["title"],
+                "description": domain_data.get("description", ""),
+                "difficulty_level": domain_data.get("difficulty", "mixed"),
+                "learning_path": domain_data.get("learning_path", []),
+                "prerequisites": domain_data.get("prerequisites", []),
+                "estimated_time": domain_data.get("estimated_completion"),
+                "related_domains": domain_data.get("related_domains", []),
+                "universal_foundations": domain_data.get("universal_foundations", []),
                 # scoring fields expected by frontend
                 "match_score": score,
                 "skill_match_percentage": score,
             }
             ranked.append(item)
 
+        # Sort by score descending
         ranked.sort(key=lambda x: (x["match_score"], x["title"]), reverse=True)
-        return ranked
+        
+        # Return top 24 recommendations (3 rows of 8 cards) plus all with score > 0
+        # This ensures we show meaningful matches while not overwhelming the UI
+        top_matches = [r for r in ranked if r["match_score"] > 0][:24]
+        
+        # If we have fewer than 24 matches, fill with top-rated domains
+        if len(top_matches) < 24:
+            remaining = 24 - len(top_matches)
+            zero_score = [r for r in ranked if r["match_score"] == 0][:remaining]
+            top_matches.extend(zero_score)
+        
+        return top_matches
+        
     except Exception as e:
         logger.error(f"Failed to get roadmap recommendations: {e}")
         raise HTTPException(status_code=500, detail="Failed to get roadmap recommendations")
