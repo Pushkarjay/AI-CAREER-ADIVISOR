@@ -100,8 +100,9 @@ async def parse_resume(request: Request, file: UploadFile = File(...), token: st
                 blob.make_public()
                 resume_url = blob.public_url
                 stored = True
+                logger.info(f"Resume stored in Firebase Storage: {storage_filename}, URL: {resume_url}")
             except Exception as e:
-                print(f"Failed to store resume in Firebase Storage: {e}")
+                logger.warning(f"Failed to store resume in Firebase Storage: {e}")
         if not stored:
             # Local filesystem fallback
             try:

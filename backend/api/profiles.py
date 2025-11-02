@@ -199,6 +199,7 @@ async def upload_resume(request: Request, file: UploadFile = File(...), token: s
                 blob.make_public()
                 resume_url = blob.public_url
                 stored = True
+                logger.info(f"Resume stored in Firebase Storage: {storage_path}, URL: {resume_url}")
             except Exception as se:
                 logger.warning(f"Firebase Storage upload failed; will fallback to local: {se}")
         
