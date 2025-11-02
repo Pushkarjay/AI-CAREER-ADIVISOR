@@ -14,7 +14,6 @@ from models.career import (
 from core.security import verify_token
 from services.firestore_service import FirestoreService
 from services.job_scraper_service import job_scraper_service
-from services.market_trends_service import market_trends_service
 from agents.base_agent import orchestrator, AgentInput
 
 logger = logging.getLogger(__name__)
@@ -22,17 +21,6 @@ router = APIRouter()
 security = HTTPBearer()
 
 firestore_service = FirestoreService()
-
-# Lazy initialization of Gemini service
-_gemini_service = None
-
-def get_gemini_service():
-    """Get or create Gemini service instance."""
-    global _gemini_service
-    if _gemini_service is None:
-        from services.gemini_service import GeminiService
-        _gemini_service = GeminiService()
-    return _gemini_service
 
 
 class CareerSearchRequest(BaseModel):
@@ -188,169 +176,57 @@ async def get_career_trends():
 async def get_career_details(career_id: str):
     """Get detailed information about a specific career."""
     try:
-        # Try to fetch from Firestore careers collection
-        careers_ref = firestore_service.db.collection('careers').document(career_id)
-        career_doc = careers_ref.get()
-        
-        if career_doc.exists:
-            career_data = career_doc.to_dict()
-            
-            # Format the data for frontend consumption
-            career_details = {
-                "id": career_id,
-                "title": career_data.get("title", "Unknown Career"),
-                "industry": career_data.get("industry", "General"),
-                "description": career_data.get("description", ""),
-                "required_skills": career_data.get("requiredSkills", []),
-                "suggested_courses": career_data.get("suggestedCourses", []),
-                "experience_level": career_data.get("experienceLevel", "Entry Level"),
-                "avg_salary": career_data.get("avgSalary", 0),
-                "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L - ₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L",
-                "work_type": career_data.get("workType", "Office"),
-                "growth_rate": career_data.get("growthRate", "N/A"),
-                "job_openings": career_data.get("jobOpenings", "N/A"),
-                "domain_id": career_data.get("domain_id", ""),
-                "skills_weightage": career_data.get("skills_weightage", {}),
-                "typical_responsibilities": career_data.get("responsibilities", [
-                    "Apply domain knowledge and skills",
-                    "Collaborate with team members",
-                    "Deliver quality work on time",
-                    "Continuously learn and improve"
-                ]),
-                "career_progression": [
-                    {"level": "Entry Level", "years": "0-2", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.5 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L"},
-                    {"level": "Mid Level", "years": "2-5", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.8 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.2 / 100000:.1f}L"},
-                    {"level": "Senior Level", "years": "5-8", "salary_range": f"₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.8 / 100000:.1f}L"},
-                    {"level": "Lead/Manager", "years": "8+", "salary_range": f"₹{career_data.get('avgSalary', 0) * 2 / 100000:.1f}L+"}
-                ],
-                "learning_roadmap_id": career_data.get("domain_id", ""),
-            }
-            
-            return career_details
-        else:
-            # Fallback: Return basic structure if career not found in database
-            raise HTTPException(
-                status_code=404,
-                detail=f"Career with ID '{career_id}' not found in database"
-            )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get career details: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get career details"
-        )
-
-
-@router.get("/{career_id}/market-trends")
-async def get_career_market_trends(career_id: str, title: Optional[str] = None):
-    """Get market trends specific to a career using Gemini AI."""
-    try:
-        # Try to fetch actual career details
-        career_data = None
-        try:
-            # Attempt to get from firestore or database
-            # This assumes careers are stored in a 'careers' collection
-            careers_ref = firestore_service.db.collection('careers').document(career_id)
-            career_doc = careers_ref.get()
-            if career_doc.exists:
-                career_data = career_doc.to_dict()
-                career_data['id'] = career_id
-                logger.info(f"Found career in Firestore: {career_data.get('title', career_id)}")
-        except Exception as e:
-            logger.warning(f"Could not fetch career from Firestore: {e}")
-        
-        # If we couldn't fetch from DB, construct from provided data or career_id
-        if not career_data:
-            # Use provided title or convert career_id to Title Case
-            career_title = title if title else career_id.replace('-', ' ').replace('_', ' ').title()
-            career_data = {
-                "id": career_id,
-                "title": career_title,
-                "industry": "technology",
-                "description": f"Career opportunities in {career_title}",
-                "required_skills": [],
-                "preferred_skills": [],
-            }
-            logger.info(f"Using constructed career data for: {career_title}")
-        
-        # Fetch career-specific market trends using Gemini AI
-        trends = await market_trends_service.get_career_specific_trends(
-            career_title=career_data.get("title", career_id),
-            career_data=career_data
-        )
-        
-        return trends
-        
-    except Exception as e:
-        logger.error(f"Failed to get career market trends: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get career market trends"
-        )
-
-
-@router.post("/{career_id}/personalized-path")
-async def generate_personalized_career_path(career_id: str, token: str = Depends(security)):
-    """
-    Generate a personalized career development path using AI based on user profile and resume.
-    Uses Gemini AI to create customized learning paths, skill gap analysis, and action plans.
-    """
-    try:
-        payload = verify_token(token.credentials)
-        user_id = payload.get("user_id")
-        
-        # Get user profile
-        user_profile = await firestore_service.get_user_profile(user_id)
-        if not user_profile:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User profile required for personalized path generation"
-            )
-        
-        # Get career details (in production, fetch from database)
-        # For now, using mock data similar to get_career_details
-        career_data = {
+        # Mock career details - in production would query database
+        career_details = {
             "id": career_id,
             "title": "Software Developer",
             "industry": "technology",
             "description": "Design, develop, and maintain software applications using various programming languages and frameworks.",
             "required_skills": ["Python", "JavaScript", "SQL", "Git"],
             "preferred_skills": ["React", "Node.js", "AWS", "Docker"],
+            "education_requirements": ["Bachelor's degree in Computer Science or related field"],
+            "experience_level": "entry",
+            "salary_range_min": 400000,
+            "salary_range_max": 800000,
+            "location_flexibility": True,
+            "growth_potential": 8.5,
+            "demand_score": 9.2,
+            "typical_responsibilities": [
+                "Write clean, maintainable code",
+                "Collaborate with cross-functional teams",
+                "Debug and troubleshoot applications",
+                "Participate in code reviews",
+                "Stay updated with technology trends"
+            ],
+            "career_progression": [
+                {"level": "Junior Developer", "years": "0-2", "salary_range": "₹4L-6L"},
+                {"level": "Mid-level Developer", "years": "2-5", "salary_range": "₹6L-12L"},
+                {"level": "Senior Developer", "years": "5-8", "salary_range": "₹12L-20L"},
+                {"level": "Tech Lead", "years": "8+", "salary_range": "₹20L+"}
+            ],
+            "related_careers": [
+                "Full Stack Developer",
+                "DevOps Engineer",
+                "Data Engineer",
+                "Mobile App Developer"
+            ],
+            # Roadmap integration fields (prototype)
+            "learning_roadmap_id": "backend-dev",
+            "career_path_stages": [
+                "Junior Developer",
+                "Mid-level Developer",
+                "Senior Developer",
+                "Tech Lead"
+            ]
         }
         
-        # Extract resume data if available
-        resume_data = user_profile.get("resume")
+        return career_details
         
-        # Generate personalized path using Gemini AI
-        gemini_service = get_gemini_service()
-        personalized_path = await gemini_service.generate_personalized_career_path(
-            career_data=career_data,
-            user_profile=user_profile,
-            resume_data=resume_data
-        )
-        
-        # Save the generated path to user's profile for future reference
-        try:
-            await firestore_service.save_personalized_path(
-                user_id, 
-                career_id, 
-                personalized_path
-            )
-        except Exception as save_error:
-            logger.warning(f"Could not save personalized path: {save_error}")
-        
-        return personalized_path
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Failed to generate personalized career path: {e}")
+        logger.error(f"Failed to get career details: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate personalized path: {str(e)}"
+            detail="Failed to get career details"
         )
 
 

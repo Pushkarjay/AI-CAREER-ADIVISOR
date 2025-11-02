@@ -110,29 +110,14 @@ export const careerAPI = {
       linkedin_fetch_description: searchParams.linkedin_fetch_description || false
     };
     return api.post('/api/v1/careers/jobs/search', body);
-  },
-  
-  // Get career details
-  getCareerDetails: (careerId) => api.get(`/api/v1/careers/${careerId}`),
-  
-  // Get career-specific market trends
-  getCareerMarketTrends: (careerId, title = null) => {
-    const params = title ? { title } : {};
-    return api.get(`/api/v1/careers/${careerId}/market-trends`, { params });
-  },
-  
-  // Generate personalized career path using AI
-  generatePersonalizedPath: (careerId) => api.post(`/api/v1/careers/${careerId}/personalized-path`)
+  }
 };
 
 // Roadmaps API client
 export const roadmapAPI = {
   list: () => api.get('/api/roadmaps/'),
   get: (domainId) => api.get(`/api/v1/roadmaps/${encodeURIComponent(domainId)}`),
-  recommend: () => api.get('/api/v1/roadmaps/recommendations'),
-  
-  // Generate personalized roadmap using AI
-  generatePersonalizedRoadmap: (domainId) => api.post(`/api/v1/roadmaps/${encodeURIComponent(domainId)}/personalized`)
+  recommend: () => api.get('/api/v1/roadmaps/recommendations')
 };
 
 // Profile API
