@@ -72,7 +72,22 @@ jobs:
             --max-instances=10 \
             --timeout=300 \
             --port=8080 \
-            --quiet
+            --no-traffic \
+            --tag=latest \
+            --quiet || \
+          (echo "Deployment conflict detected, retrying..." && sleep 10 && \
+          gcloud run deploy backend-service \
+            --source ./backend \
+            --region asia-south1 \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --allow-unauthenticated \
+            --set-env-vars="DEBUG=False,LOG_LEVEL=INFO,GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},FIREBASE_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}" \
+            --memory=1Gi \
+            --cpu=1 \
+            --max-instances=10 \
+            --timeout=300 \
+            --port=8080 \
+            --quiet)
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
