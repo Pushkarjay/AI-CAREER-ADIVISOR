@@ -195,7 +195,8 @@ async def parse_resume(request: Request, file: UploadFile = File(...), token: st
         }
         
     except Exception as e:
-        print(f"Resume parsing error: {e}")
+        logger.error(f"❌ Resume parsing error in alias_api: {type(e).__name__}: {str(e)}")
+        logger.exception("Full traceback:")
         raise HTTPException(status_code=500, detail=f"Failed to process resume: {str(e)}")
 
 

@@ -142,22 +142,29 @@ async def upload_resume(request: Request, file: UploadFile = File(...), token: s
     """Upload, store, parse resume and update user profile; returns resume metadata for preview and confirmation."""
     from services.resume_parser import ResumeParser
     try:
+        logger.info(f"📤 Resume upload started: {file.filename}, size: {file.size if hasattr(file, 'size') else 'unknown'}")
+        
         # Optional Firebase Storage
         try:
             import firebase_admin  # noqa: F401
             from firebase_admin import storage as fb_storage
             FIREBASE_STORAGE_AVAILABLE = True
-        except Exception:
+            logger.info("✅ Firebase Storage is available")
+        except Exception as fb_err:
             FIREBASE_STORAGE_AVAILABLE = False
+            logger.info(f"⚠️ Firebase Storage not available: {fb_err}")
 
         payload = verify_token(token.credentials)
         user_id = payload.get("user_id")
         if not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+        
+        logger.info(f"👤 User ID: {user_id}")
 
         # Read file
         content_bytes = await file.read()
         file_size = len(content_bytes)
+        logger.info(f"📄 File read successfully: {file_size} bytes")
 
         # Parse using ResumeParser
         parser = ResumeParser()
@@ -166,9 +173,11 @@ async def upload_resume(request: Request, file: UploadFile = File(...), token: s
         parsing_successful = False
         
         try:
+            logger.info("🔍 Starting resume parsing...")
             parsed_result = await parser.parse_file(content_bytes, file.filename)
             extracted_data = parsed_result.get("parsed") if parsed_result.get("success") else {}
             parsing_successful = parsed_result.get("success", False)
+            logger.info(f"✅ Parsing {'successful' if parsing_successful else 'failed'}")
         except Exception as pe:
             logger.warning(f"Resume parsing error, falling back to raw decode: {pe}")
             # Fallback minimal extraction: raw text only
@@ -394,7 +403,8 @@ async def upload_resume(request: Request, file: UploadFile = File(...), token: s
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to upload resume: {e}")
+        logger.error(f"❌ Failed to upload resume: {type(e).__name__}: {str(e)}")
+        logger.exception("Full traceback:")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload resume: {str(e)}"
