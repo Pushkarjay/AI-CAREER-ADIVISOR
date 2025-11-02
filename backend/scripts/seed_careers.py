@@ -9,8 +9,6 @@ import os
 # Add parent directory to path to import services
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.firestore_service import FirestoreService
-
 # Career data for prototype
 CAREERS_DATA = [
     {
@@ -227,24 +225,42 @@ CAREERS_DATA = [
 
 async def seed_careers():
     """Seed the Firestore database with career data."""
-    firestore_service = FirestoreService()
+    from core.database import initialize_connections, get_firestore_db
+    from datetime import datetime
+    
+    # Initialize database connection
+    await initialize_connections()
+    db = get_firestore_db()
     
     print("🌱 Starting to seed careers data...")
     
     try:
+        careers_ref = db.collection("careers")
+        
         for career in CAREERS_DATA:
             career_id = career["id"]
             print(f"📄 Adding career: {career['title']} (ID: {career_id})")
             
-            # Check if career already exists
-            existing_career = await firestore_service.get_document("careers", career_id)
+            # Add timestamp
+            career_doc = {
+                **career,
+                "created_at": datetime.now(),
+                "updated_at": datetime.now()
+            }
             
-            if existing_career:
+            # Check if career already exists
+            doc_ref = careers_ref.document(career_id)
+            doc = doc_ref.get()
+            
+            if doc.exists:
                 print(f"⚠️  Career {career_id} already exists, updating...")
-                await firestore_service.update_document("careers", career_id, career)
+                doc_ref.update({
+                    **career,
+                    "updated_at": datetime.now()
+                })
             else:
                 print(f"✨ Creating new career {career_id}")
-                await firestore_service.create_document("careers", career, career_id)
+                doc_ref.set(career_doc)
             
             print(f"✅ Successfully processed {career['title']}")
         
@@ -254,7 +270,7 @@ async def seed_careers():
         # Create a summary document
         summary = {
             "total_careers": len(CAREERS_DATA),
-            "last_updated": firestore_service._get_timestamp(),
+            "last_updated": datetime.now(),
             "career_ids": [career["id"] for career in CAREERS_DATA],
             "industries": list(set(career["industry"] for career in CAREERS_DATA)),
             "average_salary_range": {
@@ -264,11 +280,14 @@ async def seed_careers():
             }
         }
         
-        await firestore_service.create_document("metadata", summary, "careers_summary")
+        metadata_ref = db.collection("metadata").document("careers_summary")
+        metadata_ref.set(summary)
         print("📋 Created careers summary metadata")
         
     except Exception as e:
         print(f"❌ Error seeding careers: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
 if __name__ == "__main__":
