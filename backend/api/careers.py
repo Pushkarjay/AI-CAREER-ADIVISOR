@@ -412,17 +412,20 @@ Provide real, actionable recommendations with actual course links (Coursera, Ude
         import json
         import re
         
+        # Extract the text from the response dictionary
+        response_text = response.get("text", "") if isinstance(response, dict) else str(response)
+        
         # Extract JSON from markdown code blocks if present
-        json_match = re.search(r'```(?:json)?\s*(\{.*\})\s*```', response, re.DOTALL)
+        json_match = re.search(r'```(?:json)?\s*(\{.*\})\s*```', response_text, re.DOTALL)
         if json_match:
-            response = json_match.group(1)
+            response_text = json_match.group(1)
         
         try:
-            personalized_path = json.loads(response)
+            personalized_path = json.loads(response_text)
         except json.JSONDecodeError:
             # If not valid JSON, create a structured response from the text
             personalized_path = {
-                "overview": response[:500] + "..." if len(response) > 500 else response,
+                "overview": response_text[:500] + "..." if len(response_text) > 500 else response_text,
                 "current_level": "Assessment pending",
                 "skill_gaps": [],
                 "learning_roadmap": [],
@@ -436,7 +439,7 @@ Provide real, actionable recommendations with actual course links (Coursera, Ude
                 },
                 "success_metrics": [],
                 "next_steps": [],
-                "raw_response": response
+                "raw_response": response_text
             }
         
         logger.info(f"Generated personalized path for user {user_id} and career {career_id}")

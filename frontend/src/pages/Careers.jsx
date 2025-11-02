@@ -1052,196 +1052,240 @@ const Careers = () => {
               </div>
 
               <div className="prose max-w-none">
-                {personalizedPathData.personalized_plan?.plan ? (
+                {personalizedPathData.raw_response ? (
                   <div className="whitespace-pre-wrap text-gray-700">
-                    {personalizedPathData.personalized_plan.plan}
+                    {personalizedPathData.raw_response}
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {Object.entries(personalizedPathData.personalized_plan || {}).map(([key, value]) => {
-                      // Skill Gap Analysis
-                      if (key === 'skill_gap_analysis') {
-                        return (
-                          <div key={key} className="border-l-4 border-blue-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 mb-3 text-lg">
-                              🎯 Skill Gap Analysis
-                            </h4>
-                            <div className="space-y-3">
-                              {value.skills_you_have && (
-                                <div className="bg-green-50 p-3 rounded">
-                                  <p className="font-medium text-green-900 mb-2">✅ Skills You Have:</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {value.skills_you_have.map((skill, idx) => (
-                                      <span key={idx} className="px-2 py-1 bg-green-600 text-white text-xs rounded">
-                                        {skill}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {value.critical_missing_skills && (
-                                <div className="bg-orange-50 p-3 rounded">
-                                  <p className="font-medium text-orange-900 mb-2">🎓 Skills to Develop:</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {value.critical_missing_skills.map((skill, idx) => (
-                                      <span key={idx} className="px-2 py-1 bg-orange-600 text-white text-xs rounded">
-                                        {skill}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
+                    {/* Overview Section */}
+                    {personalizedPathData.overview && (
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-gray-900 mb-2 text-lg">📋 Overview</h4>
+                        <p className="text-gray-700">{personalizedPathData.overview}</p>
+                        {personalizedPathData.current_level && (
+                          <p className="text-sm text-blue-600 mt-2">
+                            <strong>Current Level:</strong> {personalizedPathData.current_level}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Skill Gaps Section */}
+                    {personalizedPathData.skill_gaps && personalizedPathData.skill_gaps.length > 0 && (
+                      <div className="border-l-4 border-orange-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          🎯 Skill Gaps to Address
+                        </h4>
+                        <div className="grid gap-3">
+                          {personalizedPathData.skill_gaps.map((gap, idx) => (
+                            <div key={idx} className={`p-3 rounded-lg ${
+                              gap.priority === 'high' ? 'bg-red-50 border border-red-200' : 
+                              gap.priority === 'medium' ? 'bg-yellow-50 border border-yellow-200' : 
+                              'bg-gray-50 border border-gray-200'
+                            }`}>
+                              <div className="flex justify-between items-start mb-2">
+                                <h5 className="font-semibold text-gray-900">{gap.skill}</h5>
+                                <span className={`px-2 py-1 text-xs rounded ${
+                                  gap.priority === 'high' ? 'bg-red-600 text-white' : 
+                                  gap.priority === 'medium' ? 'bg-yellow-600 text-white' : 
+                                  'bg-gray-600 text-white'
+                                }`}>
+                                  {gap.priority} priority
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-700 space-y-1">
+                                <p><strong>Current:</strong> {gap.current_level} → <strong>Target:</strong> {gap.target_level}</p>
+                                <p className="text-gray-600">{gap.reason}</p>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      }
-                      
-                      // Learning Roadmap
-                      if (key === 'learning_roadmap' && Array.isArray(value)) {
-                        return (
-                          <div key={key} className="border-l-4 border-purple-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
-                              📚 Learning Roadmap
-                            </h4>
-                            <div className="space-y-4">
-                              {value.map((resource, idx) => (
-                                <div key={idx} className="bg-blue-50 p-4 rounded-lg">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                      <h5 className="font-semibold text-blue-900">{resource.skill}</h5>
-                                      {resource.phase && <p className="text-xs text-blue-600">{resource.phase}</p>}
-                                    </div>
-                                    <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
-                                      Priority: {resource.priority}
-                                    </span>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {resource.resources?.map((r, ridx) => (
-                                      <div key={ridx} className="bg-white p-3 rounded border">
-                                        <a 
-                                          href={r.url} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline font-medium block mb-1"
-                                        >
-                                          {r.title} ↗
-                                        </a>
-                                        <div className="text-sm text-gray-600">
-                                          <span className="font-medium">{r.platform}</span> • 
-                                          {r.duration} • {r.cost}
-                                        </div>
-                                        <p className="text-sm text-gray-700 mt-1">{r.why}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      // Hands-on Projects
-                      if (key === 'hands_on_projects' && Array.isArray(value)) {
-                        return (
-                          <div key={key} className="border-l-4 border-green-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 mb-3 capitalize text-lg">
-                              🚀 Hands-On Projects
-                            </h4>
-                            <div className="grid gap-4">
-                              {value.map((project, idx) => (
-                                <div key={idx} className="bg-green-50 p-4 rounded-lg">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <h5 className="font-semibold text-green-900">{project.title}</h5>
-                                    <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">
-                                      {project.difficulty} • {project.duration}
-                                    </span>
-                                  </div>
-                                  <p className="text-gray-700 mb-2">{project.description}</p>
-                                  <div className="flex flex-wrap gap-2 mb-2">
-                                    {project.skills_practiced?.map((skill, sidx) => (
-                                      <span key={sidx} className="px-2 py-1 bg-white text-green-700 text-xs rounded">
-                                        {skill}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  {(project.tutorial_url || project.github_examples) && (
-                                    <div className="mt-2 space-y-1">
-                                      {project.tutorial_url && (
-                                        <a 
-                                          href={project.tutorial_url} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline text-sm block"
-                                        >
-                                          📖 Tutorial ↗
-                                        </a>
-                                      )}
-                                      {project.github_examples?.map((link, lidx) => (
-                                        <a 
-                                          key={lidx}
-                                          href={link} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline text-sm block"
-                                        >
-                                          💻 GitHub Example {lidx + 1} ↗
-                                        </a>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      // Default rendering for other sections
-                      return (
-                        <div key={key} className="border-l-4 border-gray-400 pl-4">
-                          <h4 className="font-semibold text-gray-900 mb-2 capitalize text-lg">
-                            {key.replace(/_/g, ' ')}
-                          </h4>
-                          {typeof value === 'string' ? (
-                            <p className="text-gray-700">{value}</p>
-                          ) : Array.isArray(value) ? (
-                            <ul className="list-disc list-inside space-y-1">
-                              {value.map((item, idx) => (
-                                <li key={idx} className="text-gray-700">
-                                  {typeof item === 'string' ? item : (
-                                    item.url ? (
-                                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                        {item.name || item.title} ↗
-                                      </a>
-                                    ) : JSON.stringify(item)
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : typeof value === 'object' ? (
-                            <div className="bg-gray-50 p-3 rounded space-y-2">
-                              {Object.entries(value).map(([k, v]) => (
-                                <div key={k}>
-                                  <span className="font-medium text-gray-700 capitalize">{k.replace(/_/g, ' ')}: </span>
-                                  {Array.isArray(v) ? (
-                                    <ul className="list-disc list-inside ml-4">
-                                      {v.map((item, idx) => (
-                                        <li key={idx} className="text-gray-600 text-sm">{item}</li>
-                                      ))}
-                                    </ul>
-                                  ) : (
-                                    <span className="text-gray-600">{String(v)}</span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-700">{String(value)}</p>
-                          )}
+                          ))}
                         </div>
-                      );
-                    })}
+                      </div>
+                    )}
+
+                    {/* Learning Roadmap Section */}
+                    {personalizedPathData.learning_roadmap && personalizedPathData.learning_roadmap.length > 0 && (
+                      <div className="border-l-4 border-purple-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          📚 Learning Roadmap
+                        </h4>
+                        <div className="space-y-4">
+                          {personalizedPathData.learning_roadmap.map((phase, idx) => (
+                            <div key={idx} className="bg-purple-50 p-4 rounded-lg">
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h5 className="font-semibold text-purple-900">{phase.phase}</h5>
+                                  <p className="text-sm text-purple-600">Duration: {phase.duration}</p>
+                                </div>
+                              </div>
+                              {phase.focus_areas && phase.focus_areas.length > 0 && (
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium text-gray-700 mb-2">Focus Areas:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {phase.focus_areas.map((area, aidx) => (
+                                      <span key={aidx} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
+                                        {area}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {phase.resources && phase.resources.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-medium text-gray-700">Resources:</p>
+                                  {phase.resources.map((resource, ridx) => (
+                                    <div key={ridx} className="bg-white p-3 rounded border">
+                                      <div className="flex justify-between items-start mb-1">
+                                        <a 
+                                          href={resource.url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline font-medium"
+                                        >
+                                          {resource.title} ↗
+                                        </a>
+                                        <span className="text-xs px-2 py-1 bg-gray-200 rounded">
+                                          {resource.difficulty}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-gray-600 mb-1">{resource.description}</p>
+                                      <div className="text-xs text-gray-500">
+                                        <span className="font-medium">{resource.type}</span> • 
+                                        {resource.estimated_hours}h
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Projects Section */}
+                    {personalizedPathData.projects && personalizedPathData.projects.length > 0 && (
+                      <div className="border-l-4 border-green-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          🚀 Hands-On Projects
+                        </h4>
+                        <div className="grid gap-4">
+                          {personalizedPathData.projects.map((project, idx) => (
+                            <div key={idx} className="bg-green-50 p-4 rounded-lg">
+                              <div className="flex justify-between items-start mb-2">
+                                <h5 className="font-semibold text-green-900">{project.title}</h5>
+                                <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">
+                                  {project.difficulty} • {project.estimated_hours}h
+                                </span>
+                              </div>
+                              <p className="text-gray-700 mb-2">{project.description}</p>
+                              {project.skills_practiced && project.skills_practiced.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {project.skills_practiced.map((skill, sidx) => (
+                                    <span key={sidx} className="px-2 py-1 bg-white text-green-700 text-xs rounded">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Certifications Section */}
+                    {personalizedPathData.certifications && personalizedPathData.certifications.length > 0 && (
+                      <div className="border-l-4 border-yellow-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          🏆 Recommended Certifications
+                        </h4>
+                        <div className="grid gap-3">
+                          {personalizedPathData.certifications.map((cert, idx) => (
+                            <div key={idx} className="bg-yellow-50 p-4 rounded-lg">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h5 className="font-semibold text-yellow-900">{cert.name}</h5>
+                                  <p className="text-sm text-yellow-700">{cert.provider}</p>
+                                </div>
+                                <div className="text-right">
+                                  <span className="block text-sm font-medium text-yellow-900">{cert.estimated_cost}</span>
+                                  <span className="text-xs text-yellow-700">{cert.difficulty}</span>
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-700 mb-2">{cert.relevance}</p>
+                              <a 
+                                href={cert.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline text-sm"
+                              >
+                                Learn More ↗
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Timeline Section */}
+                    {personalizedPathData.timeline && (
+                      <div className="border-l-4 border-blue-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          ⏱️ Timeline
+                        </h4>
+                        <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+                          {Object.entries(personalizedPathData.timeline).map(([key, value]) => (
+                            <div key={key} className="text-sm">
+                              <span className="font-medium text-blue-900 capitalize">{key.replace(/_/g, ' ')}: </span>
+                              <span className="text-gray-700">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Success Metrics Section */}
+                    {personalizedPathData.success_metrics && personalizedPathData.success_metrics.length > 0 && (
+                      <div className="border-l-4 border-indigo-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          ✅ Success Metrics
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {personalizedPathData.success_metrics.map((metric, idx) => (
+                            <li key={idx} className="text-gray-700">{metric}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Next Steps Section */}
+                    {personalizedPathData.next_steps && personalizedPathData.next_steps.length > 0 && (
+                      <div className="border-l-4 border-pink-500 pl-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 text-lg">
+                          🎬 Next Steps
+                        </h4>
+                        <ol className="list-decimal list-inside space-y-2">
+                          {personalizedPathData.next_steps.map((step, idx) => (
+                            <li key={idx} className="text-gray-700 font-medium">{step}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+
+                    {/* Fallback for any other data */}
+                    {Object.entries(personalizedPathData).map(([key, value]) => {
+                      // Skip already rendered fields
+                      if (['career_id', 'career_title', 'careerTitle', 'user_id', 'generated_at', 
+                           'overview', 'current_level', 'skill_gaps', 'learning_roadmap', 
+                           'projects', 'certifications', 'timeline', 'success_metrics', 
+                           'next_steps', 'raw_response', 'match_score'].includes(key)) {
+                        return null;
+                      }
+                      
+                      return null;
+                    }).filter(Boolean)}
                   </div>
                 )}
               </div>
