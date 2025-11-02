@@ -97,6 +97,12 @@ export const careerAPI = {
   // Optional careers list if exposed later
   getCareers: () => api.get('/api/careers'),
   
+  // Get career details by ID
+  getCareerDetails: (careerId) => api.get(`/api/v1/careers/${careerId}`),
+  
+  // Generate personalized career path using Gemini AI
+  generatePersonalizedPath: (careerId) => api.post(`/api/v1/careers/${careerId}/personalized-path`),
+  
   // Real job search using jobspy
   searchJobs: (searchParams) => {
     const body = {
@@ -117,7 +123,9 @@ export const careerAPI = {
 export const roadmapAPI = {
   list: () => api.get('/api/roadmaps/'),
   get: (domainId) => api.get(`/api/v1/roadmaps/${encodeURIComponent(domainId)}`),
-  recommend: () => api.get('/api/v1/roadmaps/recommendations')
+  recommend: () => api.get('/api/v1/roadmaps/recommendations'),
+  // Generate personalized roadmap using Gemini AI
+  generatePersonalizedRoadmap: (domainId) => api.post(`/api/v1/roadmaps/${domainId}/personalized`)
 };
 
 // Profile API
