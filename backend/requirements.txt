@@ -8,6 +8,9 @@ email-validator>=2.1.0
 firebase-admin>=6.5.0
 google-cloud-firestore>=2.13.1
 
+# Google Cloud Services
+google-cloud-bigquery>=3.11.0
+
 # Google Generative AI (Gemini)
 google-generativeai>=0.3.0
 

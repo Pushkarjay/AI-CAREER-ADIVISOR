@@ -303,6 +303,38 @@ class FirestoreService:
             logger.error(f"Failed to save resource recommendations: {e}")
             raise
     
+    async def save_personalized_path(self, user_id: str, career_id: str, 
+                                    path_data: Dict[str, Any]) -> str:
+        """Save personalized learning path for a user and career."""
+        try:
+            db = self._get_db()
+            
+            path_id = str(uuid.uuid4())
+            path_doc = {
+                "id": path_id,
+                "user_id": user_id,
+                "career_id": career_id,
+                "created_at": datetime.now(),
+                "updated_at": datetime.now(),
+                **path_data
+            }
+            
+            if self.use_mock:
+                # Store in memory for mock mode
+                if not hasattr(self, '_mock_paths'):
+                    self._mock_paths = {}
+                self._mock_paths[path_id] = path_doc
+            else:
+                doc_ref = db.collection("personalized_paths").document(path_id)
+                doc_ref.set(path_doc)
+            
+            logger.info(f"Personalized path saved: {path_id} for user {user_id} and career {career_id}")
+            return path_id
+            
+        except Exception as e:
+            logger.error(f"Failed to save personalized path: {e}")
+            raise
+    
     async def get_user_analytics(self, user_id: str) -> Dict[str, Any]:
         """Get analytics data for a user."""
         try:
