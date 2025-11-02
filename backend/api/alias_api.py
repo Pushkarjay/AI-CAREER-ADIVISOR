@@ -377,100 +377,35 @@ async def get_recommendations(token: str = Depends(security)):
 
 @router.get("/careers")
 async def get_careers(token: str = Depends(security)):
-    """Get all available careers for the Careers page."""
+    """Get all available careers for the Careers page - returns all 76 roadmap domains."""
     payload = verify_token(token.credentials)
     user_id = payload.get("user_id")
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     try:
-        # Get careers from the careers collection
-        db = firestore_service._get_db()
-        if db is None:
-            raise Exception("Database not initialized")
-        
-        careers_ref = db.collection('careers')
-        careers_docs = careers_ref.stream()
-        
-        careers = []
-        for doc in careers_docs:
-            career_data = doc.to_dict()
-            careers.append({
-                "id": doc.id,  # Use document ID as career ID
-                "title": career_data.get("title", "Unknown Career"),
-                "description": career_data.get("description", "Career path description"),
-                "avgSalary": career_data.get("avgSalary", 900000),
-                "requiredSkills": career_data.get("requiredSkills", ["Communication", "Problem Solving"]),
-                "difficulty": career_data.get("experienceLevel", "intermediate"),
-                "industry": career_data.get("industry", "General"),
-                "workType": career_data.get("workType", "Office"),
-                "growthRate": career_data.get("growthRate", "N/A"),
-                "jobOpenings": career_data.get("jobOpenings", "N/A"),
-                "domain_id": career_data.get("domain_id", ""),
-            })
-        
-        # If no careers found in database, return fallback
-        if not careers:
-            logger.warning("No careers found in database, using fallback data")
-            careers = [
-                {
-                    "id": "data-science",
-                    "title": "Data Scientist",
-                    "description": "Analyze and interpret complex data to help companies make decisions",
-                    "avgSalary": 1200000,
-                    "requiredSkills": ["Python", "Machine Learning", "Statistics", "SQL"],
-                    "difficulty": "intermediate",
-                    "industry": "Technology",
-                    "workType": "Hybrid",
-                    "growthRate": "35%",
-                    "jobOpenings": "High",
-                    "domain_id": "data-science",
-                },
-                {
-                    "id": "full-stack-developer",
-                    "title": "Full Stack Developer",
-                    "description": "Build complete web applications from frontend to backend",
-                    "avgSalary": 1000000,
-                    "requiredSkills": ["JavaScript", "React", "Node.js", "Databases"],
-                    "difficulty": "intermediate",
-                    "industry": "Technology",
-                    "workType": "Hybrid",
-                    "growthRate": "30%",
-                    "jobOpenings": "Very High",
-                    "domain_id": "full-stack-development",
-                },
-                {
-                    "id": "cybersecurity-specialist",
-                    "title": "Cybersecurity Specialist",
-                    "description": "Protect organizations from cyber threats and attacks",
-                    "avgSalary": 1100000,
-                    "requiredSkills": ["Network Security", "Ethical Hacking", "Risk Assessment"],
-                    "difficulty": "advanced",
-                    "industry": "Technology",
-                    "workType": "Office",
-                    "growthRate": "28%",
-                    "jobOpenings": "High",
-                    "domain_id": "cybersecurity",
-                },
-            ]
-
-        return {"careers": careers}
-        
-    except Exception as e:
-        logger.error(f"Error fetching careers: {e}")
-        # Fallback to minimal data in case of any error
+        # Use all domain roadmaps as careers (76 domains)
         careers = []
         for slug in ALL_DOMAIN_SLUGS:
             data = DOMAINS_ROADMAP.get(slug, {})
             careers.append({
-                "id": slug,
+                "id": slug,  # Use domain slug as career ID
                 "title": data.get("title", slug.replace('-', ' ').title()),
                 "description": data.get("description", f"Career path for {slug.replace('-', ' ')}"),
-                "avgSalary": 900000,
+                "avgSalary": 900000,  # Default salary
                 "requiredSkills": data.get("prerequisites", []) or data.get("learning_path", [])[:5] or ["Communication", "Problem Solving"],
+                "difficulty": data.get("difficulty", "intermediate"),
+                "estimated_completion": data.get("estimated_completion", "6-12 months"),
+                "related_domains": data.get("related_domains", []),
+                "domain_id": slug,
             })
-        
+
+        logger.info(f"Returning {len(careers)} careers from roadmap domains")
         return {"careers": careers}
+        
+    except Exception as e:
+        logger.error(f"Error fetching careers: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch careers")
 
 
 @router.get("/roadmaps")

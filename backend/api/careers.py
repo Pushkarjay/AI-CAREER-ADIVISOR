@@ -174,60 +174,97 @@ async def get_career_trends():
 
 @router.get("/{career_id}")
 async def get_career_details(career_id: str):
-    """Get detailed information about a specific career."""
+    """Get detailed information about a specific career (domain/roadmap)."""
     try:
-        # Try to fetch from Firestore careers collection
-        db = firestore_service._get_db()
-        if db is None:
-            raise HTTPException(
-                status_code=500,
-                detail="Database not initialized"
-            )
+        # Import domains data
+        from data.domains_roadmap import DOMAINS_ROADMAP
         
-        careers_ref = db.collection('careers').document(career_id)
-        career_doc = careers_ref.get()
+        # Try to get from roadmap domains first (analytics-engineer, etc.)
+        domain_data = DOMAINS_ROADMAP.get(career_id)
         
-        if career_doc.exists:
-            career_data = career_doc.to_dict()
+        if domain_data:
+            # Build career details from domain roadmap data
+            avg_salary = 900000  # Default salary
             
-            # Format the data for frontend consumption
             career_details = {
                 "id": career_id,
-                "title": career_data.get("title", "Unknown Career"),
-                "industry": career_data.get("industry", "General"),
-                "description": career_data.get("description", ""),
-                "required_skills": career_data.get("requiredSkills", []),
-                "suggested_courses": career_data.get("suggestedCourses", []),
-                "experience_level": career_data.get("experienceLevel", "Entry Level"),
-                "avg_salary": career_data.get("avgSalary", 0),
-                "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L - ₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L",
-                "work_type": career_data.get("workType", "Office"),
-                "growth_rate": career_data.get("growthRate", "N/A"),
-                "job_openings": career_data.get("jobOpenings", "N/A"),
-                "domain_id": career_data.get("domain_id", ""),
-                "skills_weightage": career_data.get("skills_weightage", {}),
-                "typical_responsibilities": career_data.get("responsibilities", [
+                "title": domain_data.get("title", "Unknown Career"),
+                "industry": "Technology",
+                "description": domain_data.get("description", ""),
+                "required_skills": domain_data.get("prerequisites", []) or domain_data.get("learning_path", [])[:5],
+                "suggested_courses": [f"{step}" for step in (domain_data.get("learning_path", [])[:3])],
+                "experience_level": domain_data.get("difficulty", "intermediate").title(),
+                "avg_salary": avg_salary,
+                "salary_range": f"₹{avg_salary * 0.7 / 100000:.1f}L - ₹{avg_salary * 1.3 / 100000:.1f}L",
+                "work_type": "Hybrid",
+                "growth_rate": "25%",
+                "job_openings": "High",
+                "domain_id": career_id,
+                "skills_weightage": {},
+                "typical_responsibilities": [
                     "Apply domain knowledge and skills",
                     "Collaborate with team members",
                     "Deliver quality work on time",
                     "Continuously learn and improve"
-                ]),
-                "career_progression": [
-                    {"level": "Entry Level", "years": "0-2", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.5 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L"},
-                    {"level": "Mid Level", "years": "2-5", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.8 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.2 / 100000:.1f}L"},
-                    {"level": "Senior Level", "years": "5-8", "salary_range": f"₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.8 / 100000:.1f}L"},
-                    {"level": "Lead/Manager", "years": "8+", "salary_range": f"₹{career_data.get('avgSalary', 0) * 2 / 100000:.1f}L+"}
                 ],
-                "learning_roadmap_id": career_data.get("domain_id", ""),
+                "career_progression": [
+                    {"level": "Entry Level", "years": "0-2", "salary_range": f"₹{avg_salary * 0.5 / 100000:.1f}L-₹{avg_salary * 0.7 / 100000:.1f}L"},
+                    {"level": "Mid Level", "years": "2-5", "salary_range": f"₹{avg_salary * 0.8 / 100000:.1f}L-₹{avg_salary * 1.2 / 100000:.1f}L"},
+                    {"level": "Senior Level", "years": "5-8", "salary_range": f"₹{avg_salary * 1.3 / 100000:.1f}L-₹{avg_salary * 1.8 / 100000:.1f}L"},
+                    {"level": "Lead/Manager", "years": "8+", "salary_range": f"₹{avg_salary * 2 / 100000:.1f}L+"}
+                ],
+                "learning_roadmap_id": career_id,
             }
             
             return career_details
-        else:
-            # Fallback: Return 404 if career not found in database
-            raise HTTPException(
-                status_code=404,
-                detail=f"Career with ID '{career_id}' not found in database"
-            )
+        
+        # Fallback: Try to fetch from Firestore careers collection
+        db = firestore_service._get_db()
+        if db is not None:
+            careers_ref = db.collection('careers').document(career_id)
+            career_doc = careers_ref.get()
+            
+            if career_doc.exists:
+                career_data = career_doc.to_dict()
+                
+                # Format the data for frontend consumption
+                career_details = {
+                    "id": career_id,
+                    "title": career_data.get("title", "Unknown Career"),
+                    "industry": career_data.get("industry", "General"),
+                    "description": career_data.get("description", ""),
+                    "required_skills": career_data.get("requiredSkills", []),
+                    "suggested_courses": career_data.get("suggestedCourses", []),
+                    "experience_level": career_data.get("experienceLevel", "Entry Level"),
+                    "avg_salary": career_data.get("avgSalary", 0),
+                    "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L - ₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L",
+                    "work_type": career_data.get("workType", "Office"),
+                    "growth_rate": career_data.get("growthRate", "N/A"),
+                    "job_openings": career_data.get("jobOpenings", "N/A"),
+                    "domain_id": career_data.get("domain_id", ""),
+                    "skills_weightage": career_data.get("skills_weightage", {}),
+                    "typical_responsibilities": career_data.get("responsibilities", [
+                        "Apply domain knowledge and skills",
+                        "Collaborate with team members",
+                        "Deliver quality work on time",
+                        "Continuously learn and improve"
+                    ]),
+                    "career_progression": [
+                        {"level": "Entry Level", "years": "0-2", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.5 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 0.7 / 100000:.1f}L"},
+                        {"level": "Mid Level", "years": "2-5", "salary_range": f"₹{career_data.get('avgSalary', 0) * 0.8 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.2 / 100000:.1f}L"},
+                        {"level": "Senior Level", "years": "5-8", "salary_range": f"₹{career_data.get('avgSalary', 0) * 1.3 / 100000:.1f}L-₹{career_data.get('avgSalary', 0) * 1.8 / 100000:.1f}L"},
+                        {"level": "Lead/Manager", "years": "8+", "salary_range": f"₹{career_data.get('avgSalary', 0) * 2 / 100000:.1f}L+"}
+                    ],
+                    "learning_roadmap_id": career_data.get("domain_id", ""),
+                }
+                
+                return career_details
+        
+        # Return 404 if career not found anywhere
+        raise HTTPException(
+            status_code=404,
+            detail=f"Career with ID '{career_id}' not found"
+        )
         
     except HTTPException:
         raise
@@ -254,24 +291,35 @@ async def generate_personalized_path(career_id: str, token: str = Depends(securi
                 detail="User profile required for personalized path generation"
             )
         
-        # Get career details
-        db = firestore_service._get_db()
-        if db is None:
-            raise HTTPException(
-                status_code=500,
-                detail="Database not initialized"
-            )
+        # Import domains data
+        from data.domains_roadmap import DOMAINS_ROADMAP
         
-        career_ref = db.collection('careers').document(career_id)
-        career_doc = career_ref.get()
+        # Get career/domain data - try roadmaps first, then Firestore careers
+        domain_data = DOMAINS_ROADMAP.get(career_id)
+        career_title = None
+        career_skills = []
         
-        if not career_doc.exists:
+        if domain_data:
+            # Using roadmap domain data
+            career_title = domain_data.get("title", career_id.replace('-', ' ').title())
+            career_skills = domain_data.get("prerequisites", []) or domain_data.get("learning_path", [])[:5]
+        else:
+            # Try Firestore careers collection
+            db = firestore_service._get_db()
+            if db is not None:
+                career_ref = db.collection('careers').document(career_id)
+                career_doc = career_ref.get()
+                
+                if career_doc.exists:
+                    career_data = career_doc.to_dict()
+                    career_title = career_data.get("title", "Unknown Career")
+                    career_skills = career_data.get("requiredSkills", [])
+        
+        if not career_title:
             raise HTTPException(
                 status_code=404,
                 detail=f"Career with ID '{career_id}' not found"
             )
-        
-        career_data = career_doc.to_dict()
         
         # Use Gemini to generate personalized path
         from services.gemini_service import GeminiService
@@ -279,8 +327,6 @@ async def generate_personalized_path(career_id: str, token: str = Depends(securi
         
         user_skills = user_profile.get("skills", [])
         user_interests = user_profile.get("interests", [])
-        career_skills = career_data.get("requiredSkills", [])
-        career_title = career_data.get("title", "Unknown Career")
         
         # Build prompt for Gemini
         prompt = f"""Generate a comprehensive personalized learning path for a user pursuing a career as {career_title}.
@@ -290,13 +336,12 @@ User Profile:
 - Interests: {', '.join(user_interests) if user_interests else 'None specified'}
 
 Career Requirements:
-- Required Skills: {', '.join(career_skills)}
-- Industry: {career_data.get('industry', 'General')}
-- Experience Level: {career_data.get('experienceLevel', 'Entry Level')}
+- Required Skills: {', '.join(career_skills) if career_skills else 'General career skills'}
+- Career Path: {career_title}
 
 Please provide a JSON response with the following structure:
 {{
-    "overview": "Brief overview of the learning path",
+    "overview": "Brief overview of the learning path (2-3 sentences)",
     "current_level": "Assessment of user's current skill level",
     "skill_gaps": [
         {{
@@ -377,7 +422,7 @@ Provide real, actionable recommendations with actual course links (Coursera, Ude
         except json.JSONDecodeError:
             # If not valid JSON, create a structured response from the text
             personalized_path = {
-                "overview": response[:500] + "...",
+                "overview": response[:500] + "..." if len(response) > 500 else response,
                 "current_level": "Assessment pending",
                 "skill_gaps": [],
                 "learning_roadmap": [],
@@ -408,6 +453,8 @@ Provide real, actionable recommendations with actual course links (Coursera, Ude
         raise
     except Exception as e:
         logger.error(f"Failed to generate personalized path: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate personalized path: {str(e)}"
