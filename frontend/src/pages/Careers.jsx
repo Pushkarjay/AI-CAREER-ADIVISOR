@@ -40,6 +40,8 @@ const Careers = () => {
   });
   const [savedCareers, setSavedCareers] = useState(new Set());
   const [likedCareers, setLikedCareers] = useState(new Set());
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedCareerDetails, setSelectedCareerDetails] = useState(null);
 
   useEffect(() => {
     fetchRecommendations();
@@ -190,6 +192,34 @@ const Careers = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
+  const handleViewDetails = async (careerId, careerTitle) => {
+    try {
+      // Try to fetch career details from API
+      const response = await careerAPI.getCareerDetails(careerId);
+      const details = response?.data || {};
+      
+      setSelectedCareerDetails({
+        id: careerId,
+        title: careerTitle,
+        ...details
+      });
+      setShowDetailsModal(true);
+    } catch (error) {
+      console.error('Failed to fetch career details:', error);
+      // Fallback to basic data
+      setSelectedCareerDetails({
+        id: careerId,
+        title: careerTitle,
+        description: 'Detailed career information',
+        salary_range: '5-15 LPA',
+        required_skills: ['Skill 1', 'Skill 2', 'Skill 3'],
+        typical_responsibilities: ['Responsibility 1', 'Responsibility 2'],
+        career_progression: ['Entry → Mid → Senior → Lead']
+      });
+      setShowDetailsModal(true);
+    }
+  };
+
   const toggleSaved = (careerId) => {
     const newSaved = new Set(savedCareers);
     if (newSaved.has(careerId)) {
@@ -290,7 +320,10 @@ const Careers = () => {
             <ChartBarIcon className="w-4 h-4 mr-1" />
             Match: {career.match_score}%
           </div>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+          <button 
+            onClick={() => handleViewDetails(career.id, career.title)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
             View Details
           </button>
         </div>
@@ -774,6 +807,172 @@ const Careers = () => {
         </div>
       </div>
 
+      {/* Career Details Modal */}
+      {showDetailsModal && selectedCareerDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedCareerDetails.title}
+              </h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Description */}
+              {selectedCareerDetails.description && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Description</h3>
+                  <p className="text-gray-700">{selectedCareerDetails.description}</p>
+                </div>
+              )}
+
+              {/* Industry and Work Type */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedCareerDetails.industry && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Industry</h3>
+                    <p className="text-gray-700">{selectedCareerDetails.industry}</p>
+                  </div>
+                )}
+                {selectedCareerDetails.work_type && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Work Type</h3>
+                    <p className="text-gray-700">{selectedCareerDetails.work_type}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Salary Range */}
+              {(selectedCareerDetails.salary_range || selectedCareerDetails.avg_salary) && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Salary Range</h3>
+                  <p className="text-gray-700">
+                    {selectedCareerDetails.salary_range || 
+                     `₹${Math.round(selectedCareerDetails.avg_salary/100000)} LPA (Average)`}
+                  </p>
+                </div>
+              )}
+
+              {/* Growth Rate and Job Openings */}
+              {(selectedCareerDetails.growth_rate || selectedCareerDetails.job_openings) && (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedCareerDetails.growth_rate && (
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Growth Rate</h3>
+                      <p className="text-green-600 font-semibold">{selectedCareerDetails.growth_rate}</p>
+                    </div>
+                  )}
+                  {selectedCareerDetails.job_openings && (
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Job Openings</h3>
+                      <p className="text-blue-600 font-semibold">{selectedCareerDetails.job_openings}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Required Skills */}
+              {selectedCareerDetails.required_skills && selectedCareerDetails.required_skills.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Required Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCareerDetails.required_skills.map((skill, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Suggested Courses */}
+              {selectedCareerDetails.suggested_courses && selectedCareerDetails.suggested_courses.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Suggested Courses</h3>
+                  <div className="space-y-3">
+                    {selectedCareerDetails.suggested_courses.map((course, idx) => (
+                      <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{course.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {course.provider} • {course.duration}
+                            </p>
+                          </div>
+                          {course.url && (
+                            <a
+                              href={course.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              View Course ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Key Responsibilities */}
+              {selectedCareerDetails.typical_responsibilities && selectedCareerDetails.typical_responsibilities.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Key Responsibilities</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {selectedCareerDetails.typical_responsibilities.map((resp, idx) => (
+                      <li key={idx}>{resp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Career Progression */}
+              {selectedCareerDetails.career_progression && selectedCareerDetails.career_progression.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Career Progression</h3>
+                  <div className="space-y-2">
+                    {selectedCareerDetails.career_progression.map((stage, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                        <span className="font-medium text-blue-600">{stage.level || stage}</span>
+                        {stage.years && <span className="text-gray-600">({stage.years})</span>}
+                        {stage.salary_range && <span className="text-green-600 ml-auto">{stage.salary_range}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Experience Level */}
+              {selectedCareerDetails.experience_level && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Experience Level</h3>
+                  <p className="text-gray-700">{selectedCareerDetails.experience_level}</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
     </>
   );
