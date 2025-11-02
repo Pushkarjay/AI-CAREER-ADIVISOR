@@ -7,7 +7,7 @@ Exposes:
 - POST /api/chat -> chat.send_message (unauth fallback to /chat/test if no token)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from fastapi.security import HTTPBearer
 from typing import Optional, Dict, Any
 import logging
@@ -77,9 +77,9 @@ async def save_profile(payload: ProfilePayload, token = Depends(security)):
 
 
 @router.post("/resume")
-async def parse_resume(file: UploadFile = File(...), token = Depends(security)):
+async def parse_resume(request: Request, file: UploadFile = File(...), token = Depends(security)):
     if token and token.credentials:
-        return await profiles_mod.upload_resume(file=file, token=token)
+        return await profiles_mod.upload_resume(request=request, file=file, token=token)
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
