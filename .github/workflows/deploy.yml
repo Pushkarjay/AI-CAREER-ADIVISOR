@@ -96,6 +96,22 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Validate Firebase API key
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: |
+          CHECK_URL="https://identitytoolkit.googleapis.com/v1/projects?key=${FIREBASE_API_KEY}"
+          HTTP_CODE=$(curl -s -o /tmp/firebase_api_key_check.json -w "%{http_code}" "$CHECK_URL")
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Firebase API key validation failed with HTTP $HTTP_CODE"
+            cat /tmp/firebase_api_key_check.json
+            echo "Update repository secret FIREBASE_API_KEY with a valid Web API key from Firebase Console."
+            exit 1
+          fi
+
+          echo "Firebase API key is valid."
+
       - name: Install dependencies & build frontend
         working-directory: frontend
         env:
