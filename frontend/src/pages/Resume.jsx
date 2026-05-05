@@ -204,7 +204,7 @@ const Resume = () => {
       
       if (url.startsWith('/uploads/')) {
         // Local storage - need to point to backend server
-        const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://backend-service-680116190409.asia-south1.run.app';
         absoluteUrl = `${backendUrl}${url}`;
       } else if (url.includes('firebasestorage.googleapis.com') || url.includes('storage.googleapis.com')) {
         // Firebase Storage URL
